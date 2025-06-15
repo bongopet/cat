@@ -12,5 +12,5 @@ export default defineConfig({
       }
     }
   },
-  base: '/bongocat/', // 与仓库名一致，用于 GitHub Pages
+  base: '/cat/', // 与仓库名一致，用于 GitHub Pages
 }) 

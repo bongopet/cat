@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://marshalt.github.io/bongocat",
+  "homepage": "https://bongopet.github.io/cat",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
