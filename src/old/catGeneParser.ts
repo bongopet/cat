@@ -3,6 +3,7 @@
  * 用于解析和处理猫咪基因数据，生成外观和属性特征
  */
 
+
 // 基因解析结果接口
 export interface GeneParseResult {
   appearance: {
