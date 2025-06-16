@@ -170,14 +170,7 @@ async function feedCat(wallet, accountName, catId) {
       catId,
       txId
     );
-    
-    // 返回喂养结果
-    return {
-      success: true,
-      expGained: Math.floor(Math.random() * 50) + 10, // 随机10-60的经验值
-      staminaGained: Math.floor(Math.random() * 20) + 5, // 随机5-25的体力
-      txHash: txId
-    };
+    return true;
   } catch (error) {
     console.error(`喂养猫咪失败:${error}`);
     throw error;
