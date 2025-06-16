@@ -13,16 +13,6 @@ const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 // 检查猫咪是否有可用经验
 async function checkCatHasAvailableExp(wallet, owner, catId, lastCheckTime) {
   try {
-    // // 检查是否为GitHub Pages环境
-    // if (window.location.hostname.includes('github.io')) {
-    //   // 在GitHub Pages环境中使用模拟数据
-    //   console.log(`GitHub Pages环境：使用模拟数据检查猫咪 ${catId} 的经验`);
-    //   const hasExp = Math.random() > 0.3; // 70%概率有经验可获取
-    //   console.log(`模拟检查结果: ${hasExp ? '有经验可获取' : '无经验可获取'}`);
-    //   return hasExp;
-    // }
-    
-    // 其他环境尝试真实API调用
     // 首先检查loglogloglog合约的logs表
     const externalContract = 'loglogloglog';
     const logsRows = await getTableRows(
@@ -94,13 +84,6 @@ async function checkCatHasAvailableExp(wallet, owner, catId, lastCheckTime) {
         return true;
       }
     }
-
-    // 模拟随机结果（如果无法获取实际数据）
-    if (!logsRows || !pppLogsRows) {
-      console.log('无法获取经验日志，使用随机模拟结果');
-      return Math.random() > 0.7;
-    }
-
     return false;
   } catch (error) {
     console.error('检查猫咪经验失败:', error);
@@ -120,8 +103,8 @@ async function mintCat(wallet, accountName) {
     const balanceValue = Number.parseFloat(balanceParts[0]);
     if (isNaN(balanceValue) || balanceValue < 30.0) {
       const errorMsg = `DFS余额不足，铸造猫咪需要至少30.0000 DFS (当前余额: ${balanceStr || '0 DFS'})`;
-      message.warning(errorMsg);
-      console.log('铸造猫咪余额不足:', { balance: balanceStr, required: '30.0000 DFS' });
+      // message.warning(errorMsg);
+      // console.log('铸造猫咪余额不足:', { balance: balanceStr, required: '30.0000 DFS' });
       throw new Error(errorMsg);
     }
     
@@ -144,22 +127,7 @@ async function mintCat(wallet, accountName) {
       null,
       txId
     );
-    
-    // 生成一个随机的基因值
-    const gene = Math.floor(Math.random() * 2147483647);
-    
-    // 返回新猫咪的信息
-    return {
-      id: `${Date.now()}`, // 模拟ID生成
-      owner: accountName,
-      gene: gene,
-      level: 1,
-      exp: 0,
-      stamina: 100,
-      maxStamina: 100,
-      createdAt: new Date().getTime(),
-      txHash: txId
-    };
+    return true;
   } catch (error) {
     console.error('铸造猫咪失败:', error);
     throw error;
@@ -287,53 +255,11 @@ async function checkCatAction(wallet, accountName, catId) {
         Math.floor(Math.random() * 15) + 5, // 随机经验值
         'EXP' // 经验货币
       );
-      
       message.success('检查活动成功');
-      
-      // 模拟活动结果
-      const activities = ['hunting', 'playing', 'exploring', 'resting'];
-      const randomActivity = activities[Math.floor(Math.random() * activities.length)];
-      const expGained = Math.floor(Math.random() * 15) + 5; // 5-20的随机经验
-      
-      return {
-        success: true,
-        activity: randomActivity,
-        expGained: expGained,
-        txHash: txId,
-        timestamp: Date.now()
-      };
+      return true;
     } catch (error) {
-      console.error('与链交互失败，使用模拟结果:', error);
-      
-      // 如果与链交互失败，模拟一个随机的活动类型
-      const activities = ['hunting', 'playing', 'exploring', 'resting'];
-      const randomActivity = activities[Math.floor(Math.random() * activities.length)];
-      
-      // 模拟经验获取
-      const expGained = Math.floor(Math.random() * 15) + 5; // 5-20的随机经验
-      
-      // 模拟交易结果
-      const txId = `action-${Date.now()}`;
-      
-      // 记录交易
-      recordCatTransaction(
-        'action',
-        catId,
-        txId,
-        `${expGained}`, // 经验作为amount
-        'EXP' // 货币类型为EXP
-      );
-      
-      console.log(`猫咪${catId}完成了${randomActivity}活动，获得${expGained}经验`);
-      
-      // 返回活动结果
-      return {
-        success: true,
-        activity: randomActivity,
-        expGained: expGained,
-        txHash: txId,
-        timestamp: Date.now()
-      };
+      console.error('检查活动失败:', error);
+      throw error;
     }
   } catch (error) {
     console.error('猫咪活动检查失败:', error);
@@ -439,40 +365,6 @@ async function getCatInteractions(wallet, catId) {
       console.log(`找到 ${catTransactions.length} 条猫咪互动记录`);
       return catTransactions;
     }
-    
-    // 如果没有找到真实数据，生成测试数据
-    const testData = [
-      {
-        type: 'mint',
-        catId,
-        txId: `mint-${Date.now() - 86400000 * 7}`,
-        timestamp: Date.now() - 86400000 * 7,
-      },
-      {
-        type: 'feed',
-        catId,
-        txId: `feed-${Date.now() - 86400000 * 5}`,
-        timestamp: Date.now() - 86400000 * 5,
-        amount: '1',
-        currency: 'BGFISH',
-      },
-      {
-        type: 'action',
-        catId,
-        txId: `action-${Date.now() - 86400000 * 3}`,
-        timestamp: Date.now() - 86400000 * 3,
-        amount: '15',
-        currency: 'EXP',
-      },
-      {
-        type: 'upgrade',
-        catId,
-        txId: `upgrade-${Date.now() - 86400000 * 2}`,
-        timestamp: Date.now() - 86400000 * 2,
-      },
-    ];
-    
-    return testData;
   } catch (error) {
     console.error('获取猫咪互动记录失败:', error);
     return [];
@@ -528,34 +420,6 @@ async function getAllCats(wallet, limit = 50) {
     } catch (chainError) {
       console.error('从链上获取猫咪数据失败:', chainError);
     }
-    
-    // 如果没有找到链上数据，生成随机测试数据
-    const testCats = [];
-    const owners = ['alice', 'bob', 'charlie', 'dave', 'eve', 'frank', 'grace', 'heidi', 'ivan', 'judy'];
-    
-    for (let i = 0; i < limit; i++) {
-      const level = Math.floor(Math.random() * 5) + 1; // 1-5级
-      testCats.push({
-        id: `${1000 + i}`,
-        owner: owners[i % owners.length],
-        genes: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER), // 使用 genes 而不是 gene，确保属性名称一致
-        level: level,
-        experience: Math.floor(Math.random() * 100) * level, // 使用 experience 而不是 exp，与链上数据保持一致
-        stamina: Math.floor(Math.random() * 50) + 50, // 50-100的体力
-        maxStamina: 100,
-        createdAt: Date.now() - Math.floor(Math.random() * 30) * 86400000, // 1-30天前创建
-      });
-    }
-    
-    // 按级别和经验排序
-    testCats.sort((a, b) => {
-      if (a.level !== b.level) {
-        return b.level - a.level; // 级别降序
-      }
-      return b.experience - a.experience; // 同级别下，经验降序，使用 experience 而不是 exp
-    });
-    
-    return testCats;
   } catch (error) {
     console.error('获取猫咪排行榜失败:', error);
     return [];

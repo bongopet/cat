@@ -19,7 +19,7 @@ import './App.css'
 
 const { Header, Content } = Layout
 const { Title, Text } = Typography
-
+  
 function App() {
   // DFS wallet state
   const [dfsWallet, setDfsWallet] = useState(null)
@@ -291,7 +291,8 @@ function App() {
           <div className="logo-section">
             <div className="logo">
               <img
-                src="https://s1.imagehub.cc/images/2025/06/11/c34dd32ef2c2206b6a77cd970cd5818b.png"
+                // src={`${basePath}images/logo.png`}
+                src={`/cat/images/logo.png`}
                 alt="猫星球"
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }}
               />
@@ -309,9 +310,9 @@ function App() {
                   <Text style={{ color: 'white' }} ellipsis={{ tooltip: account?.name }}>
                     {account?.name}
                   </Text>
-                  {balance && (
+                  {/* {balance && (
                     <Tag color="gold">{balance.balance}</Tag>
-                  )}
+                  )} */}
                 </div>
                 <Button
                   danger
@@ -352,7 +353,8 @@ function App() {
             <div className="connect-hero">
               <div className="connect-cat-image">
                 <img
-                  src="https://s1.imagehub.cc/images/2025/06/11/c34dd32ef2c2206b6a77cd970cd5818b.png"
+                  // src={`${basePath}images/logo.png`}
+                  src={`/cat/images/logo.png`}
                   alt="猫星球"
                   className="hero-cat-image"
                 />

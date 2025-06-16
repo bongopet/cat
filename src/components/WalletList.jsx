@@ -4,22 +4,9 @@ import './WalletList.css'; // 我们将创建这个CSS文件
 // 导入钱包类型常量
 // 注意：您需要确保从正确的路径导入WalletType
 import { WalletType } from 'dfssdk/dist/types';
-
-// 获取基础路径
-const getBasePath = () => {
-  // 检查是否为生产环境
-  if (import.meta.env.PROD) {
-    // 使用 vite.config.js 中配置的 base 路径
-    return '/bongocat/';
-  }
-  // 开发环境使用根路径
-  return '/';
-};
+import { getBasePath } from '../utils/tool';
 
 const WalletList = ({ onWalletSelect }) => {
-  // 获取基础路径
-  const basePath = getBasePath();
-  
   // 检查是否在Telegram应用中
   const isTgApp = useMemo(() => {
     const Telegram = window.Telegram;
@@ -49,18 +36,18 @@ const WalletList = ({ onWalletSelect }) => {
       <div className="title">选择登录方式</div>
       
       <div className="item" onClick={() => handleChoose(WalletType.WEB)}>
-        <img src={`${basePath}images/fingerprint.svg`} className="icon" alt="Passkey" />
+        <img src={`/cat/images/fingerprint.svg`} className="icon" alt="Passkey" />
         <div className="label">Passkey</div>
       </div>
       
       <div className="item" onClick={() => handleChoose(WalletType.DFSWALLET)}>
-        <img src={`${basePath}images/DFS.png`} className="icon" alt="DFS Wallet" />
+        <img src={`/cat/images/DFS.png`} className="icon" alt="DFS Wallet" />
         <div className="label">DFS Wallet</div>
       </div>
       
       {isTgApp && (
         <div className="item" onClick={() => handleChoose(WalletType.TELEGRAMAPP)}>
-          <img src={`${basePath}images/logo.png`} className="icon" alt="Telegram App" />
+          <img src={`/cat/images/logo.png`} className="icon" alt="Telegram App" />
           <div className="label">Telegram App</div>
         </div>
       )}
