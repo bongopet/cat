@@ -39,7 +39,7 @@ function App() {
   // WalletList state
   const [showWalletList, setShowWalletList] = useState(false)
 
-    // Initialize DFS wallet
+  // Initialize DFS wallet
   useEffect(() => {
     // Initialize wallet per README example
     const wallet = new Wallet({
@@ -236,21 +236,20 @@ function App() {
         </div>
       )
     },
-          {
-        key: 'ranking',
-        label: (
-          <span>
-            <TrophyOutlined />
-            排行榜
-          </span>
-        ),
-        children: (
-          <div className="tab-content">
-            <RankingList DFSWallet={dfsWallet} />
-          </div>
-        )
-      }
-      ,
+    {
+      key: 'ranking',
+      label: (
+        <span>
+          <TrophyOutlined />
+          排行榜
+        </span>
+      ),
+      children: (
+        <div className="tab-content">
+          <RankingList DFSWallet={dfsWallet} />
+        </div>
+      )
+    },
     {
       key: 'market',
       label: (
@@ -261,7 +260,11 @@ function App() {
       ),
       children: (
         <div className="tab-content">
-          <p>市场功能即将推出...</p>
+          <div className="coming-soon-container">
+            <div className="coming-soon-icon">🛒</div>
+            <h2>市场功能即将推出</h2>
+            <p>敬请期待！我们正在紧锣密鼓地开发猫咪交易市场，让您可以自由买卖您的猫咪。</p>
+          </div>
         </div>
       )
     }
@@ -269,6 +272,19 @@ function App() {
 
   return (
     <Layout className="app-layout">
+      {/* 背景气泡动画 */}
+      <div className="bubbles">
+        {[...Array(10)].map((_, i) => (
+          <div className="bubble" key={i} style={{
+            '--size': `${Math.random() * 5 + 2}rem`,
+            '--distance': `${Math.random() * 6 + 4}rem`,
+            '--position': `${Math.random() * 100}%`,
+            '--time': `${Math.random() * 2 + 2}s`,
+            '--delay': `${Math.random() * 2}s`,
+          }}></div>
+        ))}
+      </div>
+
       <Header className="app-header">
         <div className="header-content">
           {/* Logo和标题区域 */}
@@ -290,7 +306,7 @@ function App() {
             {connected ? (
               <>
                 <div className="account-info">
-                  <Text style={{ color: 'white', marginRight: 10 }}>
+                  <Text style={{ color: 'white' }} ellipsis={{ tooltip: account?.name }}>
                     {account?.name}
                   </Text>
                   {balance && (
@@ -311,6 +327,7 @@ function App() {
                 onClick={showWalletSelector}
                 loading={connecting}
                 disabled={connecting}
+                icon={<WalletOutlined />}
               >
                 连接钱包
               </Button>
@@ -332,27 +349,63 @@ function App() {
           </div>
         ) : (
           <div className="connect-prompt">
-            <WalletOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-            <p>请连接DFS钱包开始</p>
-            <Button
-              type="primary"
-              size="large"
-              onClick={showWalletSelector}
-              loading={connecting}
-            >
-              连接DFS钱包
-            </Button>
+            <div className="connect-hero">
+              <div className="connect-cat-image">
+                <img
+                  src="https://s1.imagehub.cc/images/2025/06/11/c34dd32ef2c2206b6a77cd970cd5818b.png"
+                  alt="猫星球"
+                  className="hero-cat-image"
+                />
+              </div>
+              <div className="connect-text">
+                <h1>欢迎来到猫星球</h1>
+                <p>连接您的DFS钱包，开始您的养猫之旅！</p>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={showWalletSelector}
+                  loading={connecting}
+                  icon={<WalletOutlined />}
+                >
+                  连接DFS钱包
+                </Button>
+              </div>
+            </div>
+            <div className="connect-features">
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <img src="/cat/images/Cat.svg" alt="猫咪" className="feature-icon-image" />
+                </div>
+                <h3>收集猫咪</h3>
+                <p>铸造独特的猫咪，每只猫咪都有自己的特性和属性</p>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <span className="feature-icon-symbol">🏆</span>
+                </div>
+                <h3>提升等级</h3>
+                <p>通过喂养和互动提升您的猫咪等级，增强属性</p>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">
+                  <span className="feature-icon-symbol">💰</span>
+                </div>
+                <h3>市场交易</h3>
+                <p>未来您可以在市场上买卖猫咪，赚取收益</p>
+              </div>
+            </div>
           </div>
         )}
       </Content>
 
       {/* Cat detail modal */}
       <Modal
-        title="猫咪详情"
+        title={selectedCat ? `猫咪 #${selectedCat.id} 详情` : "猫咪详情"}
         open={catDetailsVisible}
         onCancel={() => setCatDetailsVisible(false)}
         footer={null}
         width={700}
+        className="cat-modal"
       >
         {selectedCat && (
           <CatDetail
@@ -368,7 +421,6 @@ function App() {
       {showWalletList && !connected && (
         <div className="wallet-list-modal">
           <div className="wallet-list-backdrop" onClick={() => {
-            console.log('背景被点击，关闭钱包列表');
             setShowWalletList(false);
           }}></div>
           <WalletList onWalletSelect={handleWalletSelect} />

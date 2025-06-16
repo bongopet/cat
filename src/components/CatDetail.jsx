@@ -90,7 +90,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats }) => {
         );
 
         setHasAvailableExp(hasExp);
-        console.log('检查经验结果:', hasExp);
+        // console.log('检查经验结果:', hasExp);
       } catch (error) {
         console.error('检查可获取经验出错:', error);
         setHasAvailableExp(false);
@@ -246,9 +246,9 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats }) => {
       <Spin spinning={loading}>
         <div className="cat-detail-header">
           <div className="cat-identifier">
-            <div className="cat-id">
+            {/* <div className="cat-id">
               <span className="cat-number">#{selectedCat.id}</span>
-            </div>
+            </div> */}
             <div className="cat-birth">
               <span>出生于: {formatTime(selectedCat.birth_time)}</span>
             </div>

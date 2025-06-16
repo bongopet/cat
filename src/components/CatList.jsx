@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { List, Card, Button, Spin, Empty, Tag } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getCatColorClass } from '../utils/catGeneParser';
 import { getUserCats } from '../utils/chainOperations';
 import './CatList.css';
@@ -61,6 +61,10 @@ const CatList = ({
     }
   };
 
+  const handleRefresh = () => {
+    fetchCats();
+  };
+
   return (
     <div className="cat-list-container">
       <Spin spinning={loading || externalLoading}>
@@ -78,6 +82,7 @@ const CatList = ({
                 icon={<PlusOutlined />}
                 onClick={onMintCat}
                 disabled={!DFSWallet || !userInfo}
+                size="large"
               >
                 铸造猫咪 (30.0000 DFS)
               </Button>
@@ -89,10 +94,18 @@ const CatList = ({
               <div className="cats-count">
                 <span>我的猫咪 ({catsList.length})</span>
               </div>
+              <Button 
+                type="primary" 
+                icon={<ReloadOutlined />} 
+                onClick={handleRefresh}
+                size="middle"
+              >
+                刷新
+              </Button>
             </div>
             <List
               grid={{ 
-                gutter: 16,
+                gutter: 24,
                 xs: 1,
                 sm: 2,
                 md: 3,
@@ -120,9 +133,22 @@ const CatList = ({
                           <span className="stat-label">体力:</span>
                           <span className="stat-value">{formatStamina(cat.stamina)}/100</span>
                         </div>
+                        <div className="progress-container">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${formatStamina(cat.stamina)}%` }}
+                          ></div>
+                        </div>
+                        
                         <div className="cat-stat">
-                          <span className="stat-label">经验:</span>
+                          <span className="stat-label">经验值:</span>
                           <span className="stat-value">{getExpProgressPercent(cat.experience, cat.level)}%</span>
+                        </div>
+                        <div className="progress-container">
+                          <div 
+                            className="progress-bar" 
+                            style={{ width: `${getExpProgressPercent(cat.experience, cat.level)}%` }}
+                          ></div>
                         </div>
                       </div>
                     </div>

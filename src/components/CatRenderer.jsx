@@ -17,7 +17,7 @@ const CatRenderer = ({parent, gene, onClick }) => {
   }, [parent, gene]);
 
   // 输出基因值的原始值和 BigInt 转换后的值
-  console.log(`基因值调试信息 - parent: ${parent}, gene: ${gene}, gene类型: ${typeof gene}`);
+  // console.log(`基因值调试信息 - parent: ${parent}, gene: ${gene}, gene类型: ${typeof gene}`);
   // try {
   //   const geneBigInt = BigInt(gene || 0);
   //   console.log(`BigInt转换后: ${geneBigInt}, BigInt类型: ${typeof geneBigInt}`);
@@ -51,10 +51,10 @@ const CatRenderer = ({parent, gene, onClick }) => {
     return getCatAppearanceStyle(gene);
   }, [gene]); // 只依赖于 gene 参数，不依赖于 parent
   
-  console.log(`详细信息 - parent: ${parent}, gene: ${gene}, 颜色方案:`, 
-              catAppearance?.colors, 
-              '耳朵形状:', catAppearance?.ears,
-              '眼睛颜色:', catAppearance?.eyes);
+  // console.log(`详细信息 - parent: ${parent}, gene: ${gene}, 颜色方案:`, 
+  //             catAppearance?.colors, 
+  //             '耳朵形状:', catAppearance?.ears,
+  //             '眼睛颜色:', catAppearance?.eyes);
  
   // Handle pat animation
   const handlePat = () => {

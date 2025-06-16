@@ -25,13 +25,13 @@ export function parseGene(gene) {
   try {
     // 将输入转换为 BigInt
     const geneBigInt = typeof gene === 'bigint' ? gene : BigInt(gene || 0);
-    console.log('parseGene - 原始基因值:', gene, '类型:', typeof gene);
-    console.log('parseGene - BigInt转换后:', geneBigInt.toString(), '类型:', typeof geneBigInt);
+    // console.log('parseGene - 原始基因值:', gene, '类型:', typeof gene);
+    // console.log('parseGene - BigInt转换后:', geneBigInt.toString(), '类型:', typeof geneBigInt);
     
     // 使用基因值的字符串表示来增加随机性
     const geneStr = geneBigInt.toString();
     const geneLength = geneStr.length;
-    console.log('parseGene - 基因字符串:', geneStr, '长度:', geneLength);
+    //console.log('parseGene - 基因字符串:', geneStr, '长度:', geneLength);
     
     // 使用字符串的不同部分来提取特征
     // 这样即使两个基因值在位运算后的结果相同，它们的字符串表示也可能不同
@@ -74,7 +74,7 @@ export function parseGene(gene) {
       topFeature: Number((geneBigInt >> 47n) & 0xFFn),
     };
     
-    console.log('parseGene - 解析后的外观:', appearance);
+    // console.log('parseGene - 解析后的外观:', appearance);
 
     // 2. Attributes part - using different bit segments with BigInt
     const attributes = {
@@ -398,12 +398,12 @@ export function getCatAppearanceStyle(gene) {
   try {
     // 使用 BigInt 处理大整数
     const geneBigInt = typeof gene === 'bigint' ? gene : BigInt(gene || 0);
-    console.log('getCatAppearanceStyle - 原始基因值:', gene, '类型:', typeof gene);
-    console.log('getCatAppearanceStyle - BigInt转换后:', geneBigInt.toString(), '类型:', typeof geneBigInt);
+    //  console.log('getCatAppearanceStyle - 原始基因值:', gene, '类型:', typeof gene);
+    // console.log('getCatAppearanceStyle - BigInt转换后:', geneBigInt.toString(), '类型:', typeof geneBigInt);
     
     const parsedGene = parseGene(geneBigInt);
     
-    console.log('getCatAppearanceStyle - 解析后的基因:', parsedGene);
+    // console.log('getCatAppearanceStyle - 解析后的基因:', parsedGene);
     
     // 使用更多的基因位来决定基本颜色
     // 将原来的 baseColor 和其他特征组合起来，生成更多样化的颜色索引
