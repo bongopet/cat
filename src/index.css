@@ -31,3 +31,29 @@ body {
   border-radius: 4px;
   min-height: calc(100vh - 112px);
 }
+
+/* 全局Modal样式覆盖 */
+.ant-modal-title {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.ant-modal-close-x {
+  color: white !important;
+  font-weight: bold !important;
+  opacity: 0.9 !important;
+}
+
+.ant-modal-close-x:hover {
+  opacity: 1 !important;
+}
+
+.cat-modal-info p {
+  color: #333333 !important;
+  margin: 8px 0 !important;
+}
+
+.cat-modal-info strong {
+  color: #222222 !important;
+  font-weight: 600 !important;
+}

@@ -64,6 +64,39 @@
 }
 
 /* 猫咪Modal样式 */
+.cat-detail-modal .ant-modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.cat-detail-modal .ant-modal-header {
+  background: linear-gradient(90deg, #5a32ea 0%, #844fff 100%);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 16px 24px;
+}
+
+.cat-detail-modal .ant-modal-title {
+  color: white !important;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.cat-detail-modal .ant-modal-close {
+  color: white !important;
+}
+
+.cat-detail-modal .ant-modal-close-x {
+  color: white !important;
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+.cat-detail-modal .ant-modal-close-x:hover {
+  opacity: 1;
+}
+
 .cat-modal-content {
   display: flex;
   flex-direction: column;
@@ -74,9 +107,20 @@
 .cat-modal-info {
   width: 100%;
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 15px;
   background-color: #f5f5f5;
   border-radius: 8px;
+}
+
+.cat-modal-info p {
+  margin: 8px 0;
+  color: #333333;
+  font-size: 14px;
+}
+
+.cat-modal-info strong {
+  font-weight: 600;
+  color: #222222;
 }
 
 .cat-modal-renderer {

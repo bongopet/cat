@@ -196,6 +196,10 @@ const RankingList = ({ DFSWallet }) => {
         footer={null}
         width={400}
         centered
+        className="cat-detail-modal cat-modal"
+        style={{ borderRadius: '12px' }}
+        bodyStyle={{ padding: '16px' }}
+        headStyle={{ backgroundColor: '#5a32ea', borderRadius: '12px 12px 0 0' }}
       >
         {selectedCat && (
           <div className="cat-modal-content">
