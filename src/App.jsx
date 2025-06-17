@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Button, message, Layout, Typography, Tabs, Modal, Tag } from 'antd'
+import { Button, message, Layout, Typography, Tabs, Modal, Tag, Drawer } from 'antd'
 import {
   WalletOutlined,
   LogoutOutlined,
   HomeOutlined,
   ShopOutlined,
-  TrophyOutlined
+  TrophyOutlined,
+  MenuOutlined
 } from '@ant-design/icons'
 import Wallet from 'dfssdk'
 import { WalletType } from 'dfssdk/dist/types'
@@ -17,7 +18,7 @@ import { getAccountBalance } from './utils/eosUtils'
 import WalletList from './components/WalletList'
 import './App.css'
 
-const { Header, Content } = Layout
+const { Header, Content, Sider } = Layout
 const { Title, Text } = Typography
   
 function App() {
@@ -38,6 +39,22 @@ function App() {
 
   // WalletList state
   const [showWalletList, setShowWalletList] = useState(false)
+  
+  // Drawer state
+  const [drawerVisible, setDrawerVisible] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // 检测窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Initialize DFS wallet
   useEffect(() => {
@@ -212,66 +229,101 @@ function App() {
     fetchCats();
   }, [dfsWallet, account, connected, refreshCats]);
 
-  // Define tab items
-  const tabItems = [
+  // Define menu items for navigation
+  const menuItems = [
     {
       key: 'home',
-      label: (
-        <span>
-          <HomeOutlined />
-          主页
-        </span>
-      ),
-      children: (
-        <div className="tab-content">
-          <CatList
-            DFSWallet={dfsWallet}
-            userInfo={account}
-            onSelectCat={handleCatSelect}
-            refreshTrigger={refreshCats}
-            selectedCatId={selectedCat?.id}
-            onMintCat={handleMintCat}
-            loading={connecting || mintingCat}
-          />
-        </div>
-      )
+      icon: <HomeOutlined />,
+      label: '主页',
     },
     {
       key: 'ranking',
-      label: (
-        <span>
-          <TrophyOutlined />
-          排行榜
-        </span>
-      ),
-      children: (
-        <div className="tab-content">
-          <RankingList DFSWallet={dfsWallet} />
-        </div>
-      )
+      icon: <TrophyOutlined />,
+      label: '排行榜',
     },
     {
       key: 'market',
-      label: (
-        <span>
-          <ShopOutlined />
-          市场
-        </span>
-      ),
-      children: (
-        <div className="tab-content">
-          <div className="coming-soon-container">
-            <div className="coming-soon-icon">🛒</div>
-            <h2>市场功能即将推出</h2>
-            <p>敬请期待！我们正在紧锣密鼓地开发猫咪交易市场，让您可以自由买卖您的猫咪。</p>
-          </div>
-        </div>
-      )
+      icon: <ShopOutlined />,
+      label: '市场',
     }
   ];
 
+  // Handle menu item click
+  const handleMenuClick = (key) => {
+    setActiveTab(key)
+    if (isMobile) {
+      setDrawerVisible(false)
+    }
+  }
+
+  // Define tab content based on active tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <CatList
+              DFSWallet={dfsWallet}
+              userInfo={account}
+              onSelectCat={handleCatSelect}
+              refreshTrigger={refreshCats}
+              selectedCatId={selectedCat?.id}
+              onMintCat={handleMintCat}
+              loading={connecting || mintingCat}
+            />
+          </div>
+        );
+        
+      case 'ranking':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+              <div className="ranking-header">
+                <div></div> {/* 占位，保持与其他页面布局一致 */}
+              </div>
+                <RankingList DFSWallet={dfsWallet} />
+          </div>
+        );
+      case 'market':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <div className="market-container">
+              <div className="market-header">
+                <div></div> {/* 占位，保持与其他页面布局一致 */}
+              </div>
+              <div className="coming-soon-container">
+                <div className="coming-soon-icon">🛒</div>
+                <h2>市场功能即将推出</h2>
+                <p>敬请期待！我们正在紧锣密鼓地开发猫咪交易市场，让您可以自由买卖您的猫咪。</p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  // Render navigation menu
+  const renderMenu = () => {
+    return (
+      <div className="nav-menu">
+        {menuItems.map(item => (
+          <div 
+            key={item.key} 
+            className={`menu-item ${activeTab === item.key ? 'menu-item-active' : ''}`}
+            onClick={() => handleMenuClick(item.key)}
+          >
+            {item.icon}
+            <span className="menu-label">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <Layout className="app-layout">
+    <Layout className="app-layout" style={{ margin: 0, padding: 0 }}>
       {/* 背景气泡动画 */}
       <div className="bubbles">
         {[...Array(10)].map((_, i) => (
@@ -285,8 +337,19 @@ function App() {
         ))}
       </div>
 
-      <Header className="app-header">
+      <Header className="app-header" style={{ margin: 0, padding: 0 }}>
         <div className="header-content">
+          {/* 移动端菜单按钮 */}
+          {isMobile && (
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ color: 'white', fontSize: '20px' }} />}
+              onClick={() => setDrawerVisible(true)}
+              style={{ marginRight: '10px', border: 'none', padding: 0 }}
+              className="mobile-menu-button"
+            />
+          )}
+
           {/* Logo和标题区域 */}
           <div className="logo-section">
             <div className="logo">
@@ -302,18 +365,18 @@ function App() {
             </Title>
           </div>
 
-          {/* Wallet connection info and buttons */}
+          {/* 钱包连接/断开按钮 */}
           <div className="wallet-section">
             {connected ? (
               <>
-                <div className="account-info">
-                  <Text style={{ color: 'white' }} ellipsis={{ tooltip: account?.name }}>
-                    {account?.name}
-                  </Text>
-                  {/* {balance && (
-                    <Tag color="gold">{balance.balance}</Tag>
-                  )} */}
-                </div>
+                {/* 账户信息显示在按钮旁边 */}
+                {connected && (
+                  <div className="account-info">
+                    <Text style={{ color: 'white', maxWidth: '250px' }} ellipsis={{ tooltip: account?.name }}>
+                      {account?.name}
+                    </Text>
+                  </div>
+                )}
                 <Button
                   danger
                   icon={<LogoutOutlined />}
@@ -337,68 +400,85 @@ function App() {
         </div>
       </Header>
 
-      <Content className="app-content">
-        {connected ? (
-          <div className="content-container">
-            <Tabs
-              activeKey={activeTab}
-              onChange={setActiveTab}
-              className="main-tabs"
-              tabBarStyle={{ marginBottom: 16 }}
-              items={tabItems}
-            />
-          </div>
-        ) : (
-          <div className="connect-prompt">
-            <div className="connect-hero">
-              <div className="connect-cat-image">
-                <img
-                  // src={`${basePath}images/logo.png`}
-                  src={`/cat/images/logo.png`}
-                  alt="猫星球"
-                  className="hero-cat-image"
-                />
-              </div>
-              <div className="connect-text">
-                <h1>欢迎来到猫星球</h1>
-                <p>连接您的DFS钱包，开始您的养猫之旅！</p>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={showWalletSelector}
-                  loading={connecting}
-                  icon={<WalletOutlined />}
-                >
-                  连接DFS钱包
-                </Button>
-              </div>
-            </div>
-            <div className="connect-features">
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <img src="/cat/images/Cat.svg" alt="猫咪" className="feature-icon-image" />
-                </div>
-                <h3>收集猫咪</h3>
-                <p>铸造独特的猫咪，每只猫咪都有自己的特性和属性</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <span className="feature-icon-symbol">🏆</span>
-                </div>
-                <h3>提升等级</h3>
-                <p>通过喂养和互动提升您的猫咪等级，增强属性</p>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <span className="feature-icon-symbol">💰</span>
-                </div>
-                <h3>市场交易</h3>
-                <p>未来您可以在市场上买卖猫咪，赚取收益</p>
-              </div>
-            </div>
+      <Layout style={{ margin: 0, padding: 0 }}>
+        {/* 桌面端固定菜单 */}
+        {!isMobile && (
+          <div className="desktop-menu-container">
+            {renderMenu()}
           </div>
         )}
-      </Content>
+
+        {/* 移动端抽屉菜单 */}
+        {isMobile && (
+          <Drawer
+            placement="left"
+            onClose={() => setDrawerVisible(false)}
+            open={drawerVisible}
+            title="菜单导航"
+            bodyStyle={{ padding: 0 }}
+            width={200}
+          >
+            {renderMenu()}
+          </Drawer>
+        )}
+
+        <Content className="app-content" style={{ margin: 0, padding: 0 }}>
+          {connected ? (
+            <div className="content-container" style={{ margin: 0, padding: 0 }}>
+              {renderTabContent()}
+            </div>
+          ) : (
+            <div className="connect-prompt">
+              <div className="connect-hero">
+                <div className="connect-cat-image">
+                  <img
+                    // src={`${basePath}images/logo.png`}
+                    src={`/cat/images/logo.png`}
+                    alt="猫星球"
+                    className="hero-cat-image"
+                  />
+                </div>
+                <div className="connect-text">
+                  <h1>欢迎来到猫星球</h1>
+                  <p>连接您的DFS钱包，开始您的养猫之旅！</p>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={showWalletSelector}
+                    loading={connecting}
+                    icon={<WalletOutlined />}
+                  >
+                    连接DFS钱包
+                  </Button>
+                </div>
+              </div>
+              <div className="connect-features">
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <img src="/cat/images/Cat.svg" alt="猫咪" className="feature-icon-image" />
+                  </div>
+                  <h3>收集猫咪</h3>
+                  <p>铸造独特的猫咪，每只猫咪都有自己的特性和属性</p>
+                </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <span className="feature-icon-symbol">🏆</span>
+                  </div>
+                  <h3>提升等级</h3>
+                  <p>通过喂养和互动提升您的猫咪等级，增强属性</p>
+                </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <span className="feature-icon-symbol">💰</span>
+                  </div>
+                  <h3>市场交易</h3>
+                  <p>未来您可以在市场上买卖猫咪，赚取收益</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Content>
+      </Layout>
 
       {/* Cat detail modal */}
       <Modal

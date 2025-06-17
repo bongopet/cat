@@ -1,6 +1,9 @@
 .ranking-list-container {
   width: 100%;
-  padding: 16px 0;
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .ranking-card {
@@ -11,9 +14,12 @@
 
 .ranking-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
+  padding: 0 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ranking-badge {
@@ -247,9 +253,37 @@
 }
 
 /* 表格样式 */
+.ranking-table {
+  width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.ranking-table .ant-table-container {
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.ranking-table .ant-table-content {
+  overflow-x: hidden !important;
+}
+
+.ranking-table .ant-table-body {
+  overflow-x: hidden !important;
+}
+
 .ranking-table .ant-table-thead > tr > th {
   background-color: #f0f5ff;
   font-weight: bold;
+  padding: 6px 2px;
+}
+
+.ranking-table .ant-table-tbody > tr > td {
+  padding: 6px 2px;
 }
 
 .ranking-table .ant-table-tbody > tr:hover > td {
@@ -259,12 +293,65 @@
 /* 响应式调整 */
 @media (max-width: 768px) {
   .ranking-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+    padding: 0 4px;
   }
   
   .ranking-table .ant-table {
     font-size: 12px;
   }
+  
+  .ranking-table .ant-table-thead > tr > th,
+  .ranking-table .ant-table-tbody > tr > td {
+    padding: 6px 3px;
+  }
+  
+  .ranking-badge {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ranking-header {
+    justify-content: flex-end;
+    margin-bottom: 2px;
+    padding: 0 2px;
+  }
+  
+  .ranking-table .ant-table {
+    font-size: 12px;
+  }
+  
+  .ranking-table .ant-table-thead > tr > th,
+  .ranking-table .ant-table-tbody > tr > td {
+    padding: 4px 2px;
+  }
+  
+  .ranking-badge {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* 更正表格样式以防止出现左边距 */
+.ant-table,
+.ant-table-wrapper,
+.ant-table-container,
+.ant-table-content,
+.ant-pagination {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* 确保表格数据单元格内容不溢出 */
+.ant-table-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: 0;
 } 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Spin, Tag, Typography, message, Tooltip, Modal } from 'antd';
+import { Table, Button, Spin, Tag, Typography, message, Tooltip, Modal } from 'antd';
 import { TrophyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getAllCats } from '../utils/chainOperations';
 import { getCatColorClass } from '../utils/catGeneParser';
@@ -69,9 +69,9 @@ const RankingList = ({ DFSWallet }) => {
   // 定义表格列
   const columns = [
     {
-      title: '排名',
+      title: '#',
       key: 'ranking',
-      width: 80,
+      width: 40,
       align: 'center',
       render: (_, __, index) => {
         const rank = (pagination.current - 1) * pagination.pageSize + index + 1;
@@ -98,10 +98,10 @@ const RankingList = ({ DFSWallet }) => {
       },
     },
     {
-      title: '猫咪ID',
+      title: 'ID',
       dataIndex: 'id',
       key: 'id',
-      width: 120,
+      width: 55,
       align: 'center',
       render: (id, record) => (
         <div className="cat-id">
@@ -117,31 +117,31 @@ const RankingList = ({ DFSWallet }) => {
       ),
     },
     {
-      title: '所有者',
+      title: '主人',
       dataIndex: 'owner',
       key: 'owner',
-      width: 100, // 设置列宽
+      width: 55,
       render: (owner) => (
         <Tooltip title={owner} placement="topLeft">
-          <Tag color="blue">{owner}</Tag>
+          <Tag color="blue" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 2px' }}>{owner}</Tag>
         </Tooltip>
       ),
     },
     {
-      title: '等级',
+      title: 'Lv',
       dataIndex: 'level',
       key: 'level',
-      width: 100, // 设置列宽
+      width: 40,
       sorter: (a, b) => a.level - b.level,
       sortDirections: ['descend', 'ascend'],
       defaultSortOrder: 'descend',
-      render: (level) => <Tag color="green">Lv.{level}</Tag>,
+      render: (level) => <Tag color="green" style={{ padding: '0 2px' }}>Lv.{level}</Tag>,
     },
     {
       title: '经验',
       dataIndex: 'experience',
       key: 'experience',
-      width: 100, // 设置列宽
+      width: 40,
       sorter: (a, b) => a.experience - b.experience,
       render: (experience) => experience || 0,
     },
@@ -149,44 +149,46 @@ const RankingList = ({ DFSWallet }) => {
       title: '体力',
       dataIndex: 'stamina',
       key: 'stamina',
-      width: 100, // 设置列宽
+      width: 50,
       render: (stamina, record) => {
-        const staminaValue = stamina ? (stamina / 100).toFixed(2) : '0.00';
-        const maxStamina = record.maxStamina ? (record.maxStamina / 100).toFixed(2) : '100.00';
-        return `${staminaValue}/${maxStamina}`;
+        const staminaValue = stamina ? (stamina / 100).toFixed(1) : '0.00';
+        // const maxStamina = record.maxStamina ? (record.maxStamina / 100).toFixed(2) : '100.00';
+        return `${staminaValue}/${100}`;
       },
     },
   ];
 
   return (
     <div className="ranking-list-container">
-      <Card className="ranking-card">
-        <div className="ranking-header">
-          <Title level={4}>
-            <TrophyOutlined /> 猫咪排行榜
-          </Title>
-          <Button
-            type="primary"
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-            loading={loading}
-          >
-            刷新
-          </Button>
-        </div>
+      <div className="ranking-header">   
         
-        <Spin spinning={loading}>
-          <Table
-            dataSource={catsList}
-            columns={columns}
-            rowKey="id"
-            pagination={pagination}
-            onChange={handleTableChange}
-            className="ranking-table"
-            scroll={{ x: 'max-content' }} // 添加水平滚动
-          />
-        </Spin>
-      </Card>
+        <Button
+          type="primary"
+          icon={<ReloadOutlined />}
+          onClick={handleRefresh}
+          loading={loading}
+        >
+          刷新
+        </Button>
+      </div>
+      
+      <Spin spinning={loading}>
+        <Table
+          dataSource={catsList}
+          columns={columns}
+          rowKey="id"
+          pagination={{
+            ...pagination,
+            size: "small",
+            pageSize: 15,
+            position: ['bottomCenter']
+          }}
+          onChange={handleTableChange}
+          className="ranking-table"
+          size="small"
+          bordered={false}
+        />
+      </Spin>
       
       {/* 猫咪详情Modal */}
       <Modal

@@ -1,14 +1,16 @@
 .cat-list-container {
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .empty-cats {
-  padding: 40px 20px;
+  padding: 10px 5px;
   background: linear-gradient(135deg, #f9f9f9 0%, #f2f2f2 100%);
-  border-radius: 16px;
+  border-radius: 4px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -35,9 +37,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0 4px;
 }
 
 .cats-count {
@@ -46,6 +49,7 @@
   color: #333;
   position: relative;
   padding-left: 16px;
+  margin-right: auto;
 }
 
 .cats-count::before {
@@ -62,33 +66,66 @@
 
 /* Fix for the cat list grid layout */
 .ant-list-grid .ant-list-item {
-  margin-bottom: 24px !important;
+  margin-bottom: 6px !important;
+  padding: 0 !important;
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .ant-list-grid .ant-list-item {
+    width: 100%;
+  }
+
+  .cat-list-container {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  .cat-card {
+    border-radius: 8px;
+    margin: 0;
+    width: 100%;
+  }
+  
+  .cat-card-content {
+    padding: 4px;
+  }
+  
+  .cat-badge {
+    width: 42px;
+    height: 42px;
+  }
 }
 
 .cat-card {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s ease;
   border: none;
   height: 100%;
-  border-radius: 16px;
+  border-radius: 8px; /* 增大圆角 */
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  width: 100%; /* 确保卡片占满容器 */
+  box-sizing: border-box;
+  border: 1px solid #e8e8e8; /* 添加边框 */
 }
 
 .cat-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
 }
 
 .cat-card-selected {
   border: 2px solid #5a32ea;
   box-shadow: 0 0 0 4px rgba(90, 50, 234, 0.2), 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .cat-card-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 6px;
+  gap: 4px;
+  padding: 2px;
 }
 
 .cat-card-header {
@@ -118,10 +155,10 @@
 .cat-card-stats {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
   background: #f8f9fa;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 4px;
+  border-radius: 4px;
 }
 
 .cat-stat {

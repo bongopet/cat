@@ -105,13 +105,13 @@ const CatList = ({
             </div>
             <List
               grid={{ 
-                gutter: 24,
-                xs: 1,
-                sm: 2,
-                md: 3,
-                lg: 3,
-                xl: 4,
-                xxl: 5,
+                gutter: 6, // 移除间距
+                xs: 1,  // 在最小的屏幕上只显示1列
+                sm: 2,  // 小屏幕显示2列
+                md: 3,  // 中等屏幕显示3列
+                lg: 4,
+                xl: 5,
+                xxl: 6,
               }}
               dataSource={catsList}
               renderItem={cat => (
@@ -120,6 +120,8 @@ const CatList = ({
                     className={`cat-card ${selectedCatId === cat.id ? 'cat-card-selected' : ''}`}
                     hoverable
                     onClick={() => handleSelectCat(cat.id)}
+                    size="small"
+                    bodyStyle={{ padding: '2px' }}
                   >
                     <div className="cat-card-content">
                       <div className="cat-card-header">

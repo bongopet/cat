@@ -1,3 +1,24 @@
+/* 彻底删除所有可能的外边距、内边距和额外空间 */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,26 +31,47 @@ body {
     'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 #root {
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .ant-layout {
   background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .ant-layout-header {
   background: #001529;
+  margin: 0;
+  padding: 0;
+  width: 100%;
 }
 
 .ant-layout-content {
-  margin: 24px;
-  padding: 24px;
+  margin: 0;
+  padding: 0;
   background: #fff;
-  border-radius: 4px;
-  min-height: calc(100vh - 112px);
+  border-radius: 0;
+  min-height: calc(100vh - 56px);
+  width: 100%;
 }
 
 /* 全局Modal样式覆盖 */
