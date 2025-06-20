@@ -6,14 +6,24 @@ import {
   HomeOutlined,
   ShopOutlined,
   TrophyOutlined,
-  MenuOutlined
+  MenuOutlined,
+  BarChartOutlined
 } from '@ant-design/icons'
 import Wallet from 'dfssdk'
 import { WalletType } from 'dfssdk/dist/types'
 import CatList from './components/CatList'
 import CatDetail from './components/CatDetail'
 import RankingList from './components/RankingList'
-import { getUserCats, mintCat } from './utils/chainOperations'
+import CatStats from './components/CatStats'
+import {
+  getUserCats,
+  mintCat,
+  claimFreeCat,
+  checkSwapCat,
+  grabImage,
+  breedCats,
+  feedCatWithDFS
+} from './utils/chainOperations'
 import { getAccountBalance } from './utils/eosUtils'
 import WalletList from './components/WalletList'
 import './App.css'
@@ -36,6 +46,11 @@ function App() {
   const [activeTab, setActiveTab] = useState('home')
   const [catDetailsVisible, setCatDetailsVisible] = useState(false)
   const [mintingCat, setMintingCat] = useState(false)
+
+  // New BongoCat functionality state
+  const [claimingFreeCat, setClaimingFreeCat] = useState(false)
+  const [checkingSwap, setCheckingSwap] = useState(false)
+  const [grabbingImage, setGrabbingImage] = useState(false)
 
   // WalletList state
   const [showWalletList, setShowWalletList] = useState(false)
@@ -176,9 +191,16 @@ function App() {
 
   // Handle cat selection
   const handleCatSelect = (catId) => {
+    console.log('选择猫咪:', catId);
     const cat = catList.find(c => c.id === catId);
-    setSelectedCat(cat)
-    setCatDetailsVisible(true)
+    if (cat) {
+      console.log('找到猫咪数据:', cat);
+      setSelectedCat(cat);
+      setCatDetailsVisible(true);
+    } else {
+      console.error('未找到猫咪数据:', catId, '可用猫咪:', catList.map(c => c.id));
+      message.error('未找到猫咪数据，请刷新页面重试');
+    }
   }
 
   // Handle cat action completion refresh
@@ -208,6 +230,75 @@ function App() {
     }
   };
 
+  // Claim free cat
+  const handleClaimFreeCat = async () => {
+    if (!dfsWallet || !account) {
+      message.warning('请先连接钱包');
+      return;
+    }
+
+    try {
+      setClaimingFreeCat(true);
+      const result = await claimFreeCat(dfsWallet, account.name);
+
+      if (result.success) {
+        // Refresh cat list
+        setRefreshCats(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('领取免费猫咪失败:', error);
+      message.error('领取免费猫咪失败: ' + (error.message || String(error)));
+    } finally {
+      setClaimingFreeCat(false);
+    }
+  };
+
+  // Check swap for cats
+  const handleCheckSwap = async () => {
+    if (!dfsWallet || !account) {
+      message.warning('请先连接钱包');
+      return;
+    }
+
+    try {
+      setCheckingSwap(true);
+      const result = await checkSwapCat(dfsWallet, account.name);
+
+      if (result.success) {
+        // Refresh cat list
+        setRefreshCats(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('检查交易记录失败:', error);
+      message.error('检查交易记录失败: ' + (error.message || String(error)));
+    } finally {
+      setCheckingSwap(false);
+    }
+  };
+
+  // Grab image for cats
+  const handleGrabImage = async () => {
+    if (!dfsWallet || !account) {
+      message.warning('请先连接钱包');
+      return;
+    }
+
+    try {
+      setGrabbingImage(true);
+      const result = await grabImage(dfsWallet, account.name);
+
+      if (result.success) {
+        // Refresh cat list
+        setRefreshCats(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('抢图失败:', error);
+      message.error('抢图失败: ' + (error.message || String(error)));
+    } finally {
+      setGrabbingImage(false);
+    }
+  };
+
   // Get cats list
   useEffect(() => {
     const fetchCats = async () => {
@@ -217,8 +308,25 @@ function App() {
         const cats = await getUserCats(dfsWallet, account.name);
         setCatList(cats);
 
-        // If there are cats but none selected, default select first one
-        if (cats.length > 0 && !selectedCat) {
+        // 检查当前选中的猫咪是否还存在
+        if (selectedCat) {
+          const currentCatStillExists = cats.find(cat => cat.id === selectedCat.id);
+          if (!currentCatStillExists) {
+            // 如果当前选中的猫咪不存在了（比如被繁殖销毁），选择第一只猫咪或清空选择
+            if (cats.length > 0) {
+              console.log('当前选中的猫咪已不存在，自动选择第一只猫咪');
+              setSelectedCat(cats[0]);
+            } else {
+              console.log('没有猫咪了，清空选择');
+              setSelectedCat(null);
+              setCatDetailsVisible(false);
+            }
+          } else {
+            // 更新选中猫咪的数据（可能属性有变化）
+            setSelectedCat(currentCatStillExists);
+          }
+        } else if (cats.length > 0) {
+          // 如果没有选中任何猫咪但有猫咪存在，选择第一只
           setSelectedCat(cats[0]);
         }
       } catch (error) {
@@ -245,6 +353,11 @@ function App() {
       key: 'market',
       icon: <ShopOutlined />,
       label: '市场',
+    },
+    {
+      key: 'stats',
+      icon: <BarChartOutlined />,
+      label: '统计',
     }
   ];
 
@@ -269,7 +382,10 @@ function App() {
               refreshTrigger={refreshCats}
               selectedCatId={selectedCat?.id}
               onMintCat={handleMintCat}
-              loading={connecting || mintingCat}
+              onClaimFreeCat={handleClaimFreeCat}
+              onCheckSwap={handleCheckSwap}
+              onGrabImage={handleGrabImage}
+              loading={connecting || mintingCat || claimingFreeCat || checkingSwap || grabbingImage}
             />
           </div>
         );
@@ -298,7 +414,14 @@ function App() {
             </div>
           </div>
         );
-      
+
+      case 'stats':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <CatStats DFSWallet={dfsWallet} />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -495,6 +618,7 @@ function App() {
             userInfo={account}
             selectedCat={selectedCat}
             refreshCats={handleCatActionComplete}
+            allCats={catList}
           />
         )}
       </Modal>

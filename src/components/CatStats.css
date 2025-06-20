@@ -1,0 +1,205 @@
+.cat-stats {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.stats-header {
+  text-align: center;
+  margin-bottom: 32px;
+  color: white;
+}
+
+.stats-title-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.stats-header h2 {
+  color: white;
+  font-size: 28px;
+  margin: 0;
+  font-weight: bold;
+}
+
+.stats-header p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  margin: 0;
+}
+
+.cat-stats-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: white;
+}
+
+.cat-stats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: white;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.cat-stats-empty h3 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.cat-stats-empty p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stats-table-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.stats-table-card .ant-card-head {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.stats-table-card .ant-card-head-title {
+  font-weight: bold;
+  color: #1890ff;
+}
+
+.stats-table {
+  background: transparent;
+}
+
+.stats-table .ant-table-thead > tr > th {
+  background: rgba(24, 144, 255, 0.1);
+  border-bottom: 2px solid #1890ff;
+  font-weight: bold;
+  color: #1890ff;
+}
+
+.stats-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.stats-table .ant-table-tbody > tr:hover > td {
+  background: rgba(24, 144, 255, 0.05);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .cat-stats {
+    padding: 16px;
+  }
+
+  .stats-title-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stats-header h2 {
+    font-size: 24px;
+  }
+
+  .stats-header p {
+    font-size: 14px;
+  }
+}
+
+/* 统计卡片样式 */
+.ant-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.ant-card .ant-statistic-title {
+  color: #666;
+  font-weight: 500;
+}
+
+.ant-card .ant-statistic-content {
+  font-weight: bold;
+}
+
+/* 进度条样式 */
+.ant-progress-line {
+  margin: 0;
+}
+
+.ant-progress-text {
+  font-weight: bold;
+}
+
+/* 标签样式 */
+.ant-tag {
+  border-radius: 6px;
+  font-weight: bold;
+  padding: 4px 8px;
+}
+
+/* 表格行高亮 */
+.stats-table .ant-table-tbody > tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* 动画效果 */
+.cat-stats {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ant-card {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 加载状态动画 */
+.cat-stats-loading {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}

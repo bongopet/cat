@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { List, Card, Button, Spin, Empty, Tag, message } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { List, Card, Button, Spin, Empty, Tag, message, Space, Divider } from 'antd';
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  GiftOutlined,
+  SwapOutlined,
+  CameraOutlined,
+  HeartOutlined
+} from '@ant-design/icons';
 import { getCatColorClass } from '../utils/catGeneParser';
-import { getUserCats, refundCat } from '../utils/chainOperations';
+import { getUserCats, refundCat, QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
 import './CatList.css';
 
-const CatList = ({ 
-  DFSWallet, 
-  userInfo, 
-  onSelectCat, 
-  refreshTrigger, 
+const CatList = ({
+  DFSWallet,
+  userInfo,
+  onSelectCat,
+  refreshTrigger,
   selectedCatId,
-  onMintCat, 
-  loading: externalLoading 
+  onMintCat,
+  onClaimFreeCat,
+  onCheckSwap,
+  onGrabImage,
+  loading: externalLoading
 }) => {
   const [catsList, setCatsList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,6 +71,10 @@ const CatList = ({
       return; // 如果点击的是按钮，不执行选择操作
     }
 
+    console.log('CatList: 点击猫咪', catId);
+    const clickedCat = catsList.find(cat => cat.id === catId);
+    console.log('CatList: 找到的猫咪数据', clickedCat);
+
     if (onSelectCat) {
       onSelectCat(catId);
     }
@@ -96,22 +110,51 @@ const CatList = ({
       <Spin spinning={loading || externalLoading}>
         {catsList.length === 0 ? (
           <div className="empty-cats">
-            <Empty 
+            <Empty
               description={
                 <span>
-                  你还没有猫咪
+                  你还没有猫咪，快来获取你的第一只猫咪吧！
                 </span>
               }
             >
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />}
-                onClick={onMintCat}
-                disabled={!DFSWallet || !userInfo}
-                size="large"
-              >
-                铸造猫咪 (30.0000 DFS)
-              </Button>
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Button
+                  type="primary"
+                  icon={<GiftOutlined />}
+                  onClick={onClaimFreeCat}
+                  disabled={!DFSWallet || !userInfo}
+                  size="large"
+                  style={{ width: '100%' }}
+                >
+                  领取免费猫咪
+                </Button>
+
+                <Space wrap style={{ justifyContent: 'center' }}>
+                  <Button
+                    icon={<SwapOutlined />}
+                    onClick={onCheckSwap}
+                    disabled={!DFSWallet || !userInfo}
+                  >
+                    检查交易记录
+                  </Button>
+
+                  <Button
+                    icon={<CameraOutlined />}
+                    onClick={onGrabImage}
+                    disabled={!DFSWallet || !userInfo}
+                  >
+                    抢图获得猫咪
+                  </Button>
+
+                  <Button
+                    icon={<PlusOutlined />}
+                    onClick={onMintCat}
+                    disabled={!DFSWallet || !userInfo}
+                  >
+                    铸造猫咪 (30 DFS)
+                  </Button>
+                </Space>
+              </Space>
             </Empty>
           </div>
         ) : (
@@ -120,14 +163,43 @@ const CatList = ({
               <div className="cats-count">
                 <span>我的猫咪 ({catsList.length})</span>
               </div>
-              <Button 
-                type="primary" 
-                icon={<ReloadOutlined />} 
-                onClick={handleRefresh}
-                size="middle"
-              >
-                刷新
-              </Button>
+              <Space>
+                <Button
+                  icon={<GiftOutlined />}
+                  onClick={onClaimFreeCat}
+                  disabled={!DFSWallet || !userInfo}
+                  size="small"
+                >
+                  免费猫咪
+                </Button>
+
+                <Button
+                  icon={<SwapOutlined />}
+                  onClick={onCheckSwap}
+                  disabled={!DFSWallet || !userInfo}
+                  size="small"
+                >
+                  检查交易
+                </Button>
+
+                <Button
+                  icon={<CameraOutlined />}
+                  onClick={onGrabImage}
+                  disabled={!DFSWallet || !userInfo}
+                  size="small"
+                >
+                  抢图
+                </Button>
+
+                <Button
+                  type="primary"
+                  icon={<ReloadOutlined />}
+                  onClick={handleRefresh}
+                  size="small"
+                >
+                  刷新
+                </Button>
+              </Space>
             </div>
             <List
               grid={{ 
@@ -154,21 +226,16 @@ const CatList = ({
                         <div className={`cat-badge ${getCatColorClass(cat.genes)}`}>
                           #{cat.id}
                         </div>
-                        <Tag color="blue">等级 {cat.level}</Tag>
-                      </div>
-                      <Button
-                        type="primary"
-                        size="small"
-                        onClick={(event) => handleRefundCat(event, cat.id)}
-                        disabled={!DFSWallet || !userInfo}
-                        style={{
-                          position: 'relative',
-                          zIndex: 10,
-                          marginBottom: '4px'
-                        }}
-                      >
-                        退款 29 DFS
-                      </Button>
+                        <Space size="small">
+                          <Tag color="blue">等级 {cat.level}</Tag>
+                          <Tag color={cat.gender === 0 ? 'geekblue' : 'magenta'}>
+                            {cat.genderName || GENDER_NAMES[cat.gender] || '未知'}
+                          </Tag>
+                          <Tag color="gold">
+                            {cat.qualityName || QUALITY_NAMES[cat.quality] || '普通'}
+                          </Tag>
+                        </Space>
+                      </div>                    
                       <div className="cat-card-stats">
                         <div className="cat-stat">
                           <span className="stat-label">体力:</span>

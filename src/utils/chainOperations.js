@@ -1,14 +1,242 @@
-// 区块链操作相关函数
+// 区块链操作相关函数 - 基于BongoCat合约重构
 // 将TypeScript转换为JavaScript，移除类型声明
 
 import { message } from 'antd';
 import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction } from './eosUtils';
 
 // 常量定义
-// const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CONTRACT = 'bongocatgame'; // 猫咪合约账户名
-const CATTABLE = 'cats';
+const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
+const CATTABLE = 'cat4s';
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
+
+// 品质常量定义 - 与合约保持一致
+const QUALITY_NAMES = {
+  0: '普通',
+  1: '精良',
+  2: '卓越',
+  3: '非凡',
+  4: '至尊',
+  5: '神圣',
+  6: '永恒',
+  7: '传世'
+};
+
+// 目标概率定义 - 与合约保持一致 (百分比 * 100)
+const TARGET_PERCENTAGES = {
+  0: 6487,  // 普通 64.87%
+  1: 2000,  // 精良 20%
+  2: 1000,  // 卓越 10%
+  3: 400,   // 非凡 4%
+  4: 100,   // 至尊 1%
+  5: 10,    // 神圣 0.1%
+  6: 2,     // 永恒 0.02%
+  7: 1      // 传世 0.005%
+};
+
+// 性别常量定义
+const GENDER_NAMES = {
+  0: '公',
+  1: '母'
+};
+
+// ==================== 新的BongoCat合约操作函数 ====================
+
+// 领取免费猫咪
+async function claimFreeCat(wallet, accountName) {
+  try {
+    console.log('开始领取免费猫咪...');
+
+    const claimAction = {
+      account: CONTRACT,
+      name: 'claimfreecat',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        user: accountName,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [claimAction]);
+
+    message.success('免费猫咪领取成功！');
+    console.log('免费猫咪领取成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `claim-${Date.now()}`;
+    recordCatTransaction('claim', null, txId);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('领取免费猫咪失败:', error);
+
+    // 检查是否已经领取过
+    if (error.message && error.message.includes('already claimed')) {
+      message.warning('您已经领取过免费猫咪了');
+      return { success: false, reason: 'already_claimed' };
+    }
+
+    throw error;
+  }
+}
+
+// 检查交易记录获得猫咪
+async function checkSwapCat(wallet, accountName) {
+  try {
+    console.log('开始检查交易记录...');
+
+    const checkAction = {
+      account: CONTRACT,
+      name: 'checkswapcat',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        user: accountName,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [checkAction]);
+
+    message.success('交易记录检查完成！');
+    console.log('交易记录检查完成', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `checkswap-${Date.now()}`;
+    recordCatTransaction('checkswap', null, txId);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('检查交易记录失败:', error);
+    throw error;
+  }
+}
+
+// 抢图获得猫咪
+async function grabImage(wallet, accountName) {
+  try {
+    console.log('开始抢图获得猫咪...');
+
+    const grabAction = {
+      account: CONTRACT,
+      name: 'grabimage',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        user: accountName,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [grabAction]);
+
+    message.success('抢图检查完成！');
+    console.log('抢图检查完成', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `grabimage-${Date.now()}`;
+    recordCatTransaction('grabimage', null, txId);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('抢图失败:', error);
+    throw error;
+  }
+}
+
+// 繁殖猫咪
+async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
+  try {
+    console.log(`开始繁殖猫咪: 公猫#${maleCatId} x 母猫#${femaleCatId}`);
+
+    const breedAction = {
+      account: CONTRACT,
+      name: 'breedcats',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        owner: accountName,
+        male_cat_id: maleCatId,
+        female_cat_id: femaleCatId,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [breedAction]);
+
+    message.success('猫咪繁殖成功！父母猫咪已被销毁，获得新的小猫！');
+    console.log('猫咪繁殖成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `breed-${Date.now()}`;
+    recordCatTransaction('breed', `${maleCatId},${femaleCatId}`, txId);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('繁殖猫咪失败:', error);
+    throw error;
+  }
+}
+
+// DFS喂养猫咪（通过转账实现）
+async function feedCatWithDFS(wallet, accountName, catId, amount = '1.00000000') {
+  try {
+    console.log(`开始用DFS喂养猫咪#${catId}...`);
+
+    // 检查DFS余额
+    const balanceStr = await getAccountBalance(wallet, 'eosio.token', accountName, 'DFS');
+    const balanceParts = balanceStr.split(' ');
+    const balanceValue = Number.parseFloat(balanceParts[0]);
+    const feedAmount = Number.parseFloat(amount);
+
+    if (isNaN(balanceValue) || balanceValue < feedAmount) {
+      const errorMsg = `DFS余额不足，喂养需要至少${amount} DFS (当前余额: ${balanceStr || '0 DFS'})`;
+      message.warning(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // 执行DFS转账喂养
+    const transferAction = buildTransferAction(
+      accountName,
+      CONTRACT,
+      `${amount} DFS`,
+      `feed:${catId}` // 喂养备注格式
+    );
+
+    const result = await sendTransaction(wallet, [transferAction]);
+
+    message.success('DFS喂养成功！猫咪属性已提升，体力已恢复！');
+    console.log('DFS喂养成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `feed-${Date.now()}`;
+    recordCatTransaction('feed', catId, txId, amount, 'DFS');
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('DFS喂养失败:', error);
+    throw error;
+  }
+}
 
 // 检查猫咪是否有可用经验
 async function checkCatHasAvailableExp(wallet, owner, catId, lastCheckTime) {
@@ -348,17 +576,37 @@ async function getUserCats(wallet, accountName) {
       
       if (rows && rows.length > 0) {
         console.log(`从链上获取到 ${rows.length} 只猫咪`);
-        return rows.map(cat => ({
-          id: cat.id,
-          owner: cat.owner,
-          genes: cat.genes,
-          level: cat.level,
-          experience: cat.experience,
-          stamina: cat.stamina,
-          maxStamina: cat.max_stamina || 100,
-          createdAt: cat.created_at,
-          birth_time: cat.birth_time,
-        }));
+        const processedCats = rows.map(cat => {
+          const processedCat = {
+            id: cat.id,
+            owner: cat.owner,
+            gender: cat.gender, // 性别 (0=公, 1=母)
+            genderName: GENDER_NAMES[cat.gender] || '未知',
+            quality: cat.quality, // 品质等级
+            qualityName: QUALITY_NAMES[cat.quality] || '未知',
+            level: cat.level,
+            experience: cat.experience,
+            encrypted_stats: cat.encrypted_stats, // 加密属性
+            genes: cat.genes,
+            stamina: cat.stamina,
+            maxStamina: 100, // 固定最大体力100
+            last_challenge_day: cat.last_challenge_day,
+            birth_time: cat.birth_time,
+            is_tradeable: cat.is_tradeable,
+            in_arena: cat.in_arena,
+            createdAt: cat.birth_time, // 使用birth_time作为创建时间
+          };
+
+          // 调试：检查每只猫咪的数据完整性
+          if (!processedCat.id || processedCat.gender === undefined || processedCat.quality === undefined) {
+            console.warn('发现数据不完整的猫咪:', cat, '处理后:', processedCat);
+          }
+
+          return processedCat;
+        });
+
+        console.log('处理后的猫咪数据:', processedCats);
+        return processedCats;
       } else {
         console.log('链上未找到猫咪数据，返回空数组');
         // 返回空数组，不再使用测试数据
@@ -534,8 +782,114 @@ function getStoredTransactions() {
   return []; // 默认返回空数组
 }
 
+// 获取猫咪品质统计数据
+async function getCatStats(wallet) {
+  try {
+    console.log('开始获取猫咪统计数据...');
+
+    // 首先尝试从合约的品质统计表中读取数据
+    try {
+      const statsRows = await getTableRows(
+        wallet,
+        CONTRACT,
+        CONTRACT,
+        'qualitystats', // 合约中的统计表名
+        '', // lower_bound
+        '', // upper_bound
+        1,  // index_position
+        'i64', // key_type
+        10 // limit
+      );
+
+      if (statsRows && Array.isArray(statsRows) && statsRows.length > 0) {
+        console.log('从合约统计表获取数据成功:', statsRows);
+        const statsData = statsRows[0]; // 取第一条记录
+
+        // 解析统计数据，构建品质统计数组
+        const quality_stats = [];
+        for (let i = 0; i < 8; i++) {
+          const count = statsData[`quality_count_${i}`] || 0;
+          const targetPercentage = TARGET_PERCENTAGES[i] || 0;
+
+          quality_stats.push({
+            quality: i,
+            count: count,
+            target_percentage: targetPercentage / 100, // 转换为实际百分比
+            actual_percentage: statsData.total_cats > 0 ?
+              ((count / statsData.total_cats) * 100) : 0
+          });
+        }
+
+        return {
+          quality_stats,
+          total_cats: statsData.total_cats || 0,
+          last_updated: new Date().toISOString()
+        };
+      }
+    } catch (tableError) {
+      console.log('从合约统计表读取数据失败，尝试计算统计:', tableError);
+    }
+
+    // 如果没有统计表数据，我们通过读取所有猫咪数据来计算统计
+    console.log('开始从所有猫咪数据计算统计...');
+    const allCats = await getAllCats(wallet);
+
+    if (!allCats || !Array.isArray(allCats)) {
+      throw new Error('无法获取猫咪数据');
+    }
+
+    console.log(`获取到 ${allCats.length} 只猫咪，开始计算品质统计...`);
+
+    // 计算品质统计
+    const qualityStats = {};
+    allCats.forEach(cat => {
+      const quality = cat.quality || 0;
+      if (qualityStats[quality]) {
+        qualityStats[quality]++;
+      } else {
+        qualityStats[quality] = 1;
+      }
+    });
+
+    // 转换为数组格式，包含所有8个品质
+    const quality_stats = [];
+    for (let i = 0; i < 8; i++) {
+      const count = qualityStats[i] || 0;
+      const targetPercentage = TARGET_PERCENTAGES[i] || 0;
+
+      quality_stats.push({
+        quality: i,
+        count: count,
+        target_percentage: targetPercentage / 100, // 转换为实际百分比
+        actual_percentage: allCats.length > 0 ?
+          ((count / allCats.length) * 100) : 0
+      });
+    }
+
+    console.log('品质统计计算完成:', quality_stats);
+
+    return {
+      quality_stats,
+      total_cats: allCats.length,
+      last_updated: new Date().toISOString()
+    };
+
+  } catch (error) {
+    console.error('获取猫咪统计数据失败:', error);
+    throw error;
+  }
+}
+
 // 导出所有函数
 export {
+  // 新的BongoCat合约函数
+  claimFreeCat,
+  checkSwapCat,
+  grabImage,
+  breedCats,
+  feedCatWithDFS,
+
+  // 原有函数（保持兼容性）
   checkCatHasAvailableExp,
   mintCat,
   refundCat,
@@ -546,5 +900,11 @@ export {
   getCatInteractions,
   getAllCats,
   recordCatTransaction,
-  getStoredTransactions
+  getStoredTransactions,
+  getCatStats,
+
+  // 常量导出
+  QUALITY_NAMES,
+  GENDER_NAMES,
+  TARGET_PERCENTAGES
 };
