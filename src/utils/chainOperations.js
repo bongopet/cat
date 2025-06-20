@@ -134,6 +134,68 @@ async function mintCat(wallet, accountName) {
   }
 }
 
+// 退款函数
+async function refundCat(wallet, accountName, catId) {
+  try {
+    console.log('开始退款操作:', {
+      wallet: !!wallet,
+      walletType: typeof wallet,
+      walletMethods: wallet ? Object.keys(wallet) : [],
+      accountName,
+      catId
+    });
+
+    // 检查参数
+    if (!wallet) {
+      throw new Error('钱包对象为空');
+    }
+
+    // 检查钱包是否有必要的方法
+    if (typeof wallet.transact !== 'function') {
+      throw new Error('钱包对象缺少 transact 方法');
+    }
+    if (!accountName) {
+      throw new Error('账户名为空');
+    }
+    if (!catId) {
+      throw new Error('猫咪ID为空');
+    }
+
+    // 执行退款操作
+    const refundAction = {
+      account: CONTRACT,
+      name: 'refundcat',// 退款函数名 就是这个
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        cat_id: catId,
+        owner: accountName,
+      },
+    };
+
+    console.log('退款操作参数:', refundAction);
+    //输出钱包
+    const result = await sendTransaction(wallet, [refundAction]);
+
+    message.success('退款成功');
+    console.log('退款成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `refund-${Date.now()}`;
+    recordCatTransaction(
+      'refund',
+      catId,
+      txId
+    );
+    return true;
+  } catch (error) {
+    console.error('退款失败:', error);
+    throw error;
+  }
+}
+  
 // 喂养猫咪
 async function feedCat(wallet, accountName, catId) {
   try {
@@ -476,6 +538,7 @@ function getStoredTransactions() {
 export {
   checkCatHasAvailableExp,
   mintCat,
+  refundCat,
   feedCat,
   upgradeCat,
   checkCatAction,

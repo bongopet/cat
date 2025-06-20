@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { List, Card, Button, Spin, Empty, Tag } from 'antd';
+import { List, Card, Button, Spin, Empty, Tag, message } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getCatColorClass } from '../utils/catGeneParser';
-import { getUserCats } from '../utils/chainOperations';
+import { getUserCats, refundCat } from '../utils/chainOperations';
 import './CatList.css';
 
 const CatList = ({ 
@@ -55,7 +55,12 @@ const CatList = ({
   }, [DFSWallet, userInfo, refreshTrigger]);
 
   // Handle cat selection
-  const handleSelectCat = (catId) => {
+  const handleSelectCat = (event, catId) => {
+    // 检查点击的是否是退款按钮或其子元素
+    if (event.target.closest('button')) {
+      return; // 如果点击的是按钮，不执行选择操作
+    }
+
     if (onSelectCat) {
       onSelectCat(catId);
     }
@@ -63,6 +68,27 @@ const CatList = ({
 
   const handleRefresh = () => {
     fetchCats();
+  };
+
+  // Handle cat refund
+  const handleRefundCat = async (event, catId) => {
+    // 阻止事件冒泡和默认行为，避免触发卡片点击事件
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (!DFSWallet || !userInfo) {
+      message.warning('钱包未连接');
+      return;
+    }
+
+    try {
+      await refundCat(DFSWallet, userInfo.name, catId);
+      // 刷新猫咪列表
+      fetchCats();
+    } catch (error) {
+      console.error('退款失败:', error);
+      message.error('退款失败: ' + (error.message || String(error)));
+    }
   };
 
   return (
@@ -119,7 +145,7 @@ const CatList = ({
                   <Card 
                     className={`cat-card ${selectedCatId === cat.id ? 'cat-card-selected' : ''}`}
                     hoverable
-                    onClick={() => handleSelectCat(cat.id)}
+                    onClick={(event) => handleSelectCat(event, cat.id)}
                     size="small"
                     bodyStyle={{ padding: '2px' }}
                   >
@@ -130,6 +156,19 @@ const CatList = ({
                         </div>
                         <Tag color="blue">等级 {cat.level}</Tag>
                       </div>
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={(event) => handleRefundCat(event, cat.id)}
+                        disabled={!DFSWallet || !userInfo}
+                        style={{
+                          position: 'relative',
+                          zIndex: 10,
+                          marginBottom: '4px'
+                        }}
+                      >
+                        退款 29 DFS
+                      </Button>
                       <div className="cat-card-stats">
                         <div className="cat-stat">
                           <span className="stat-label">体力:</span>

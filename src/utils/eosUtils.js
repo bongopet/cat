@@ -193,13 +193,27 @@ export async function getChainInfo(wallet) {
  * @returns {Object} 交易结果
  */
 export async function sendTransaction(wallet, actions, options = { useFreeCpu: true }) {
+  console.log('sendTransaction 调用:', {
+    wallet: !!wallet,
+    walletType: typeof wallet,
+    hasTransact: wallet && typeof wallet.transact === 'function',
+    actions,
+    options
+  });
+
   if (!wallet) {
     throw new Error('钱包未初始化');
   }
 
+  if (typeof wallet.transact !== 'function') {
+    throw new Error('钱包对象缺少 transact 方法');
+  }
+
   try {
     const transaction = { actions };
+    console.log('准备发送交易:', transaction);
     const result = await wallet.transact(transaction, options);
+    console.log('交易发送成功:', result);
     return result;
   } catch (error) {
     console.error('发送交易失败:', error);
