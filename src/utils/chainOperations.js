@@ -6,7 +6,7 @@ import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction }
 
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CATTABLE = 'cat4s';
+const CATTABLE = 'cat5s';
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 
 // 品质常量定义 - 与合约保持一致
@@ -793,7 +793,7 @@ async function getCatStats(wallet) {
         wallet,
         CONTRACT,
         CONTRACT,
-        'qualitystats', // 合约中的统计表名
+        'qualitystat', // 合约中的统计表名
         '', // lower_bound
         '', // upper_bound
         1,  // index_position
