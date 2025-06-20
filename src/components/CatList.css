@@ -71,43 +71,292 @@
   width: 100%;
 }
 
-@media (max-width: 576px) {
-  .ant-list-grid .ant-list-item {
-    width: 100%;
+/* 响应式优化 */
+/* 平板端适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cat-list-container {
+    padding: 16px;
   }
 
-  .cat-list-container {
-    padding: 0;
-    margin: 0;
-    width: 100%;
+  .cats-header {
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+  }
+
+  .cats-count {
+    font-size: 18px;
   }
 
   .cat-card {
+    height: 200px;
     border-radius: 8px;
-    margin: 0;
-    width: 100%;
   }
-  
+
+  .cat-card-content {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .cat-level-badge {
+    font-size: 10px;
+    padding: 2px 5px;
+    top: 5px;
+    left: 5px;
+  }
+
+  .cat-gender-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    top: 5px;
+    right: 5px;
+  }
+
+  .cat-card-image {
+    height: 110px;
+    margin-top: 8px;
+  }
+
+  .cat-card-image .cat-renderer {
+    transform: scale(0.65);
+  }
+
+  .cat-id-text {
+    font-size: 12px;
+  }
+
+  .cat-info-row .ant-tag {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .cat-list-container {
+    padding: 12px 8px;
+  }
+
+  .empty-cats {
+    padding: 24px 12px;
+    border-radius: 10px;
+  }
+
+  .empty-cats .ant-empty-image {
+    height: 80px;
+  }
+
+  .cats-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .cats-count {
+    font-size: 16px;
+    padding-left: 10px;
+  }
+
+  .cats-count::before {
+    width: 3px;
+    height: 18px;
+  }
+
+  .cat-card {
+    height: 180px;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .cat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .cat-card-content {
+    padding: 6px;
+    gap: 5px;
+  }
+
+  .cat-level-badge {
+    font-size: 9px;
+    padding: 1px 4px;
+    top: 4px;
+    left: 4px;
+  }
+
+  .cat-gender-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    top: 4px;
+    right: 4px;
+  }
+
+  .cat-card-image {
+    height: 100px;
+    margin-top: 6px;
+  }
+
+  .cat-card-image .cat-renderer {
+    transform: scale(0.6);
+  }
+
+  .cat-id-text {
+    font-size: 11px;
+  }
+
+  .cat-info-row .ant-tag {
+    font-size: 9px;
+    padding: 1px 3px;
+  }
+}
+
+/* 小屏幕设备优化 */
+@media (max-width: 480px) {
+  .cat-list-container {
+    padding: 8px 6px;
+  }
+
+  .empty-cats {
+    padding: 20px 10px;
+    border-radius: 8px;
+  }
+
+  .empty-cats .ant-empty-image {
+    height: 60px;
+  }
+
+  .cats-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .cats-count {
+    font-size: 14px;
+    padding-left: 8px;
+  }
+
+  .cats-count::before {
+    width: 2px;
+    height: 14px;
+  }
+
+  .cat-card {
+    height: 150px;
+    border-radius: 6px;
+  }
+
   .cat-card-content {
     padding: 4px;
+    gap: 3px;
   }
-  
-  .cat-badge {
-    width: 42px;
-    height: 42px;
+
+  .cat-level-badge {
+    font-size: 8px;
+    padding: 1px 3px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .cat-gender-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: 3px;
+    right: 3px;
+  }
+
+  .cat-card-image {
+    height: 85px;
+    margin-top: 5px;
+  }
+
+  .cat-card-image .cat-renderer {
+    transform: scale(0.55);
+  }
+
+  .cat-id-text {
+    font-size: 10px;
+  }
+
+  .cat-info-row .ant-tag {
+    font-size: 8px;
+    padding: 1px 2px;
+  }
+}
+
+/* 超小屏幕设备优化 */
+@media (max-width: 360px) {
+  .cat-list-container {
+    padding: 6px 4px;
+  }
+
+  .empty-cats {
+    padding: 16px 8px;
+  }
+
+  .cats-count {
+    font-size: 13px;
+    padding-left: 6px;
+  }
+
+  .cat-card {
+    height: 130px;
+    border-radius: 4px;
+  }
+
+  .cat-card-content {
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .cat-level-badge {
+    font-size: 7px;
+    padding: 1px 2px;
+    top: 2px;
+    left: 2px;
+  }
+
+  .cat-gender-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    top: 2px;
+    right: 2px;
+  }
+
+  .cat-card-image {
+    height: 75px;
+    margin-top: 4px;
+  }
+
+  .cat-card-image .cat-renderer {
+    transform: scale(0.5);
+  }
+
+  .cat-id-text {
+    font-size: 9px;
+  }
+
+  .cat-info-row .ant-tag {
+    font-size: 7px;
+    padding: 0px 2px;
   }
 }
 
 .cat-card {
   transition: all 0.3s ease;
   border: none;
-  height: 100%;
-  border-radius: 8px; /* 增大圆角 */
+  height: 220px; /* 增加高度以容纳所有内容 */
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  width: 100%; /* 确保卡片占满容器 */
+  width: 100%;
   box-sizing: border-box;
-  border: 1px solid #e8e8e8; /* 添加边框 */
+  border: 1px solid #e8e8e8;
 }
 
 .cat-card:hover {
@@ -122,42 +371,113 @@
 }
 
 .cat-card-content {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 2px;
-}
-
-.cat-card-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  padding: 8px;
+  height: 100%;
+  justify-content: flex-start;
 }
 
-.cat-badge {
-  width: 48px;
-  height: 48px;
+/* 左上角等级徽章 */
+.cat-level-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(255, 77, 79, 0.3);
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 右上角性别徽章 */
+.cat-gender-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  font-size: 14px;
   font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  font-size: 16px;
-  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
 }
 
-.cat-card:hover .cat-badge {
-  transform: scale(1.1) rotate(5deg);
+/* 雄性性别颜色 - 蓝色 */
+.cat-gender-badge.male {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  color: white;
 }
 
-.cat-card-stats {
+/* 雌性性别颜色 - 粉色 */
+.cat-gender-badge.female {
+  background: linear-gradient(135deg, #eb2f96 0%, #f759ab 100%);
+  color: white;
+}
+
+.cat-card-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  flex-shrink: 0;
+  height: 130px; /* 增加图像区域高度 */
+  overflow: hidden;
+  margin-top: 10px; /* 为顶部徽章留出空间 */
+}
+
+.cat-card-image .cat-renderer {
+  transform: scale(0.7); /* 增大SVG图片 */
+  transform-origin: center;
+}
+
+.cat-card-info {
+  width: 100%;
+  text-align: center;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: #f8f9fa;
-  padding: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+
+.cat-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 3px 8px;
+  background: linear-gradient(90deg, #f0f2f5 0%, #e6f7ff 100%);
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+}
+
+.cat-id-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  text-align: left;
+}
+
+.cat-info-row .ant-tag {
+  margin: 0;
+  font-size: 10px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 

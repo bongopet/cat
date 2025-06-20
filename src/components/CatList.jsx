@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { List, Card, Button, Spin, Empty, Tag, message, Space, Divider } from 'antd';
+import { List, Card, Button, Spin, Empty, Tag, message, Space } from 'antd';
 import {
   PlusOutlined,
   ReloadOutlined,
   GiftOutlined,
   SwapOutlined,
-  CameraOutlined,
-  HeartOutlined
+  CameraOutlined
 } from '@ant-design/icons';
-import { getCatColorClass } from '../utils/catGeneParser';
-import { getUserCats, refundCat, QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
+import { getUserCats, QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
+import CatRenderer from './CatRenderer';
 import './CatList.css';
 
 const CatList = ({
@@ -27,21 +26,16 @@ const CatList = ({
   const [catsList, setCatsList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Format stamina value (convert from 0-10000 to 0-100.00)
-  const formatStamina = (stamina) => {
-    if (!stamina && stamina !== 0) return 0;
-    return (stamina / 100).toFixed(2);
-  };
-
-  // Calculate exp progress percentage
-  const getExpProgressPercent = (exp, level) => {
-    // Next level total exp required
-    const nextLevelExp = 100 * level * level + 500 * level;
-    // Current total exp
-    const currentExp = exp || 0;
-    
-    // Calculate progress percentage, ensure between 0-100
-    return Math.min(Math.max(Math.floor((currentExp / nextLevelExp) * 100), 0), 100);
+  // 品质颜色映射 - 与统计页面保持一致
+  const QUALITY_COLORS = {
+    0: '#8c8c8c',  // 普通 - 灰色
+    1: '#52c41a',  // 精良 - 绿色
+    2: '#1890ff',  // 卓越 - 蓝色
+    3: '#722ed1',  // 非凡 - 紫色
+    4: '#f5222d',  // 至尊 - 红色
+    5: '#fa8c16',  // 神圣 - 橙色
+    6: '#eb2f96',  // 永恒 - 粉色
+    7: '#fadb14'   // 传世 - 金色
   };
 
   // Get cats from blockchain
@@ -82,27 +76,6 @@ const CatList = ({
 
   const handleRefresh = () => {
     fetchCats();
-  };
-
-  // Handle cat refund
-  const handleRefundCat = async (event, catId) => {
-    // 阻止事件冒泡和默认行为，避免触发卡片点击事件
-    event.stopPropagation();
-    event.preventDefault();
-
-    if (!DFSWallet || !userInfo) {
-      message.warning('钱包未连接');
-      return;
-    }
-
-    try {
-      await refundCat(DFSWallet, userInfo.name, catId);
-      // 刷新猫咪列表
-      fetchCats();
-    } catch (error) {
-      console.error('退款失败:', error);
-      message.error('退款失败: ' + (error.message || String(error)));
-    }
   };
 
   return (
@@ -202,61 +175,66 @@ const CatList = ({
               </Space>
             </div>
             <List
-              grid={{ 
-                gutter: 6, // 移除间距
-                xs: 1,  // 在最小的屏幕上只显示1列
-                sm: 2,  // 小屏幕显示2列
-                md: 3,  // 中等屏幕显示3列
-                lg: 4,
-                xl: 5,
-                xxl: 6,
+              grid={{
+                gutter: [8, 8], // 水平和垂直间距
+                xs: 2,  // 在最小的屏幕上显示2列
+                sm: 3,  // 小屏幕显示3列
+                md: 4,  // 中等屏幕显示4列
+                lg: 5,  // 大屏幕显示5列
+                xl: 6,  // 超大屏幕显示6列
+                xxl: 8, // 超超大屏幕显示8列
               }}
               dataSource={catsList}
               renderItem={cat => (
                 <List.Item>
-                  <Card 
+                  <Card
                     className={`cat-card ${selectedCatId === cat.id ? 'cat-card-selected' : ''}`}
                     hoverable
                     onClick={(event) => handleSelectCat(event, cat.id)}
                     size="small"
-                    bodyStyle={{ padding: '2px' }}
+                    styles={{
+                      body: { padding: '12px' },
+                      header: {
+                        borderTop: `3px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`
+                      }
+                    }}
+                    style={{
+                      borderTop: `3px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`
+                    }}
                   >
                     <div className="cat-card-content">
-                      <div className="cat-card-header">
-                        <div className={`cat-badge ${getCatColorClass(cat.genes)}`}>
-                          #{cat.id}
-                        </div>
-                        <Space size="small">
-                          <Tag color="blue">等级 {cat.level}</Tag>
-                          <Tag color={cat.gender === 0 ? 'geekblue' : 'magenta'}>
-                            {cat.genderName || GENDER_NAMES[cat.gender] || '未知'}
-                          </Tag>
-                          <Tag color="gold">
+                      {/* 左上角等级 */}
+                      <div className="cat-level-badge">
+                        LV {cat.level}
+                      </div>
+
+                      {/* 右上角性别图标 */}
+                      <div className={`cat-gender-badge ${cat.gender === 0 ? 'male' : 'female'}`}>
+                        {cat.gender === 0 ? '♂' : '♀'}
+                      </div>
+
+                      {/* 猫咪SVG图像 */}
+                      <div className="cat-card-image">
+                        <CatRenderer
+                          parent={`list-${cat.id}`}
+                          gene={cat.genes}
+                        />
+                      </div>
+
+                      {/* 猫咪信息 */}
+                      <div className="cat-card-info">
+                        <div className="cat-info-row">
+                          <span className="cat-id-text">猫咪 #{cat.id}</span>
+                          <Tag
+                            size="small"
+                            style={{
+                              backgroundColor: QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0],
+                              color: 'white',
+                              border: 'none'
+                            }}
+                          >
                             {cat.qualityName || QUALITY_NAMES[cat.quality] || '普通'}
                           </Tag>
-                        </Space>
-                      </div>                    
-                      <div className="cat-card-stats">
-                        <div className="cat-stat">
-                          <span className="stat-label">体力:</span>
-                          <span className="stat-value">{formatStamina(cat.stamina)}/100</span>
-                        </div>
-                        <div className="progress-container">
-                          <div 
-                            className="progress-bar" 
-                            style={{ width: `${formatStamina(cat.stamina)}%` }}
-                          ></div>
-                        </div>
-                        
-                        <div className="cat-stat">
-                          <span className="stat-label">经验值:</span>
-                          <span className="stat-value">{getExpProgressPercent(cat.experience, cat.level)}%</span>
-                        </div>
-                        <div className="progress-container">
-                          <div 
-                            className="progress-bar" 
-                            style={{ width: `${getExpProgressPercent(cat.experience, cat.level)}%` }}
-                          ></div>
                         </div>
                       </div>
                     </div>
