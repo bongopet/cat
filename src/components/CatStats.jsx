@@ -158,79 +158,38 @@ const CatStats = ({ DFSWallet }) => {
   return (
     <div className="cat-stats">
       <div className="stats-header">
-        <div className="stats-title-section">
-          <h2>
-            <PieChartOutlined style={{ marginRight: 8 }} />
-            猫咪品质统计
-          </h2>
-          <Button
-            type="primary"
-            icon={<ReloadOutlined />}
-            onClick={fetchStats}
-            loading={loading}
-            style={{ marginLeft: 16 }}
-          >
-            刷新数据
-          </Button>
-        </div>
+        <h2>
+          <PieChartOutlined style={{ marginRight: 8 }} />
+          猫咪品质统计
+        </h2>
         <p>查看全服猫咪品质分布情况</p>
       </div>
 
-      {/* 总览卡片 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="总猫咪数量"
-              value={totalCats}
-              prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="品质种类"
-              value={tableData.length}
-              prefix={<StarOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="最稀有品质"
-              value={tableData.length > 0 ?
-                QUALITY_NAMES[tableData.filter(d => d.count > 0).reduce((prev, current) =>
-                  prev.quality > current.quality ? prev : current, { quality: 0 }
-                ).quality] : '-'}
-              valueStyle={{ color: '#f5222d' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="最大偏差品质"
-              value={tableData.length > 0 ?
-                QUALITY_NAMES[tableData.reduce((prev, current) =>
-                  Math.abs(parseFloat(prev.deviation)) > Math.abs(parseFloat(current.deviation)) ? prev : current
-                ).quality] : '-'}
-              valueStyle={{ color: '#fa8c16' }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* 详细统计表格 */}
-      <Card 
+      <Card
         title={
-          <span>
-            <BarChartOutlined style={{ marginRight: 8 }} />
-            品质分布详情
-          </span>
+          <div className="table-header">
+            <span>
+              <BarChartOutlined style={{ marginRight: 8 }} />
+              品质分布详情
+            </span>
+            <div className="table-controls">
+              <div className="total-cats-display">
+                <span className="total-label">全服猫咪总量：</span>
+                <span className="total-value">{totalCats}</span>
+                <span className="total-unit">只</span>
+              </div>
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={fetchStats}
+                loading={loading}
+                style={{ marginLeft: 12 }}
+              >
+                刷新数据
+              </Button>
+            </div>
+          </div>
         }
         className="stats-table-card"
       >

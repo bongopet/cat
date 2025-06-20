@@ -10,17 +10,10 @@
   color: white;
 }
 
-.stats-title-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
 .stats-header h2 {
   color: white;
   font-size: 28px;
-  margin: 0;
+  margin: 0 0 8px 0;
   font-weight: bold;
 }
 
@@ -29,6 +22,15 @@
   font-size: 16px;
   margin: 0;
 }
+
+/* 通用总量显示样式 */
+.total-cats-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+
 
 .cat-stats-loading {
   display: flex;
@@ -77,6 +79,48 @@
 .stats-table-card .ant-card-head-title {
   font-weight: bold;
   color: #1890ff;
+  width: 100%;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-controls .total-cats-display {
+  background: rgba(24, 144, 255, 0.1);
+  border: 1px solid rgba(24, 144, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+}
+
+.table-controls .total-label {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.table-controls .total-value {
+  color: #1890ff;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: none;
+  animation: none;
+}
+
+.table-controls .total-unit {
+  color: #666;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .stats-table {
@@ -104,17 +148,37 @@
     padding: 16px;
   }
 
-  .stats-title-section {
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .stats-header h2 {
     font-size: 24px;
   }
 
   .stats-header p {
     font-size: 14px;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .table-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .table-controls .total-cats-display {
+    padding: 8px 12px;
+    border-radius: 14px;
+  }
+
+  .table-controls .total-value {
+    font-size: 14px;
+  }
+
+  .table-controls .total-label,
+  .table-controls .total-unit {
+    font-size: 11px;
   }
 }
 
