@@ -1194,6 +1194,219 @@ async function getMarketStats(wallet) {
   }
 }
 
+// ========== 擂台系统函数 ==========
+
+// 获取所有擂台信息
+async function getArenas(wallet) {
+  try {
+    console.log('正在获取擂台信息...');
+
+    const arenaRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      'arenas',
+      '', // lower_bound
+      '', // upper_bound
+      1, // index_position
+      'i64', // key_type
+      100 // limit
+    );
+
+    if (arenaRows && arenaRows.length > 0) {
+      // 获取擂台中猫咪的详细信息
+      const arenasWithCats = await Promise.all(
+        arenaRows.map(async (arena) => {
+          try {
+            const catRows = await getTableRows(
+              wallet,
+              CONTRACT,
+              CONTRACT,
+              'cat51s',
+              arena.cat_id.toString(),
+              arena.cat_id.toString(),
+              1,
+              'i64',
+              1
+            );
+
+            const cat = catRows && catRows.length > 0 ? catRows[0] : null;
+
+            return {
+              ...arena,
+              cat: cat,
+              // 计算战斗力等级（基于合约逻辑）
+              powerRank: cat ? calculatePowerRank(cat) : 'Unknown'
+            };
+          } catch (error) {
+            console.error(`获取擂台 ${arena.id} 的猫咪信息失败:`, error);
+            return {
+              ...arena,
+              cat: null,
+              powerRank: 'Unknown'
+            };
+          }
+        })
+      );
+
+      console.log('获取到擂台信息:', arenasWithCats);
+      return arenasWithCats;
+    }
+
+    return [];
+  } catch (error) {
+    console.error('获取擂台信息失败:', error);
+    return [];
+  }
+}
+
+// 计算战斗力等级（前端估算）
+function calculatePowerRank(cat) {
+  // 基于等级和品质的简单估算
+  const levelBonus = cat.level * 15;
+  const qualityBonus = cat.quality * 50;
+  const estimatedPower = levelBonus + qualityBonus + 200; // 基础值
+
+  if (estimatedPower < 200) return 'Weak';
+  if (estimatedPower < 400) return 'Normal';
+  if (estimatedPower < 600) return 'Strong';
+  if (estimatedPower < 800) return 'Elite';
+  if (estimatedPower < 1000) return 'Master';
+  if (estimatedPower < 1200) return 'Legendary';
+  return 'Mythical';
+}
+
+// 放置猫咪到擂台
+async function placeInArena(wallet, accountName, catId, totalAmount) {
+  try {
+    console.log('正在放置猫咪到擂台...', { catId, totalAmount });
+
+    // 通过DFS转账放置擂台，memo格式: "arena:猫咪ID"
+    const memo = `arena:${catId}`;
+
+    const result = await wallet.transact({
+      actions: [{
+        account: 'eosio.token',
+        name: 'transfer',
+        authorization: [{
+          actor: accountName,
+          permission: 'active',
+        }],
+        data: {
+          from: accountName,
+          to: CONTRACT,
+          quantity: `${totalAmount.toFixed(8)} DFS`,
+          memo: memo
+        },
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      useFreeCpu: true, 
+    });
+
+    console.log('放置擂台成功:', result);
+    return result;
+  } catch (error) {
+    console.error('放置擂台失败:', error);
+    throw error;
+  }
+}
+
+// 挑战擂台
+async function challengeArena(wallet, accountName, arenaId, challengerCatId, betAmount) {
+  try {
+    console.log('正在挑战擂台...', { arenaId, challengerCatId, betAmount });
+
+    // 通过DFS转账挑战，memo格式: "challenge:擂台ID:猫咪ID"
+    const memo = `challenge:${arenaId}:${challengerCatId}`;
+
+    const result = await wallet.transact({
+      actions: [{
+        account: 'eosio.token',
+        name: 'transfer',
+        authorization: [{
+          actor: accountName,
+          permission: 'active',
+        }],
+        data: {
+          from: accountName,
+          to: CONTRACT,
+          quantity: `${betAmount.toFixed(8)} DFS`,
+          memo: memo
+        },
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+    });
+
+    console.log('挑战擂台成功:', result);
+    return result;
+  } catch (error) {
+    console.error('挑战擂台失败:', error);
+    throw error;
+  }
+}
+
+// 移除擂台
+async function removeArena(wallet, accountName, arenaId) {
+  try {
+    console.log('正在移除擂台...', { arenaId });
+    const result = await wallet.transact({
+      actions: [{
+        account: CONTRACT,
+        name: 'removearena',
+        authorization: [{
+          actor: accountName,
+          permission: 'active',
+        }],
+        data: {
+          owner: accountName,
+          arena_id: arenaId
+        },
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      useFreeCpu: true,
+    });
+
+    console.log('移除擂台成功:', result);
+    return result;
+  } catch (error) {
+    console.error('移除擂台失败:', error);
+    throw error;
+  }
+}
+
+// 获取猫咪体力状态
+async function getCatStamina(wallet, catId) {
+  try {
+    console.log('正在获取猫咪体力状态...', { catId });
+
+    const result = await wallet.transact({
+      actions: [{
+        account: CONTRACT,
+        name: 'getstamina',
+        authorization: [],
+        data: {
+          cat_id: catId
+        },
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+    });
+
+    console.log('获取体力状态成功:', result);
+    return result;
+  } catch (error) {
+    console.error('获取体力状态失败:', error);
+    throw error;
+  }
+}
+
 // 导出所有函数
 export {
   // 新的BongoCat合约函数
@@ -1210,6 +1423,14 @@ export {
   transferCat,
   getMarketCats,
   getMarketStats,
+
+  // 擂台系统函数
+  getArenas,
+  placeInArena,
+  challengeArena,
+  removeArena,
+  getCatStamina,
+  calculatePowerRank,
 
   // 原有函数（保持兼容性）
   checkCatHasAvailableExp,

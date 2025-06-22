@@ -16,6 +16,7 @@ import CatDetail from './components/CatDetail'
 import RankingList from './components/RankingList'
 import CatStats from './components/CatStats'
 import Market from './components/Market'
+import Arena from './components/Arena'
 import {
   getUserCats,
   mintCat,
@@ -356,6 +357,11 @@ function App() {
       label: '市场',
     },
     {
+      key: 'arena',
+      icon: <TrophyOutlined />,
+      label: '擂台',
+    },
+    {
       key: 'stats',
       icon: <BarChartOutlined />,
       label: '统计',
@@ -404,6 +410,13 @@ function App() {
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
             <Market DFSWallet={dfsWallet} userInfo={account} />
+          </div>
+        );
+
+      case 'arena':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <Arena DFSWallet={dfsWallet} accountName={account?.name} />
           </div>
         );
 

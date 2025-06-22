@@ -1,0 +1,286 @@
+/* 擂台容器 */
+.arena-container {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+/* 擂台统计卡片 */
+.arena-stats .ant-statistic {
+  text-align: center;
+}
+
+.arena-stats .ant-statistic-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.arena-stats .ant-statistic-content {
+  font-size: 24px;
+}
+
+.arena-stats .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.arena-stats .ant-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 擂台卡片 */
+.arena-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.arena-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+}
+
+.arena-card .ant-card-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.arena-card .ant-card-cover img {
+  transition: transform 0.3s ease;
+}
+
+.arena-card:hover .ant-card-cover img {
+  transform: scale(1.05);
+}
+
+/* 擂台猫咪封面 */
+.arena-cat-cover {
+  position: relative;
+  overflow: hidden;
+}
+
+.arena-cat-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arena-cat-overlay .ant-tag {
+  margin: 0;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 擂台统计信息 */
+.arena-stats {
+  padding: 8px 0;
+}
+
+.arena-stats .ant-statistic-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.arena-stats .ant-statistic-content {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 战斗力等级标签 */
+.power-rank-weak { color: #d9d9d9; }
+.power-rank-normal { color: #52c41a; }
+.power-rank-strong { color: #1890ff; }
+.power-rank-elite { color: #722ed1; }
+.power-rank-master { color: #eb2f96; }
+.power-rank-legendary { color: #fa8c16; }
+.power-rank-mythical { color: #f5222d; }
+
+/* 擂台操作按钮 */
+.arena-card .ant-card-actions {
+  background: rgba(250, 250, 250, 0.8);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(240, 240, 240, 0.8);
+}
+
+.arena-card .ant-card-actions > li {
+  margin: 8px 0;
+}
+
+.arena-card .ant-card-actions .ant-btn {
+  border: none;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.arena-card .ant-card-actions .ant-btn-primary {
+  background: linear-gradient(45deg, #1890ff, #36cfc9);
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+}
+
+.arena-card .ant-card-actions .ant-btn-primary:hover {
+  background: linear-gradient(45deg, #40a9ff, #5cdbd3);
+  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.arena-card .ant-card-actions .ant-btn-text.ant-btn-dangerous {
+  color: #ff4d4f;
+}
+
+.arena-card .ant-card-actions .ant-btn-text.ant-btn-dangerous:hover {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff7875;
+}
+
+/* 主标签页 */
+.arena-container .ant-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.arena-container .ant-tabs-tab {
+  font-weight: 500;
+  border-radius: 8px 8px 0 0;
+}
+
+.arena-container .ant-tabs-tab-active {
+  background: rgba(24, 144, 255, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .arena-container {
+    padding: 16px;
+  }
+  
+  .arena-stats .ant-statistic-content {
+    font-size: 20px;
+  }
+  
+  .arena-stats .ant-card-body {
+    padding: 16px 12px;
+  }
+  
+  .arena-card .ant-card-meta-title {
+    font-size: 14px;
+  }
+  
+  .arena-card .ant-card-meta-description {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .arena-container {
+    padding: 12px;
+  }
+  
+  .arena-stats .ant-statistic-content {
+    font-size: 18px;
+  }
+  
+  .arena-cat-overlay {
+    top: 4px;
+    right: 4px;
+  }
+  
+  .arena-cat-overlay .ant-tag {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+}
+
+/* 模态框样式增强 */
+.ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  background: linear-gradient(45deg, #f0f2f5, #fafafa);
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-modal-title {
+  font-weight: 600;
+}
+
+/* 进度条样式 */
+.ant-progress-line {
+  border-radius: 8px;
+}
+
+.ant-progress-bg {
+  border-radius: 8px;
+}
+
+/* 统计卡片动画 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.arena-stats .ant-card:hover {
+  animation: pulse 2s infinite;
+}
+
+/* 战斗预览样式 */
+.battle-preview {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.battle-preview .ant-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: none;
+}
+
+/* 胜率显示 */
+.win-chance-display {
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.win-chance-number {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.win-chance-label {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
