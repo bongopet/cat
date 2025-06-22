@@ -503,14 +503,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           </div>
 
           <Space>
-            <Button
-              icon={<SwapOutlined />}
-              onClick={handleCheckSwap}
-              size="small"
-            >
-              检查交易
-            </Button>
-
+          
             <Button
               icon={<CameraOutlined />}
               onClick={handleGrabImage}

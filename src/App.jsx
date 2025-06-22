@@ -15,6 +15,7 @@ import CatList from './components/CatList'
 import CatDetail from './components/CatDetail'
 import RankingList from './components/RankingList'
 import CatStats from './components/CatStats'
+import Market from './components/Market'
 import {
   getUserCats,
   mintCat,
@@ -402,16 +403,7 @@ function App() {
       case 'market':
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
-            <div className="market-container">
-              <div className="market-header">
-                <div></div> {/* 占位，保持与其他页面布局一致 */}
-              </div>
-              <div className="coming-soon-container">
-                <div className="coming-soon-icon">🛒</div>
-                <h2>市场功能即将推出</h2>
-                <p>敬请期待！我们正在紧锣密鼓地开发猫咪交易市场，让您可以自由买卖您的猫咪。</p>
-              </div>
-            </div>
+            <Market DFSWallet={dfsWallet} userInfo={account} />
           </div>
         );
 
@@ -484,7 +476,7 @@ function App() {
               />
             </div>
             <Title level={4} style={{ margin: 0, color: 'white' }}>
-              猫星球
+              猫星球 测试版
             </Title>
           </div>
 

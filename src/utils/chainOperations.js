@@ -880,6 +880,320 @@ async function getCatStats(wallet) {
   }
 }
 
+// ==================== 市场交易系统函数 ====================
+
+// 上架猫咪到市场
+async function listCatForSale(wallet, accountName, catId, price) {
+  try {
+    console.log(`开始上架猫咪#${catId}，价格: ${price}...`);
+
+    const listAction = {
+      account: CONTRACT,
+      name: 'listcat',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        seller: accountName,
+        cat_id: catId,
+        price: price, // 格式: "10.00000000 DFS"
+      },
+    };
+
+    const result = await sendTransaction(wallet, [listAction]);
+
+    message.success('猫咪上架成功！');
+    console.log('猫咪上架成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `list-${Date.now()}`;
+    recordCatTransaction('list', catId, txId, price, 'DFS');
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('上架猫咪失败:', error);
+    throw error;
+  }
+}
+
+// 从市场下架猫咪
+async function unlistCatFromSale(wallet, accountName, catId) {
+  try {
+    console.log(`开始下架猫咪#${catId}...`);
+
+    const unlistAction = {
+      account: CONTRACT,
+      name: 'unlistcat',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        seller: accountName,
+        cat_id: catId,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [unlistAction]);
+
+    message.success('猫咪下架成功！');
+    console.log('猫咪下架成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `unlist-${Date.now()}`;
+    recordCatTransaction('unlist', catId, txId);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('下架猫咪失败:', error);
+    throw error;
+  }
+}
+
+// 购买市场上的猫咪
+async function buyCatFromMarket(wallet, accountName, catId, price) {
+  try {
+    console.log(`开始购买猫咪#${catId}，价格: ${price}...`);
+
+    // 检查DFS余额
+    const balanceStr = await getAccountBalance(wallet, 'eosio.token', accountName, 'DFS');
+    const balanceParts = balanceStr.split(' ');
+    const balanceValue = Number.parseFloat(balanceParts[0]);
+    const priceValue = Number.parseFloat(price.split(' ')[0]);
+
+    if (isNaN(balanceValue) || balanceValue < priceValue) {
+      const errorMsg = `DFS余额不足，购买需要${price} (当前余额: ${balanceStr || '0 DFS'})`;
+      message.warning(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // 执行DFS转账购买
+    const transferAction = buildTransferAction(
+      accountName,
+      CONTRACT,
+      price,
+      `buy:${catId}` // 购买备注格式
+    );
+
+    const result = await sendTransaction(wallet, [transferAction]);
+
+    message.success('猫咪购买成功！');
+    console.log('猫咪购买成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `buy-${Date.now()}`;
+    recordCatTransaction('buy', catId, txId, price, 'DFS');
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('购买猫咪失败:', error);
+    throw error;
+  }
+}
+
+// 直接转让猫咪
+async function transferCat(wallet, accountName, catId, toAccount) {
+  try {
+    console.log(`开始转让猫咪#${catId}给${toAccount}...`);
+
+    const transferAction = {
+      account: CONTRACT,
+      name: 'transfercat',
+      authorization: [{
+        actor: accountName,
+        permission: 'active',
+      }],
+      data: {
+        from: accountName,
+        to: toAccount,
+        cat_id: catId,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [transferAction]);
+
+    message.success('猫咪转让成功！');
+    console.log('猫咪转让成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `transfer-${Date.now()}`;
+    recordCatTransaction('transfer', catId, txId, '', '', accountName, toAccount);
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('转让猫咪失败:', error);
+    throw error;
+  }
+}
+
+// 获取市场上的猫咪列表
+async function getMarketCats(wallet, limit = 20) {
+  try {
+    console.log(`正在获取市场猫咪列表，最多 ${limit} 只...`);
+
+    // 从市场表获取数据
+    const marketRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      'catmarket',
+      '', // lower_bound
+      '', // upper_bound
+      1, // index_position - 主键索引
+      'i64', // key_type
+      limit // limit
+    );
+
+    if (marketRows && marketRows.length > 0) {
+      console.log(`从市场表获取到 ${marketRows.length} 条记录`);
+
+      // 过滤活跃的市场记录
+      const activeMarketCats = marketRows.filter(market => market.is_active);
+
+      // 获取每只猫咪的详细信息
+      const marketCatsWithDetails = [];
+
+      for (const marketCat of activeMarketCats) {
+        try {
+          // 获取猫咪详细信息
+          const catRows = await getTableRows(
+            wallet,
+            CONTRACT,
+            CONTRACT,
+            CATTABLE,
+            marketCat.cat_id.toString(),
+            marketCat.cat_id.toString(),
+            1, // index_position - 主键索引
+            'i64', // key_type
+            1 // limit
+          );
+
+          if (catRows && catRows.length > 0) {
+            const cat = catRows[0];
+            const marketCatWithDetails = {
+              // 市场信息
+              marketId: marketCat.id,
+              catId: marketCat.cat_id,
+              seller: marketCat.seller,
+              price: marketCat.price,
+              listedAt: marketCat.listed_at,
+              isActive: marketCat.is_active,
+
+              // 猫咪详细信息
+              id: cat.id,
+              owner: cat.owner,
+              gender: cat.gender,
+              genderName: GENDER_NAMES[cat.gender] || '未知',
+              quality: cat.quality,
+              qualityName: QUALITY_NAMES[cat.quality] || '未知',
+              level: cat.level,
+              experience: cat.experience,
+              encrypted_stats: cat.encrypted_stats,
+              genes: cat.genes,
+              stamina: cat.stamina,
+              maxStamina: 100,
+              last_challenge_day: cat.last_challenge_day,
+              birth_time: cat.birth_time,
+              is_tradeable: cat.is_tradeable,
+              in_arena: cat.in_arena,
+            };
+
+            marketCatsWithDetails.push(marketCatWithDetails);
+          }
+        } catch (catError) {
+          console.error(`获取猫咪#${marketCat.cat_id}详细信息失败:`, catError);
+        }
+      }
+
+      // 按价格排序
+      marketCatsWithDetails.sort((a, b) => {
+        const priceA = Number.parseFloat(a.price.split(' ')[0]);
+        const priceB = Number.parseFloat(b.price.split(' ')[0]);
+        return priceA - priceB;
+      });
+
+      console.log('处理后的市场猫咪数据:', marketCatsWithDetails);
+      return marketCatsWithDetails;
+    } else {
+      console.log('市场上暂无猫咪');
+      return [];
+    }
+  } catch (error) {
+    console.error('获取市场猫咪列表失败:', error);
+    return [];
+  }
+}
+
+// 获取市场统计信息
+async function getMarketStats(wallet) {
+  try {
+    console.log('正在获取市场统计信息...');
+
+    const marketRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      'catmarket',
+      '', // lower_bound
+      '', // upper_bound
+      1, // index_position
+      'i64', // key_type
+      100 // limit
+    );
+
+    if (marketRows && marketRows.length > 0) {
+      const activeListings = marketRows.filter(market => market.is_active);
+
+      let totalValue = 0;
+      let minPrice = Number.MAX_VALUE;
+      let maxPrice = 0;
+
+      activeListings.forEach(market => {
+        const price = Number.parseFloat(market.price.split(' ')[0]);
+        totalValue += price;
+        minPrice = Math.min(minPrice, price);
+        maxPrice = Math.max(maxPrice, price);
+      });
+
+      const avgPrice = activeListings.length > 0 ? totalValue / activeListings.length : 0;
+
+      return {
+        totalListings: marketRows.length,
+        activeListings: activeListings.length,
+        totalValue: totalValue.toFixed(8),
+        avgPrice: avgPrice.toFixed(8),
+        minPrice: minPrice === Number.MAX_VALUE ? 0 : minPrice.toFixed(8),
+        maxPrice: maxPrice.toFixed(8)
+      };
+    }
+
+    return {
+      totalListings: 0,
+      activeListings: 0,
+      totalValue: '0.00000000',
+      avgPrice: '0.00000000',
+      minPrice: '0.00000000',
+      maxPrice: '0.00000000'
+    };
+  } catch (error) {
+    console.error('获取市场统计信息失败:', error);
+    return null;
+  }
+}
+
 // 导出所有函数
 export {
   // 新的BongoCat合约函数
@@ -888,6 +1202,14 @@ export {
   grabImage,
   breedCats,
   feedCatWithDFS,
+
+  // 市场交易系统函数
+  listCatForSale,
+  unlistCatFromSale,
+  buyCatFromMarket,
+  transferCat,
+  getMarketCats,
+  getMarketStats,
 
   // 原有函数（保持兼容性）
   checkCatHasAvailableExp,

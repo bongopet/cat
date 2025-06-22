@@ -1,0 +1,404 @@
+.market-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* 市场猫咪包装器 */
+.market-cat-wrapper {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.market-cat-wrapper .cat-card {
+  flex: 1;
+  margin-bottom: 8px;
+}
+
+/* 用户猫咪包装器 */
+.user-cat-wrapper {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-cat-wrapper .cat-card {
+  flex: 1;
+  margin-bottom: 8px;
+  border: 2px solid #1890ff;
+}
+
+.user-cat-wrapper .cat-card:hover {
+  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.2);
+}
+
+/* 猫咪操作按钮 */
+.cat-actions {
+  padding: 8px;
+  background: #f9f9f9;
+  border-radius: 0 0 8px 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 市场统计卡片优化 */
+.market-stats .ant-statistic {
+  text-align: center;
+}
+
+.market-stats .ant-statistic-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.market-stats .ant-statistic-content {
+  font-size: 24px;
+}
+
+.market-stats .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.market-stats .ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .market-stats .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  .market-stats .ant-card-body {
+    padding: 20px 16px;
+  }
+
+  .market-stats .ant-statistic-title {
+    font-size: 13px;
+  }
+}
+
+.cat-image-container {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cat-image-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.3;
+}
+
+.market-stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.market-stats-card .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.market-stats-card .ant-statistic-content {
+  color: white;
+}
+
+.filter-section {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.price-display {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1890ff;
+  margin: 8px 0;
+}
+
+.seller-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.quality-tag {
+  margin-bottom: 8px;
+}
+
+.cat-level {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.cat-gender {
+  color: #722ed1;
+}
+
+.market-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.market-empty .ant-empty-image {
+  height: 120px;
+}
+
+.action-button {
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+.buy-button {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border: none;
+  color: white;
+}
+
+.buy-button:hover {
+  background: linear-gradient(135deg, #389e0d 0%, #237804 100%);
+  color: white;
+}
+
+.sell-button {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border: none;
+  color: white;
+}
+
+.sell-button:hover {
+  background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+  color: white;
+}
+
+.unlist-button {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+  border: none;
+  color: white;
+}
+
+.unlist-button:hover {
+  background: linear-gradient(135deg, #cf1322 0%, #a8071a 100%);
+  color: white;
+}
+
+.transfer-button {
+  background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+  border: none;
+  color: white;
+}
+
+.transfer-button:hover {
+  background: linear-gradient(135deg, #531dab 0%, #391085 100%);
+  color: white;
+}
+
+.modal-cat-preview {
+  text-align: center;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.cat-detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cat-detail-item:last-child {
+  border-bottom: none;
+}
+
+.cat-detail-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.cat-detail-value {
+  color: #333;
+}
+
+.price-input {
+  margin-top: 16px;
+}
+
+.price-input .ant-input {
+  font-size: 16px;
+  padding: 12px;
+}
+
+.transfer-input {
+  margin-top: 16px;
+}
+
+.transfer-input .ant-input {
+  font-size: 16px;
+  padding: 12px;
+}
+
+.market-tabs .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.market-tabs .ant-tabs-tab-active {
+  color: #1890ff;
+}
+
+.stats-grid {
+  margin-bottom: 24px;
+}
+
+.stats-card {
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-controls .ant-select {
+  min-width: 120px;
+}
+
+.no-cats-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .market-container {
+    padding: 16px;
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-controls .ant-select {
+    width: 100%;
+  }
+  
+  .cat-image-container {
+    height: 150px;
+  }
+  
+  .market-tabs .ant-tabs-tab {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-grid .ant-col {
+    margin-bottom: 16px;
+  }
+  
+  .cat-detail-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .modal-cat-preview {
+    padding: 16px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.market-cat-card,
+.user-cat-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.market-cat-card:nth-child(even) {
+  animation-delay: 0.1s;
+}
+
+.market-cat-card:nth-child(3n) {
+  animation-delay: 0.2s;
+}
+
+/* 品质颜色主题 */
+.quality-normal {
+  border-left: 4px solid #d9d9d9;
+}
+
+.quality-fine {
+  border-left: 4px solid #52c41a;
+}
+
+.quality-excellent {
+  border-left: 4px solid #1890ff;
+}
+
+.quality-rare {
+  border-left: 4px solid #722ed1;
+}
+
+.quality-supreme {
+  border-left: 4px solid #eb2f96;
+}
+
+.quality-sacred {
+  border-left: 4px solid #fa8c16;
+}
+
+.quality-eternal {
+  border-left: 4px solid #fadb14;
+}
+
+.quality-legendary {
+  border-left: 4px solid #f5222d;
+  box-shadow: 0 0 20px rgba(245, 34, 45, 0.3);
+}

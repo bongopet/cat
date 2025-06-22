@@ -7,7 +7,7 @@ import {
   SwapOutlined,
   CameraOutlined
 } from '@ant-design/icons';
-import { getUserCats, QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
+import { getUserCats, GENDER_NAMES } from '../utils/chainOperations';
 import CatRenderer from './CatRenderer';
 import './CatList.css';
 
@@ -37,6 +37,20 @@ const CatList = ({
     6: '#eb2f96',  // 永恒 - 粉色
     7: '#fadb14'   // 传世 - 金色
   };
+
+  // 品质名称映射
+  const QUALITY_NAMES = {
+    0: '普通',
+    1: '精良',
+    2: '卓越',
+    3: '非凡',
+    4: '至尊',
+    5: '神圣',
+    6: '永恒',
+    7: '传世'
+  };
+
+
 
   // Get cats from blockchain
   const fetchCats = async () => {
@@ -193,13 +207,12 @@ const CatList = ({
                     onClick={(event) => handleSelectCat(event, cat.id)}
                     size="small"
                     styles={{
-                      body: { padding: '12px' },
-                      header: {
-                        borderTop: `3px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`
-                      }
+                      body: { padding: '12px' }
                     }}
                     style={{
-                      borderTop: `3px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`
+                      border: `2px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`,
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
                     }}
                   >
                     <div className="cat-card-content">
