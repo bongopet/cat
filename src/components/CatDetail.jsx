@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Progress, Button, Spin, Tag, Divider, message, Space, Modal, Select } from 'antd';
+import { Card, Progress, Button, Spin, Tag, Divider, message, Space, Modal, Select, Tabs } from 'antd';
 import {
   HeartOutlined,
   ExperimentOutlined,
@@ -7,9 +7,13 @@ import {
   GiftOutlined,
   SwapOutlined,
   CameraOutlined,
-  TeamOutlined
+  TeamOutlined,
+  LockOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import CatRenderer from './CatRenderer';
+import CatAttributes from './CatAttributes';
+import SecureCatAttributes from './SecureCatAttributes';
 import { getCatGeneDetails } from '../utils/catGeneParser';
 import {
   checkCatAction,
@@ -613,6 +617,43 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
               </div>
             </div>
           </div>
+        </Card>
+
+        {/* 猫咪属性 */}
+        <Card title="猫咪属性" size="small" style={{ marginBottom: 16 }}>
+          <Tabs
+            defaultActiveKey="secure"
+            items={[
+              {
+                key: 'secure',
+                label: (
+                  <Space>
+                    <LockOutlined />
+                    安全属性
+                  </Space>
+                ),
+                children: (
+                  <SecureCatAttributes
+                    wallet={DFSWallet}
+                    accountName={userInfo?.name}
+                    showTitle={false}
+                  />
+                )
+              },
+              {
+                key: 'legacy',
+                label: (
+                  <Space>
+                    <EyeOutlined />
+                    演示属性
+                  </Space>
+                ),
+                children: (
+                  <CatAttributes cat={selectedCat} showTitle={false} />
+                )
+              }
+            ]}
+          />
         </Card>
 
         {/* 调试信息 - 开发时使用 */}

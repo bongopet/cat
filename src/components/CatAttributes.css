@@ -1,0 +1,256 @@
+/* 猫咪属性卡片 */
+.cat-attributes-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  border: 1px solid #e8e8e8;
+}
+
+.cat-attributes-card .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.cat-attributes-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+}
+
+/* 总战斗力区域 */
+.total-power-section {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.total-power-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="stars" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.3)"/></pattern></defs><rect width="100" height="100" fill="url(%23stars)"/></svg>');
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.total-power-header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 8px;
+}
+
+.total-power-header span {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.total-power-value {
+  position: relative;
+  z-index: 1;
+}
+
+/* 属性区域 */
+.attributes-section {
+  margin-top: 16px;
+}
+
+/* 单个属性项 */
+.cat-attribute-item {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.cat-attribute-item:hover {
+  border-color: #d9d9d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 属性头部 */
+.attribute-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.attribute-icon {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.attribute-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: #333;
+}
+
+/* 属性值 */
+.attribute-value {
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.value-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.value-max {
+  font-size: 12px;
+  color: #999;
+  margin-left: 2px;
+}
+
+/* 属性进度条 */
+.attribute-progress {
+  margin-bottom: 4px;
+}
+
+.attribute-progress .ant-progress-bg {
+  border-radius: 4px;
+}
+
+.attribute-progress .ant-progress-inner {
+  border-radius: 4px;
+  background-color: #f5f5f5;
+}
+
+/* 属性说明 */
+.attributes-legend {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  margin-top: 16px;
+}
+
+.attributes-legend .ant-tag {
+  margin: 2px;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .cat-attribute-item {
+    padding: 10px;
+  }
+  
+  .attribute-name {
+    font-size: 12px;
+  }
+  
+  .value-number {
+    font-size: 16px;
+  }
+  
+  .total-power-section {
+    padding: 12px;
+  }
+  
+  .total-power-value span {
+    font-size: 20px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .cat-attributes-card {
+    margin: 0 -8px;
+  }
+  
+  .attribute-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .attributes-legend {
+    text-align: center;
+  }
+  
+  .attributes-legend .ant-space {
+    justify-content: center;
+  }
+}
+
+/* 属性等级标签动画 */
+.cat-attribute-item .ant-tag {
+  transition: all 0.3s ease;
+}
+
+.cat-attribute-item:hover .ant-tag {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 进度条动画 */
+.attribute-progress .ant-progress-bg {
+  transition: all 0.5s ease;
+}
+
+/* 总战斗力数字动画 */
+.total-power-value span {
+  transition: all 0.3s ease;
+}
+
+.total-power-section:hover .total-power-value span {
+  transform: scale(1.05);
+}
+
+/* 属性图标颜色渐变 */
+.attribute-icon {
+  background: linear-gradient(45deg, currentColor, currentColor);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+}
+
+/* 卡片整体悬浮效果 */
+.cat-attributes-card {
+  transition: all 0.3s ease;
+}
+
+.cat-attributes-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 属性值高亮效果 */
+.cat-attribute-item:hover .value-number {
+  color: #1890ff;
+  text-shadow: 0 1px 2px rgba(24, 144, 255, 0.2);
+}
+
+/* 等级标签特殊效果 */
+.cat-attribute-item .ant-tag[style*="#fadb14"] {
+  background: linear-gradient(45deg, #fadb14, #ffd700) !important;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  animation: golden-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes golden-glow {
+  0% {
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.6);
+  }
+}
+
+.cat-attribute-item .ant-tag[style*="#f5222d"] {
+  background: linear-gradient(45deg, #f5222d, #ff4d4f) !important;
+  box-shadow: 0 2px 8px rgba(245, 34, 45, 0.3);
+}

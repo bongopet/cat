@@ -1276,6 +1276,102 @@ function calculatePowerRank(cat) {
   return 'Mythical';
 }
 
+// 解密猫咪属性（6个属性）
+function decryptCatStats(encryptedStats, catId) {
+
+  try {
+    // 使用与合约相同的解密逻辑
+    const key = BigInt(catId) ^ BigInt('0x123456789ABCDEF0');
+    const stats = BigInt(encryptedStats) ^ key;
+
+    // 提取各个属性（按照合约的位移逻辑）
+    const attack = Number((stats >> BigInt(54)) & BigInt(0x3FF));      // 10位攻击
+    const defense = Number((stats >> BigInt(44)) & BigInt(0x3FF));     // 10位防御
+    const health = Number((stats >> BigInt(32)) & BigInt(0xFFF));      // 12位血量
+    const critical = Number((stats >> BigInt(24)) & BigInt(0xFF));     // 8位暴击
+    const dodge = Number((stats >> BigInt(16)) & BigInt(0xFF));        // 8位闪避
+    const luck = Number((stats >> BigInt(8)) & BigInt(0xFF));          // 8位幸运
+
+    return {
+      attack,
+      defense,
+      health,
+      critical,
+      dodge,
+      luck
+    };
+  } catch (error) {
+    console.error('解密猫咪属性失败:', error);
+    // 返回默认值
+    return {
+      attack: 0,
+      defense: 0,
+      health: 0,
+      critical: 0,
+      dodge: 0,
+      luck: 0
+    };
+  }
+}
+
+// 计算总战斗力（基于解密的属性）
+function calculateTotalBattlePower(stats, level) {
+  // 使用与合约相同的战斗力计算公式
+  const basePower = (stats.attack * 3) + (stats.defense * 3) + (stats.health / 2) +
+                   (stats.critical * 2) + (stats.dodge * 2) + stats.luck;
+  const levelBonus = level * 15; // 每级增加15点战斗力
+
+  return Math.floor(basePower + levelBonus);
+}
+
+// 获取属性等级描述
+function getAttributeRank(value, type) {
+  let thresholds;
+
+  switch (type) {
+    case 'attack':
+    case 'defense':
+      thresholds = [0, 20, 40, 80, 150, 250, 400, 600];
+      break;
+    case 'health':
+      thresholds = [0, 100, 200, 400, 800, 1200, 2000, 3000];
+      break;
+    case 'critical':
+    case 'dodge':
+    case 'luck':
+      thresholds = [0, 10, 25, 50, 80, 120, 180, 255];
+      break;
+    default:
+      thresholds = [0, 10, 25, 50, 80, 120, 180, 255];
+  }
+
+  const ranks = ['F', 'E', 'D', 'C', 'B', 'A', 'S', 'SS'];
+
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    if (value >= thresholds[i]) {
+      return ranks[i] || 'F';
+    }
+  }
+
+  return 'F';
+}
+
+// 获取属性颜色
+function getAttributeColor(rank) {
+  const colors = {
+    'F': '#d9d9d9',   // 灰色
+    'E': '#52c41a',   // 绿色
+    'D': '#1890ff',   // 蓝色
+    'C': '#722ed1',   // 紫色
+    'B': '#eb2f96',   // 粉色
+    'A': '#fa8c16',   // 橙色
+    'S': '#f5222d',   // 红色
+    'SS': '#fadb14'   // 金色
+  };
+
+  return colors[rank] || colors['F'];
+}
+
 // 放置猫咪到擂台
 async function placeInArena(wallet, accountName, catId, totalAmount) {
   try {
@@ -1431,6 +1527,12 @@ export {
   removeArena,
   getCatStamina,
   calculatePowerRank,
+
+  // 猫咪属性解密函数
+  decryptCatStats,
+  calculateTotalBattlePower,
+  getAttributeRank,
+  getAttributeColor,
 
   // 原有函数（保持兼容性）
   checkCatHasAvailableExp,

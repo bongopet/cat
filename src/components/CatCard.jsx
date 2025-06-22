@@ -2,6 +2,7 @@ import React from 'react'
 import { Card, Tag, Space } from 'antd'
 import { QUALITY_NAMES } from '../utils/chainOperations'
 import CatRenderer from './CatRenderer'
+import CatAttributesBrief from './CatAttributesBrief'
 import './CatCard.css'
 
 function CatCard({ cat, showDetails = false, onClick, showPrice = false, showSeller = false }) {
@@ -77,7 +78,10 @@ function CatCard({ cat, showDetails = false, onClick, showPrice = false, showSel
           </div>
         )}
 
-        {/* 详细信息 - 已移除性别、经验、体力显示 */}
+        {/* 猫咪属性简要显示 */}
+        {showDetails && (
+          <CatAttributesBrief cat={cat} showPower={true} showTopStats={true} />
+        )}
       </div>
     </div>
   )
