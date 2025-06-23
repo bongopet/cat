@@ -6,7 +6,8 @@ import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction }
 
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CATTABLE = 'cat51s';
+const CATTABLE = 'cat13s';
+const QATBLE='qualstat13s'
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 
 // 品质常量定义 - 与合约保持一致
@@ -177,8 +178,25 @@ async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
 
     const result = await sendTransaction(wallet, [breedAction]);
 
-    message.success('猫咪繁殖成功！父母猫咪已被销毁，获得新的小猫！');
-    console.log('猫咪繁殖成功', result);
+    // 解析繁殖结果
+    const breedingResult = parseBreedingResult(result);
+
+    if (breedingResult.success) {
+      const qualityNames = ['普通', '精良', '卓越', '非凡', '至尊', '神圣', '永恒', '传世'];
+      const qualityName = qualityNames[breedingResult.quality] || '未知';
+
+      message.success(`猫咪繁殖成功！获得新猫咪#${breedingResult.newCatId}，品质：${qualityName}`);
+      console.log('猫咪繁殖成功', {
+        newCatId: breedingResult.newCatId,
+        quality: breedingResult.quality,
+        qualityName: qualityName,
+        genes: breedingResult.genes,
+        parentIds: [maleCatId, femaleCatId]
+      });
+    } else {
+      message.success('猫咪繁殖成功！父母猫咪已被销毁，获得新的小猫！');
+      console.log('猫咪繁殖成功', result);
+    }
 
     // 记录交易
     const txId = result?.transaction_id || `breed-${Date.now()}`;
@@ -186,7 +204,8 @@ async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
 
     return {
       success: true,
-      txHash: txId
+      txHash: txId,
+      breedingResult: breedingResult
     };
   } catch (error) {
     console.error('繁殖猫咪失败:', error);
@@ -240,6 +259,8 @@ async function feedCatWithDFS(wallet, accountName, catId, amount = '1.00000000')
 
 // 检查猫咪是否有可用经验
 async function checkCatHasAvailableExp(wallet, owner, catId, lastCheckTime) {
+
+  return false; // 先不检查，等合约改版后再开启
   try {
     // 首先检查loglogloglog合约的logs表
     const externalContract = 'loglogloglog';
@@ -571,7 +592,7 @@ async function getUserCats(wallet, accountName) {
         accountName, // upper_bound
         2, // index_position - 按所有者索引
         'name', // key_type
-        100 // limit
+        1000 // limit
       );
       
       if (rows && rows.length > 0) {
@@ -700,11 +721,16 @@ async function getAllCats(wallet, limit = 50) {
         const cats = rows.map(cat => ({
           id: cat.id,
           owner: cat.owner,
+          gender: cat.gender,
+          quality: cat.quality, // 添加品质字段
           genes: cat.genes,
           level: cat.level,
           experience: cat.experience,
           stamina: cat.stamina,
           maxStamina: cat.max_stamina || 100,
+          birth_time: cat.birth_time,
+          is_tradeable: cat.is_tradeable,
+          in_arena: cat.in_arena,
           createdAt: cat.created_at,
         }));
         
@@ -726,6 +752,61 @@ async function getAllCats(wallet, limit = 50) {
   } catch (error) {
     console.error('获取猫咪排行榜失败:', error);
     return [];
+  }
+}
+
+// 解析繁殖结果
+function parseBreedingResult(transactionResult) {
+  try {
+    // 查找繁殖action的console输出
+    const actionTraces = transactionResult?.processed?.action_traces || [];
+
+    for (const trace of actionTraces) {
+      if (trace.act?.name === 'breedcats' && trace.console) {
+        const console = trace.console;
+
+        // 解析console输出
+        // 格式: "Bred cat #220 for jgdnhvsznbrx with quality 0 inherited genes:31260219568947206Bred cats #28 and #215 to create new cat with quality 0"
+
+        // 提取新猫咪ID
+        const newCatMatch = console.match(/Bred cat #(\d+) for \w+ with quality (\d+)/);
+        if (newCatMatch) {
+          const newCatId = parseInt(newCatMatch[1]);
+          const quality = parseInt(newCatMatch[2]);
+
+          // 提取基因信息
+          const genesMatch = console.match(/inherited genes:(\d+)/);
+          const genes = genesMatch ? genesMatch[1] : null;
+
+          // 提取父母猫咪ID
+          const parentsMatch = console.match(/Bred cats #(\d+) and #(\d+) to create new cat with quality (\d+)/);
+          let parentIds = null;
+          if (parentsMatch) {
+            parentIds = [parseInt(parentsMatch[1]), parseInt(parentsMatch[2])];
+          }
+
+          return {
+            success: true,
+            newCatId: newCatId,
+            quality: quality,
+            genes: genes,
+            parentIds: parentIds,
+            rawConsole: console
+          };
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Unable to parse breeding result from console output'
+    };
+  } catch (error) {
+    console.error('Error parsing breeding result:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
@@ -793,7 +874,7 @@ async function getCatStats(wallet) {
         wallet,
         CONTRACT,
         CONTRACT,
-        'qualitystat1', // 合约中的统计表名
+        QATBLE, // 合约中的统计表名
         '', // lower_bound
         '', // upper_bound
         1,  // index_position
@@ -1511,6 +1592,7 @@ export {
   grabImage,
   breedCats,
   feedCatWithDFS,
+  parseBreedingResult,
 
   // 市场交易系统函数
   listCatForSale,

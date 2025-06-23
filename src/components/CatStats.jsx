@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Spin, message, Row, Col, Statistic, Progress, Table, Tag, Button } from 'antd';
 import { PieChartOutlined, BarChartOutlined, TrophyOutlined, StarOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getCatStats, QUALITY_NAMES, TARGET_PERCENTAGES } from '../utils/chainOperations';
+import { getCatStats, getAllCats, QUALITY_NAMES, TARGET_PERCENTAGES } from '../utils/chainOperations';
 import './CatStats.css';
 
 const CatStats = ({ DFSWallet }) => {
   const [loading, setLoading] = useState(false);
   const [statsData, setStatsData] = useState(null);
+  const [actualCatsData, setActualCatsData] = useState(null);
 
   // 品质颜色映射 - 扩展到8个品质
   const QUALITY_COLORS = {
@@ -30,9 +31,42 @@ const CatStats = ({ DFSWallet }) => {
     try {
       setLoading(true);
       console.log('开始获取猫咪统计数据...');
-      const stats = await getCatStats(DFSWallet);
+
+      // 同时获取统计数据和实际猫咪数据
+      const [stats, actualCats] = await Promise.all([
+        getCatStats(DFSWallet),
+        getAllCats(DFSWallet, 1000) // 获取更多猫咪数据
+      ]);
+
       console.log('获取到的统计数据:', stats);
+      console.log('获取到的实际猫咪数据:', actualCats);
+
       setStatsData(stats);
+
+      // 计算实际猫咪的品质分布
+      if (actualCats && Array.isArray(actualCats)) {
+        const actualQualityStats = {};
+        actualCats.forEach(cat => {
+          const quality = cat.quality || 0;
+          actualQualityStats[quality] = (actualQualityStats[quality] || 0) + 1;
+        });
+
+        // 转换为数组格式
+        const actualStatsArray = [];
+        for (let i = 0; i < 8; i++) {
+          actualStatsArray.push({
+            quality: i,
+            count: actualQualityStats[i] || 0,
+            percentage: actualCats.length > 0 ?
+              ((actualQualityStats[i] || 0) / actualCats.length * 100) : 0
+          });
+        }
+
+        setActualCatsData({
+          quality_stats: actualStatsArray,
+          total_cats: actualCats.length
+        });
+      }
     } catch (error) {
       console.error('获取统计数据失败:', error);
       message.error('获取统计数据失败: ' + (error.message || String(error)));
@@ -55,17 +89,24 @@ const CatStats = ({ DFSWallet }) => {
   const getTableData = () => {
     if (!statsData || !statsData.quality_stats) return [];
 
-    return statsData.quality_stats.map((stat, index) => ({
-      key: index,
-      quality: stat.quality,
-      qualityName: QUALITY_NAMES[stat.quality] || '未知',
-      count: stat.count,
-      actualPercentage: stat.actual_percentage ? stat.actual_percentage.toFixed(2) : '0.00',
-      targetPercentage: stat.target_percentage ? stat.target_percentage.toFixed(2) : '0.00',
-      // 计算与目标的差异
-      deviation: stat.actual_percentage && stat.target_percentage ?
-        (stat.actual_percentage - stat.target_percentage).toFixed(2) : '0.00'
-    }));
+    return statsData.quality_stats.map((stat, index) => {
+      // 查找对应的实际猫咪数据
+      const actualStat = actualCatsData?.quality_stats?.find(actual => actual.quality === stat.quality);
+
+      return {
+        key: index,
+        quality: stat.quality,
+        qualityName: QUALITY_NAMES[stat.quality] || '未知',
+        count: stat.count, // 统计表中的数量
+        actualCount: actualStat?.count || 0, // 实际猫咪数量
+        actualPercentage: stat.actual_percentage ? stat.actual_percentage.toFixed(2) : '0.00',
+        realActualPercentage: actualStat?.percentage ? actualStat.percentage.toFixed(2) : '0.00', // 实际百分比
+        targetPercentage: stat.target_percentage ? stat.target_percentage.toFixed(2) : '0.00',
+        // 计算与目标的差异
+        deviation: stat.actual_percentage && stat.target_percentage ?
+          (stat.actual_percentage - stat.target_percentage).toFixed(2) : '0.00'
+      };
+    });
   };
 
   // 表格列定义
@@ -81,7 +122,7 @@ const CatStats = ({ DFSWallet }) => {
       ),
     },
     {
-      title: '数量',
+      title: '统计数量',
       dataIndex: 'count',
       key: 'count',
       render: (count) => (
@@ -92,7 +133,28 @@ const CatStats = ({ DFSWallet }) => {
       ),
     },
     {
-      title: '实际占比',
+      title: '实际数量',
+      dataIndex: 'actualCount',
+      key: 'actualCount',
+      render: (count, record) => (
+        <div style={{ textAlign: 'center' }}>
+          <Statistic
+            value={count}
+            valueStyle={{
+              fontSize: '16px',
+              color: count !== record.count ? '#f5222d' : '#52c41a'
+            }}
+          />
+          {count !== record.count && (
+            <div style={{ fontSize: '12px', color: '#f5222d' }}>
+              差异: {count - record.count}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: '统计占比',
       dataIndex: 'actualPercentage',
       key: 'actualPercentage',
       render: (percentage, record) => (
@@ -102,6 +164,23 @@ const CatStats = ({ DFSWallet }) => {
             strokeColor={QUALITY_COLORS[record.quality]}
             format={() => `${percentage}%`}
             size="small"
+          />
+        </div>
+      ),
+    },
+    {
+      title: '实际占比',
+      dataIndex: 'realActualPercentage',
+      key: 'realActualPercentage',
+      render: (percentage, record) => (
+        <div style={{ width: '100%' }}>
+          <Progress
+            percent={parseFloat(percentage)}
+            strokeColor={QUALITY_COLORS[record.quality]}
+            format={() => `${percentage}%`}
+            size="small"
+            strokeLinecap="round"
+            trailColor="#f0f0f0"
           />
         </div>
       ),
@@ -175,9 +254,32 @@ const CatStats = ({ DFSWallet }) => {
             </span>
             <div className="table-controls">
               <div className="total-cats-display">
-                <span className="total-label">全服猫咪总量：</span>
-                <span className="total-value">{totalCats}</span>
-                <span className="total-unit">只</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <div>
+                    <span className="total-label">统计总量：</span>
+                    <span className="total-value">{totalCats}</span>
+                    <span className="total-unit">只</span>
+                  </div>
+                  {actualCatsData && (
+                    <div style={{ fontSize: '14px', marginTop: '4px' }}>
+                      <span className="total-label">实际总量：</span>
+                      <span
+                        className="total-value"
+                        style={{
+                          color: actualCatsData.total_cats !== totalCats ? '#f5222d' : '#52c41a'
+                        }}
+                      >
+                        {actualCatsData.total_cats}
+                      </span>
+                      <span className="total-unit">只</span>
+                      {actualCatsData.total_cats !== totalCats && (
+                        <span style={{ color: '#f5222d', marginLeft: '8px' }}>
+                          (差异: {actualCatsData.total_cats - totalCats})
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <Button
                 type="primary"
