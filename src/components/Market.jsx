@@ -20,7 +20,6 @@ import {
   DollarOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
-  GiftOutlined,
   BarChartOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined

@@ -37,12 +37,7 @@ async function buyCatFromMarket(wallet, accountName, catId, price)
 - 通过DFS转账到合约地址
 - 备注格式: `buy:${catId}`
 
-#### 转让猫咪
-```javascript
-async function transferCat(wallet, accountName, catId, toAccount)
-```
-- 调用合约的 `transfercat` action
-- 参数: from, to, cat_id
+
 
 #### 获取市场数据
 ```javascript

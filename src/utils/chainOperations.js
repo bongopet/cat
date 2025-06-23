@@ -3,6 +3,7 @@
 
 import { message } from 'antd';
 import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction } from './eosUtils';
+import { getUserPermission } from './permissionManager';
 
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
@@ -40,22 +41,28 @@ const GENDER_NAMES = {
   1: '母'
 };
 
+
+
 // ==================== 新的BongoCat合约操作函数 ====================
 
 // 领取免费猫咪
-async function claimFreeCat(wallet, accountName) {
+async function claimFreeCat(wallet, account) {
   try {
     console.log('开始领取免费猫咪...');
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
 
     const claimAction = {
       account: CONTRACT,
       name: 'claimfreecat',
       authorization: [{
-        actor: accountName,
-        permission: 'active',
+        actor: account.name,
+        permission: permission,
       }],
       data: {
-        user: accountName,
+        user: account.name,
       },
     };
 
@@ -86,19 +93,23 @@ async function claimFreeCat(wallet, accountName) {
 }
 
 // 检查交易记录获得猫咪
-async function checkSwapCat(wallet, accountName) {
+async function checkSwapCat(wallet, account) {
   try {
     console.log('开始检查交易记录...');
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
 
     const checkAction = {
       account: CONTRACT,
       name: 'checkswapcat',
       authorization: [{
-        actor: accountName,
-        permission: 'active',
+        actor: account.name,
+        permission: permission,
       }],
       data: {
-        user: accountName,
+        user: account.name,
       },
     };
 
@@ -122,19 +133,23 @@ async function checkSwapCat(wallet, accountName) {
 }
 
 // 抢图获得猫咪
-async function grabImage(wallet, accountName) {
+async function grabImage(wallet, account) {
   try {
     console.log('开始抢图获得猫咪...');
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
 
     const grabAction = {
       account: CONTRACT,
       name: 'grabimage',
       authorization: [{
-        actor: accountName,
-        permission: 'active',
+        actor: account.name,
+        permission: permission,
       }],
       data: {
-        user: accountName,
+        user: account.name,
       },
     };
 
@@ -161,18 +176,36 @@ async function grabImage(wallet, accountName) {
 async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
   try {
     console.log(`开始繁殖猫咪: 公猫#${maleCatId} x 母猫#${femaleCatId}`);
+    console.log('繁殖参数检查:', {
+      wallet: !!wallet,
+      accountName,
+      accountNameType: typeof accountName,
+      maleCatId,
+      femaleCatId
+    });
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    // 确保参数都是正确的类型
+    const actorName = accountName; // accountName 应该已经是字符串
+    const maleId = parseInt(maleCatId);
+    const femaleId = parseInt(femaleCatId);
+
+    console.log('处理后的参数:', { actorName, maleId, femaleId, permission });
 
     const breedAction = {
       account: CONTRACT,
       name: 'breedcats',
       authorization: [{
-        actor: accountName,
-        permission: 'active',
+        actor: actorName,
+        permission: permission,
       }],
       data: {
-        owner: accountName,
-        male_cat_id: maleCatId,
-        female_cat_id: femaleCatId,
+        owner: actorName,
+        male_cat_id: maleId,
+        female_cat_id: femaleId,
       },
     };
 
@@ -214,12 +247,12 @@ async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
 }
 
 // DFS喂养猫咪（通过转账实现）
-async function feedCatWithDFS(wallet, accountName, catId, amount = '1.00000000') {
+async function feedCatWithDFS(wallet, account, catId, amount = '1.00000000') {
   try {
     console.log(`开始用DFS喂养猫咪#${catId}...`);
 
     // 检查DFS余额
-    const balanceStr = await getAccountBalance(wallet, 'eosio.token', accountName, 'DFS');
+    const balanceStr = await getAccountBalance(wallet, 'eosio.token', account.name, 'DFS');
     const balanceParts = balanceStr.split(' ');
     const balanceValue = Number.parseFloat(balanceParts[0]);
     const feedAmount = Number.parseFloat(amount);
@@ -229,13 +262,17 @@ async function feedCatWithDFS(wallet, accountName, catId, amount = '1.00000000')
       message.warning(errorMsg);
       throw new Error(errorMsg);
     }
+ // 使用全局权限
+ const permission = getUserPermission('contract');
+ console.log(`使用权限: ${permission}`);
 
     // 执行DFS转账喂养
     const transferAction = buildTransferAction(
-      accountName,
+      account.name,
       CONTRACT,
       `${amount} DFS`,
-      `feed:${catId}` // 喂养备注格式
+      `feed:${catId}`, // 喂养备注格式
+      permission
     );
 
     const result = await sendTransaction(wallet, [transferAction]);
@@ -410,13 +447,18 @@ async function refundCat(wallet, accountName, catId) {
       throw new Error('猫咪ID为空');
     }
 
+    // 动态获取合适的权限
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
     // 执行退款操作
     const refundAction = {
       account: CONTRACT,
       name: 'refundcat',// 退款函数名 就是这个
       authorization: [{
         actor: accountName,
-        permission: 'active',
+        permission: permission,
       }],
       data: {
         cat_id: catId,
@@ -460,13 +502,17 @@ async function feedCat(wallet, accountName, catId) {
       console.log('喂养猫咪余额不足:', { balance, required: '1 BGFISH' });
       throw new Error(errorMsg);
     }
-    
+     // 使用全局权限
+     const permission = getUserPermission('contract');
+     console.log(`使用权限: ${permission}`);
+ 
     // 执行喂养操作
     const transferAction = buildTransferAction(
       accountName,
       CONTRACT,
       '1.00000000 BGFISH',
-      `feed:${catId}` // 特定备注，标识为喂养操作
+      `feed:${catId}`, // 特定备注，标识为喂养操作
+       permission
     );
     
     const result = await sendTransaction(wallet, [transferAction]);
@@ -491,13 +537,17 @@ async function feedCat(wallet, accountName, catId) {
 // 升级猫咪
 async function upgradeCat(wallet, accountName, catId) {
   try {
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
     // 执行升级操作
     const upgradeAction = {
       account: CONTRACT,
       name: 'upgrade',
       authorization: [{
         actor: accountName,
-        permission: 'active',
+        permission: permission,
       }],
       data: {
         cat_id: catId,
@@ -532,13 +582,17 @@ async function upgradeCat(wallet, accountName, catId) {
 // 检查猫咪活动
 async function checkCatAction(wallet, accountName, catId) {
   try {
+    // 动态获取合适的权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+ 
     // 执行检查活动操作
     const checkAction = {
       account: CONTRACT,
       name: 'checkaction',
       authorization: [{
         actor: accountName,
-        permission: 'active',
+        permission: permission,
       }],
       data: {
         owner: accountName,
@@ -1001,12 +1055,16 @@ async function listCatForSale(wallet, accountName, catId, price) {
   try {
     console.log(`开始上架猫咪#${catId}，价格: ${price}...`);
 
+    // 动态获取合适的权限
+    const permission = getUserPermission('contract');
+   console.log(`使用权限: ${permission}`);
+
     const listAction = {
       account: CONTRACT,
       name: 'listcat',
       authorization: [{
         actor: accountName,
-        permission: 'active',
+        permission: permission,
       }],
       data: {
         seller: accountName,
@@ -1039,12 +1097,17 @@ async function unlistCatFromSale(wallet, accountName, catId) {
   try {
     console.log(`开始下架猫咪#${catId}...`);
 
+    // 动态获取合适的权限
+   // 使用全局权限
+   const permission = getUserPermission('contract');
+   console.log(`使用权限: ${permission}`);
+
     const unlistAction = {
       account: CONTRACT,
       name: 'unlistcat',
       authorization: [{
         actor: accountName,
-        permission: 'active',
+        permission: permission,
       }],
       data: {
         seller: accountName,
@@ -1087,16 +1150,24 @@ async function buyCatFromMarket(wallet, accountName, catId, price) {
       message.warning(errorMsg);
       throw new Error(errorMsg);
     }
+ // 使用全局权限
+ const permission = getUserPermission('contract');
+ console.log(`使用权限: ${permission}`);
 
     // 执行DFS转账购买
     const transferAction = buildTransferAction(
       accountName,
       CONTRACT,
       price,
-      `buy:${catId}` // 购买备注格式
+      `buy:${catId}`, // 购买备注格式
+      permission
     );
 
-    const result = await sendTransaction(wallet, [transferAction]);
+    const result = await sendTransaction(wallet, [transferAction], {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      useFreeCpu: true
+    });
 
     message.success('猫咪购买成功！');
     console.log('猫咪购买成功', result);
@@ -1531,14 +1602,16 @@ async function challengeArena(wallet, accountName, arenaId, challengerCatId, bet
 
     // 通过DFS转账挑战，memo格式: "challenge:擂台ID:猫咪ID"
     const memo = `challenge:${arenaId}:${challengerCatId}`;
-
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+ 
     const result = await wallet.transact({
       actions: [{
         account: 'eosio.token',
         name: 'transfer',
         authorization: [{
           actor: accountName,
-          permission: 'active',
+          permission:permission,
         }],
         data: {
           from: accountName,
@@ -1564,13 +1637,18 @@ async function challengeArena(wallet, accountName, arenaId, challengerCatId, bet
 async function removeArena(wallet, accountName, arenaId) {
   try {
     console.log('正在移除擂台...', { arenaId });
+
+ // 使用全局权限
+ const permission = getUserPermission('contract');
+ console.log(`使用权限: ${permission}`);
+
     const result = await wallet.transact({
       actions: [{
         account: CONTRACT,
         name: 'removearena',
         authorization: [{
           actor: accountName,
-          permission: 'active',
+          permission: permission,
         }],
         data: {
           owner: accountName,
@@ -1620,6 +1698,7 @@ async function getCatStamina(wallet, catId) {
 
 // 导出所有函数
 export {
+
   // 新的BongoCat合约函数
   claimFreeCat,
   checkSwapCat,
@@ -1632,7 +1711,6 @@ export {
   listCatForSale,
   unlistCatFromSale,
   buyCatFromMarket,
-  transferCat,
   getMarketCats,
   getMarketStats,
   checkCatInMarket,

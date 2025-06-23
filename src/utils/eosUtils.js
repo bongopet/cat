@@ -192,7 +192,7 @@ export async function getChainInfo(wallet) {
  * @param {Object} options - 交易选项
  * @returns {Object} 交易结果
  */
-export async function sendTransaction(wallet, actions, options = { useFreeCpu: true }) {
+export async function sendTransaction(wallet, actions, options = {}) {
   console.log('sendTransaction 调用:', {
     wallet: !!wallet,
     walletType: typeof wallet,
@@ -211,8 +211,14 @@ export async function sendTransaction(wallet, actions, options = { useFreeCpu: t
 
   try {
     const transaction = { actions };
-    console.log('准备发送交易:', transaction);
-    const result = await wallet.transact(transaction, options);
+    const transactionOptions = {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      useFreeCpu: true,
+      ...options
+    };
+    console.log('准备发送交易:', transaction, '选项:', transactionOptions);
+    const result = await wallet.transact(transaction, transactionOptions);
     console.log('交易发送成功:', result);
     return result;
   } catch (error) {

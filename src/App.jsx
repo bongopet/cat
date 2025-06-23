@@ -27,6 +27,7 @@ import {
   feedCatWithDFS
 } from './utils/chainOperations'
 import { getAccountBalance } from './utils/eosUtils'
+import { setUserPermission, resetUserPermission } from './utils/permissionManager'
 import WalletList from './components/WalletList'
 import './App.css'
 
@@ -149,6 +150,16 @@ function App() {
       console.log('登录成功，用户信息:', userInfo);
       setAccount(userInfo);
       setConnected(true);
+
+      // 设置全局权限
+      if (userInfo && userInfo.authority) {
+        setUserPermission(userInfo.authority);
+        console.log('已设置全局权限:', userInfo.authority);
+      } else {
+        setUserPermission('active'); // 默认权限
+        console.log('未找到权限信息，使用默认权限: active');
+      }
+
       // 隐藏钱包列表
       setShowWalletList(false);
 
@@ -184,6 +195,10 @@ function App() {
       setAccount(null)
       setBalance(null)
       setSelectedCat(null)
+
+      // 重置权限
+      resetUserPermission()
+
       message.success('钱包已断开连接')
     } catch (error) {
       console.error('断开钱包连接失败:', error)
@@ -241,7 +256,8 @@ function App() {
 
     try {
       setClaimingFreeCat(true);
-      const result = await claimFreeCat(dfsWallet, account.name);
+      console.log('App.jsx - 调用claimFreeCat前的account对象:', account);
+      const result = await claimFreeCat(dfsWallet, account);
 
       if (result.success) {
         // Refresh cat list
@@ -264,7 +280,8 @@ function App() {
 
     try {
       setCheckingSwap(true);
-      const result = await checkSwapCat(dfsWallet, account.name);
+      console.log('App.jsx - 调用checkSwapCat前的account对象:', account);
+      const result = await checkSwapCat(dfsWallet, account);
 
       if (result.success) {
         // Refresh cat list
@@ -287,7 +304,7 @@ function App() {
 
     try {
       setGrabbingImage(true);
-      const result = await grabImage(dfsWallet, account.name);
+      const result = await grabImage(dfsWallet, account);
 
       if (result.success) {
         // Refresh cat list
