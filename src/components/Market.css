@@ -41,6 +41,18 @@
   background: #f9f9f9;
   border-radius: 0 0 8px 8px;
   border-top: 1px solid #f0f0f0;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.cat-actions .ant-space {
+  width: 100%;
+}
+
+.cat-actions .ant-btn {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* 市场统计卡片优化 */
@@ -193,14 +205,25 @@
 }
 
 .unlist-button {
-  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
-  border: none;
-  color: white;
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%) !important;
+  border: none !important;
+  color: white !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 500 !important;
 }
 
 .unlist-button:hover {
-  background: linear-gradient(135deg, #cf1322 0%, #a8071a 100%);
-  color: white;
+  background: linear-gradient(135deg, #cf1322 0%, #a8071a 100%) !important;
+  color: white !important;
+  opacity: 1 !important;
+  transform: scale(1.05) !important;
+}
+
+.unlist-button:focus {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%) !important;
+  color: white !important;
+  opacity: 1 !important;
 }
 
 .transfer-button {

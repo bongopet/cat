@@ -25,14 +25,14 @@ import {
   SortAscendingOutlined,
   SortDescendingOutlined
 } from '@ant-design/icons'
-import { 
-  getMarketCats, 
-  getMarketStats, 
-  buyCatFromMarket, 
-  listCatForSale, 
+import {
+  getMarketCats,
+  getMarketStats,
+  buyCatFromMarket,
+  listCatForSale,
   unlistCatFromSale,
-  transferCat,
   getUserCats,
+  checkCatInMarket,
   QUALITY_NAMES
 } from '../utils/chainOperations'
 import CatCard from './CatCard'
@@ -52,12 +52,10 @@ function Market({ DFSWallet, userInfo }) {
   // 模态框状态
   const [buyModalVisible, setBuyModalVisible] = useState(false)
   const [sellModalVisible, setSellModalVisible] = useState(false)
-  const [transferModalVisible, setTransferModalVisible] = useState(false)
   const [selectedCat, setSelectedCat] = useState(null)
-  
+
   // 表单状态
   const [sellPrice, setSellPrice] = useState('')
-  const [transferTo, setTransferTo] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   
   // 筛选和排序状态
@@ -92,12 +90,32 @@ function Market({ DFSWallet, userInfo }) {
   // 获取用户猫咪
   const fetchUserCats = async () => {
     if (!DFSWallet || !userInfo) return
-    
+
     try {
       const cats = await getUserCats(DFSWallet, userInfo.name)
       // 只显示可交易的猫咪（卓越品质以上）
       const tradeableCats = cats.filter(cat => cat.is_tradeable && cat.quality >= 2)
-      setUserCats(tradeableCats)
+
+      // 检查每只猫咪是否已经在市场上出售
+      const catsWithMarketStatus = await Promise.all(
+        tradeableCats.map(async (cat) => {
+          try {
+            const isListed = await checkCatInMarket(DFSWallet, cat.id)
+            return {
+              ...cat,
+              isListedInMarket: isListed
+            }
+          } catch (error) {
+            console.error(`检查猫咪#${cat.id}市场状态失败:`, error)
+            return {
+              ...cat,
+              isListedInMarket: false
+            }
+          }
+        })
+      )
+
+      setUserCats(catsWithMarketStatus)
     } catch (error) {
       console.error('获取用户猫咪失败:', error)
     }
@@ -168,26 +186,7 @@ function Market({ DFSWallet, userInfo }) {
     }
   }
 
-  // 处理转让猫咪
-  const handleTransferCat = async () => {
-    if (!selectedCat || !transferTo || !userInfo) return
-    
-    try {
-      setActionLoading(true)
-      await transferCat(DFSWallet, userInfo.name, selectedCat.id, transferTo)
-      
-      setTransferModalVisible(false)
-      setSelectedCat(null)
-      setTransferTo('')
-      setRefreshTrigger(prev => prev + 1)
-      
-    } catch (error) {
-      console.error('转让猫咪失败:', error)
-      message.error('转让猫咪失败: ' + (error.message || String(error)))
-    } finally {
-      setActionLoading(false)
-    }
-  }
+
 
   // 筛选和排序市场猫咪
   const getFilteredAndSortedCats = () => {
@@ -363,32 +362,33 @@ function Market({ DFSWallet, userInfo }) {
         {/* 操作按钮 */}
         <div className="cat-actions">
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Button
-              type="primary"
-              icon={<DollarOutlined />}
-              size="small"
-              className="sell-button"
-              onClick={() => {
-                setSelectedCat(cat)
-                setSellModalVisible(true)
-              }}
-              block
-            >
-              上架出售
-            </Button>
-
-            <Button
-              icon={<GiftOutlined />}
-              size="small"
-              className="transfer-button"
-              onClick={() => {
-                setSelectedCat(cat)
-                setTransferModalVisible(true)
-              }}
-              block
-            >
-              转让
-            </Button>
+            {cat.isListedInMarket ? (
+              <Button
+                danger
+                icon={<DollarOutlined />}
+                size="small"
+                className="unlist-button"
+                onClick={() => handleUnlistCat(cat.id)}
+                loading={actionLoading}
+                block
+              >
+                下架
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                icon={<DollarOutlined />}
+                size="small"
+                className="sell-button"
+                onClick={() => {
+                  setSelectedCat(cat)
+                  setSellModalVisible(true)
+                }}
+                block
+              >
+                上架出售
+              </Button>
+            )}
           </Space>
         </div>
       </div>
@@ -514,39 +514,7 @@ function Market({ DFSWallet, userInfo }) {
         )}
       </Modal>
 
-      {/* 转让猫咪模态框 */}
-      <Modal
-        title="转让猫咪"
-        open={transferModalVisible}
-        onOk={handleTransferCat}
-        onCancel={() => {
-          setTransferModalVisible(false)
-          setSelectedCat(null)
-          setTransferTo('')
-        }}
-        confirmLoading={actionLoading}
-        okText="确认转让"
-        cancelText="取消"
-      >
-        {selectedCat && (
-          <div>
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <CatCard cat={selectedCat} showDetails={true} />
-            </div>
-            <Divider />
 
-            <div style={{ marginTop: 16 }}>
-              <label>转让给 (账户名):</label>
-              <Input
-                value={transferTo}
-                onChange={(e) => setTransferTo(e.target.value)}
-                placeholder="请输入接收方账户名"
-                style={{ marginTop: 8 }}
-              />
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   )
 }

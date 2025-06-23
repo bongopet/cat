@@ -6,8 +6,8 @@ import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction }
 
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CATTABLE = 'cat13s';
-const QATBLE='qualstat13s'
+const CATTABLE = 'cat14s';
+const QATBLE='qualstat14s'
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 
 // 品质常量定义 - 与合约保持一致
@@ -890,12 +890,13 @@ async function getCatStats(wallet) {
         const quality_stats = [];
         for (let i = 0; i < 8; i++) {
           const count = statsData[`quality_count_${i}`] || 0;
-          const targetPercentage = TARGET_PERCENTAGES[i] || 0;
+          // 使用表中的目标概率数据，而不是硬编码的常量
+          const targetPercentage = statsData[`target_percentage_${i}`] || 0;
 
           quality_stats.push({
             quality: i,
             count: count,
-            target_percentage: targetPercentage / 100, // 转换为实际百分比
+            target_percentage: targetPercentage / 100, // 转换为实际百分比 (从万分比转为百分比)
             actual_percentage: statsData.total_cats > 0 ?
               ((count / statsData.total_cats) * 100) : 0
           });
@@ -913,6 +914,38 @@ async function getCatStats(wallet) {
 
     // 如果没有统计表数据，我们通过读取所有猫咪数据来计算统计
     console.log('开始从所有猫咪数据计算统计...');
+
+    // 首先尝试获取目标概率数据
+    let targetPercentages = {};
+    try {
+      const targetStatsRows = await getTableRows(
+        wallet,
+        CONTRACT,
+        CONTRACT,
+        QATBLE, // 从同一个表获取目标概率
+        '', // lower_bound
+        '', // upper_bound
+        1,  // index_position
+        'i64', // key_type
+        1 // limit
+      );
+
+      if (targetStatsRows && targetStatsRows.length > 0) {
+        const targetData = targetStatsRows[0];
+        for (let i = 0; i < 8; i++) {
+          targetPercentages[i] = targetData[`target_percentage_${i}`] || 0;
+        }
+        console.log('获取到目标概率数据:', targetPercentages);
+      } else {
+        // 如果无法获取目标概率，使用默认值
+        console.log('无法获取目标概率数据，使用默认值');
+        targetPercentages = TARGET_PERCENTAGES;
+      }
+    } catch (targetError) {
+      console.log('获取目标概率失败，使用默认值:', targetError);
+      targetPercentages = TARGET_PERCENTAGES;
+    }
+
     const allCats = await getAllCats(wallet);
 
     if (!allCats || !Array.isArray(allCats)) {
@@ -936,12 +969,12 @@ async function getCatStats(wallet) {
     const quality_stats = [];
     for (let i = 0; i < 8; i++) {
       const count = qualityStats[i] || 0;
-      const targetPercentage = TARGET_PERCENTAGES[i] || 0;
+      const targetPercentage = targetPercentages[i] || 0;
 
       quality_stats.push({
         quality: i,
         count: count,
-        target_percentage: targetPercentage / 100, // 转换为实际百分比
+        target_percentage: targetPercentage / 100, // 转换为实际百分比 (从万分比转为百分比)
         actual_percentage: allCats.length > 0 ?
           ((count / allCats.length) * 100) : 0
       });
@@ -1082,43 +1115,7 @@ async function buyCatFromMarket(wallet, accountName, catId, price) {
   }
 }
 
-// 直接转让猫咪
-async function transferCat(wallet, accountName, catId, toAccount) {
-  try {
-    console.log(`开始转让猫咪#${catId}给${toAccount}...`);
 
-    const transferAction = {
-      account: CONTRACT,
-      name: 'transfercat',
-      authorization: [{
-        actor: accountName,
-        permission: 'active',
-      }],
-      data: {
-        from: accountName,
-        to: toAccount,
-        cat_id: catId,
-      },
-    };
-
-    const result = await sendTransaction(wallet, [transferAction]);
-
-    message.success('猫咪转让成功！');
-    console.log('猫咪转让成功', result);
-
-    // 记录交易
-    const txId = result?.transaction_id || `transfer-${Date.now()}`;
-    recordCatTransaction('transfer', catId, txId, '', '', accountName, toAccount);
-
-    return {
-      success: true,
-      txHash: txId
-    };
-  } catch (error) {
-    console.error('转让猫咪失败:', error);
-    throw error;
-  }
-}
 
 // 获取市场上的猫咪列表
 async function getMarketCats(wallet, limit = 20) {
@@ -1215,6 +1212,43 @@ async function getMarketCats(wallet, limit = 20) {
   } catch (error) {
     console.error('获取市场猫咪列表失败:', error);
     return [];
+  }
+}
+
+// 检查猫咪是否在市场上出售
+async function checkCatInMarket(wallet, catId) {
+  try {
+    console.log(`正在检查猫咪#${catId}是否在市场上...`);
+
+    // 使用 bycatid 索引查询特定猫咪
+    const marketRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      'catmarket',
+      catId.toString(), // lower_bound
+      catId.toString(), // upper_bound
+      2, // index_position - bycatid 索引
+      'i64', // key_type
+      1 // limit
+    );
+
+    if (marketRows && marketRows.length > 0) {
+      // 检查是否有活跃的市场记录
+      const activeMarketRecord = marketRows.find(market =>
+        market.cat_id === catId && market.is_active
+      );
+
+      const isListed = !!activeMarketRecord;
+      console.log(`猫咪#${catId}市场状态: ${isListed ? '已上架' : '未上架'}`);
+      return isListed;
+    }
+
+    console.log(`猫咪#${catId}未在市场上`);
+    return false;
+  } catch (error) {
+    console.error(`检查猫咪#${catId}市场状态失败:`, error);
+    return false;
   }
 }
 
@@ -1601,6 +1635,7 @@ export {
   transferCat,
   getMarketCats,
   getMarketStats,
+  checkCatInMarket,
 
   // 擂台系统函数
   getArenas,
