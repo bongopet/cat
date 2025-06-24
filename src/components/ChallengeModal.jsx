@@ -60,8 +60,8 @@ const ChallengeModal = ({
 
   // 处理确认挑战
   const handleConfirm = () => {
-    if (!arena || !selectedCat) return;
-    
+    if (!arena || !selectedCat || !arena.bet_amount) return;
+
     form.validateFields().then(values => {
       const betAmount = parseFloat(arena.bet_amount.split(' ')[0]);
       onConfirm(arena.id, values.catId, betAmount);
@@ -70,15 +70,15 @@ const ChallengeModal = ({
 
   // 计算胜率估算
   const calculateWinChance = () => {
-    if (!selectedCat || !arena.cat) return 50;
-    
+    if (!selectedCat || !arena || !arena.cat) return 50;
+
     // 简单的胜率计算（基于等级和品质）
     const challengerPower = selectedCat.level * 15 + selectedCat.quality * 50;
     const defenderPower = arena.cat.level * 15 + arena.cat.quality * 50;
-    
+
     const totalPower = challengerPower + defenderPower;
     const winChance = Math.round((challengerPower / totalPower) * 100);
-    
+
     // 限制在10-90%之间，增加不确定性
     return Math.max(10, Math.min(90, winChance));
   };
@@ -97,12 +97,13 @@ const ChallengeModal = ({
     return '#f5222d';
   };
 
-  const availableCats = getAvailableCats();
-  const betAmount = arena ? parseFloat(arena.bet_amount.split(' ')[0]) : 0;
-  const totalPool = arena ? parseFloat(arena.total_pool.split(' ')[0]) : 0;
-  const winChance = calculateWinChance();
-
+  // 早期返回检查
   if (!arena) return null;
+
+  const availableCats = getAvailableCats();
+  const betAmount = arena.bet_amount ? parseFloat(arena.bet_amount.split(' ')[0]) : 0;
+  const totalPool = arena.total_pool ? parseFloat(arena.total_pool.split(' ')[0]) : 0;
+  const winChance = calculateWinChance();
 
   return (
     <Modal
@@ -129,7 +130,9 @@ const ChallengeModal = ({
         description={
           <ul style={{ margin: 0, paddingLeft: 20 }}>
             <li>支付挑战费用参与战斗</li>
-            <li>胜利获得整个奖池，失败则挑战费加入奖池</li>
+            <li>挑战成功：获得挑战费用作为奖励，失败费用按比例分配</li>
+            <li>挑战失败：费用的1.5%给开发者，1.5%进传世猫池，97%加入奖池</li>
+            <li>挑战成功：获得退还的挑战费用 + 97%的奖池奖励</li>
             <li>战斗结果基于猫咪属性和随机因素</li>
             <li>每只猫咪每天只能挑战一次</li>
             <li>挑战消耗20点体力</li>
@@ -150,7 +153,7 @@ const ChallengeModal = ({
                 alt={`Defender Cat #${arena.cat.id}`}
                 style={{ width: '100%', borderRadius: 8 }}
                 onError={(e) => {
-                  e.target.src = '/images/default_cat.png';
+                  e.target.src = '/images/logo.png';
                 }}
               />
             )}
@@ -257,7 +260,7 @@ const ChallengeModal = ({
                     alt={`Challenger Cat #${selectedCat.id}`}
                     style={{ width: '100%', borderRadius: 8 }}
                     onError={(e) => {
-                      e.target.src = '/images/default_cat.png';
+                      e.target.src = '/images/logo.png';
                     }}
                   />
                   <div>
@@ -300,7 +303,7 @@ const ChallengeModal = ({
                         alt={`Defender Cat #${arena.cat.id}`}
                         style={{ width: '100%', borderRadius: 8 }}
                         onError={(e) => {
-                          e.target.src = '/images/default_cat.png';
+                          e.target.src = '/images/logo.png';
                         }}
                       />
                       <div>
@@ -336,7 +339,8 @@ const ChallengeModal = ({
                   <FireOutlined />
                   <span>
                     支付 <strong>{betAmount.toFixed(2)} DFS</strong> 挑战费用，
-                    胜利可获得 <strong>{totalPool.toFixed(2)} DFS</strong> 奖池！
+                    胜利可获得 <strong>{(betAmount + betAmount * 0.97).toFixed(2)} DFS</strong> 奖励！
+                    (退还 {betAmount.toFixed(2)} + 97%奖池奖励 {(betAmount * 0.97).toFixed(2)})
                   </span>
                 </Space>
               }

@@ -106,6 +106,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8px;
 }
 
 .account-info {
@@ -119,6 +120,17 @@ html {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+
+.balance-info {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(82, 196, 26, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(82, 196, 26, 0.3);
+  height: 32px; /* 与按钮高度保持一致 */
+  box-sizing: border-box;
 }
 
 /* 菜单导航样式 */
@@ -191,20 +203,27 @@ html {
   .app-header {
     padding: 0 10px;
   }
-  
+
   .account-info {
     max-width: 120px;
     font-size: 13px;
     margin-right: 6px;
   }
-  
+
+  .balance-info {
+    padding: 2px 6px;
+    font-size: 12px;
+    height: 28px; /* 移动端按钮高度 */
+  }
+
   .logo-section h4 {
     font-size: 16px !important;
   }
-  
+
   .wallet-section {
     display: flex;
     align-items: center;
+    gap: 6px;
   }
 }
 
@@ -607,31 +626,37 @@ html {
     max-width: 80px;
     margin-right: 3px;
   }
-  
+
   .account-info .ant-typography {
     max-width: 80px;
     font-size: 12px;
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  
-  .wallet-section {
-    gap: 2px;
+
+  .balance-info {
+    padding: 1px 4px;
+    font-size: 11px;
+    height: 24px; /* 小屏幕按钮高度 */
   }
-  
+
+  .wallet-section {
+    gap: 4px;
+  }
+
   .wallet-section button {
     padding: 0 4px;
     font-size: 12px;
   }
-  
+
   .market-title {
     font-size: 16px;
   }
-  
+
   .coming-soon-container h2 {
     font-size: 22px;
   }
-  
+
   .coming-soon-container p {
     font-size: 14px;
   }

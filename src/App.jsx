@@ -47,9 +47,45 @@ function App() {
   const [catList, setCatList] = useState([])
   const [selectedCat, setSelectedCat] = useState(null)
   const [refreshCats, setRefreshCats] = useState(0)
+
+  // 余额刷新定时器
+  const [balanceTimer, setBalanceTimer] = useState(null)
   const [activeTab, setActiveTab] = useState('home')
   const [catDetailsVisible, setCatDetailsVisible] = useState(false)
   const [mintingCat, setMintingCat] = useState(false)
+
+  // 获取余额的函数
+  const fetchBalance = async () => {
+    if (dfsWallet && account && account.name) {
+      try {
+        const balanceStr = await getAccountBalance(dfsWallet, 'eosio.token', account.name, 'DFS');
+        setBalance({ balance: balanceStr });
+      } catch (balanceError) {
+        console.error('自动刷新余额失败:', balanceError);
+        // 如果获取失败，不更新余额状态，保持之前的值
+      }
+    }
+  }
+
+  // 启动余额定时刷新
+  const startBalanceTimer = () => {
+    // 清除现有定时器
+    if (balanceTimer) {
+      clearInterval(balanceTimer);
+    }
+
+    // 设置新的定时器，每5秒刷新一次
+    const timer = setInterval(fetchBalance, 5000);
+    setBalanceTimer(timer);
+  }
+
+  // 停止余额定时刷新
+  const stopBalanceTimer = () => {
+    if (balanceTimer) {
+      clearInterval(balanceTimer);
+      setBalanceTimer(null);
+    }
+  }
 
   // New BongoCat functionality state
   const [claimingFreeCat, setClaimingFreeCat] = useState(false)
@@ -68,12 +104,21 @@ function App() {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
+
     window.addEventListener('resize', handleResize)
     handleResize()
-    
+
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (balanceTimer) {
+        clearInterval(balanceTimer)
+      }
+    }
+  }, [balanceTimer])
 
   // Initialize DFS wallet
   useEffect(() => {
@@ -170,6 +215,9 @@ function App() {
           console.log('尝试获取余额...');
           const balanceStr = await getAccountBalance(dfsWallet, 'eosio.token', userInfo.name, 'DFS');
           setBalance({ balance: balanceStr });
+
+          // 启动余额自动刷新
+          startBalanceTimer();
         } catch (balanceError) {
           console.error('获取余额失败:', balanceError);
           setBalance({ balance: '获取失败' });
@@ -190,6 +238,9 @@ function App() {
     if (!dfsWallet) return
 
     try {
+      // 停止余额自动刷新
+      stopBalanceTimer()
+
       // Call logout method
       dfsWallet.logout()
       setConnected(false)
@@ -483,7 +534,7 @@ function App() {
   return (
     <Layout className="app-layout" style={{ margin: 0, padding: 0 }}>
       {/* 背景气泡动画 */}
-      <div className="bubbles">
+      {/* <div className="bubbles">
         {[...Array(10)].map((_, i) => (
           <div className="bubble" key={i} style={{
             '--size': `${Math.random() * 5 + 2}rem`,
@@ -493,7 +544,7 @@ function App() {
             '--delay': `${Math.random() * 2}s`,
           }}></div>
         ))}
-      </div>
+      </div> */}
 
       <Header className="app-header" style={{ margin: 0, padding: 0 }}>
         <div className="header-content">
@@ -527,11 +578,19 @@ function App() {
           <div className="wallet-section">
             {connected ? (
               <>
-                {/* 账户信息显示在按钮旁边 */}
-                {connected && (
-                  <div className="account-info">
-                    <Text style={{ color: 'white', maxWidth: '250px' }} ellipsis={{ tooltip: account?.name }}>
-                      {account?.name}
+                {/* 余额显示在按钮左边 */}
+                {balance && (
+                  <div className="balance-info">
+                    <Text style={{ color: '#52c41a', fontWeight: 'bold' }}>
+                      {(() => {
+                        try {
+                          const balanceStr = balance.balance || '0.00000000 DFS';
+                          const amount = parseFloat(balanceStr.split(' ')[0]);
+                          return `${amount.toFixed(2)} DFS`;
+                        } catch (error) {
+                          return '0.00 DFS';
+                        }
+                      })()}
                     </Text>
                   </div>
                 )}
@@ -540,7 +599,7 @@ function App() {
                   icon={<LogoutOutlined />}
                   onClick={disconnectWallet}
                 >
-                  断开连接
+                  {account?.name || '断开连接'}
                 </Button>
               </>
             ) : (

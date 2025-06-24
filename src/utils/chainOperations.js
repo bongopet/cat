@@ -1408,7 +1408,7 @@ async function getArenas(wallet) {
               wallet,
               CONTRACT,
               CONTRACT,
-              'cat51s',
+              CATTABLE,
               arena.cat_id.toString(),
               arena.cat_id.toString(),
               1,
@@ -1559,12 +1559,14 @@ function getAttributeColor(rank) {
 }
 
 // 放置猫咪到擂台
-async function placeInArena(wallet, accountName, catId, totalAmount) {
+async function placeInArena(wallet, accountName, catId, totalAmount, betAmount) {
   try {
-    console.log('正在放置猫咪到擂台...', { catId, totalAmount });
+    console.log('正在放置猫咪到擂台...', { catId, totalAmount, betAmount });
 
-    // 通过DFS转账放置擂台，memo格式: "arena:猫咪ID"
-    const memo = `arena:${catId}`;
+    // 通过DFS转账放置擂台，memo格式: "arena:猫咪ID:挑战金额"
+    // 挑战金额需要转换为最小单位（8位小数）
+    const betAmountInMinUnits = Math.round(betAmount * 100000000);
+    const memo = `arena:${catId}:${betAmountInMinUnits}`;
 
     const result = await wallet.transact({
       actions: [{
@@ -1623,6 +1625,7 @@ async function challengeArena(wallet, accountName, arenaId, challengerCatId, bet
     }, {
       blocksBehind: 3,
       expireSeconds: 30,
+      useFreeCpu: true,
     });
 
     console.log('挑战擂台成功:', result);

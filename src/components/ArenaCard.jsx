@@ -83,7 +83,7 @@ const ArenaCard = ({
               alt={`Cat #${arena.cat.id}`}
               style={{ width: '100%', height: 200, objectFit: 'cover' }}
               onError={(e) => {
-                e.target.src = '/images/default_cat.png';
+                e.target.src = '/images/logo.png';
               }}
             />
             <div className="arena-cat-overlay">

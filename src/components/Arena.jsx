@@ -84,10 +84,10 @@ const Arena = ({ DFSWallet, accountName }) => {
   };
 
   // 处理放置擂台
-  const handlePlaceArena = async (catId, totalAmount) => {
+  const handlePlaceArena = async (catId, totalAmount, betAmount) => {
     try {
       setLoading(true);
-      await placeInArena(DFSWallet, accountName, catId, totalAmount);
+      await placeInArena(DFSWallet, accountName, catId, totalAmount, betAmount);
       message.success('猫咪已成功放置到擂台！');
       setPlaceModalVisible(false);
       await loadData(); // 重新加载数据
