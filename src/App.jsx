@@ -17,6 +17,7 @@ import RankingList from './components/RankingList'
 import CatStats from './components/CatStats'
 import Market from './components/Market'
 import Arena from './components/Arena'
+import LegendaryPool from './components/LegendaryPool'
 import {
   getUserCats,
   mintCat,
@@ -379,6 +380,11 @@ function App() {
       label: '擂台',
     },
     {
+      key: 'legendary-pool',
+      icon: <TrophyOutlined />,
+      label: '传世猫池',
+    },
+    {
       key: 'stats',
       icon: <BarChartOutlined />,
       label: '统计',
@@ -434,6 +440,13 @@ function App() {
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
             <Arena DFSWallet={dfsWallet} accountName={account?.name} />
+          </div>
+        );
+
+      case 'legendary-pool':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <LegendaryPool DFSWallet={dfsWallet} userInfo={account} />
           </div>
         );
 

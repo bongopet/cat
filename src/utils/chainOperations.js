@@ -1696,6 +1696,154 @@ async function getCatStamina(wallet, catId) {
   }
 }
 
+// ==================== 传世猫池相关操作 ====================
+
+// 获取传世猫池信息
+async function getPoolInfo(wallet) {
+  try {
+    console.log('获取传世猫池信息...');
+
+    // 暂时返回模拟数据，等合约完善后再连接真实数据
+    // TODO: 实现真实的合约调用
+    /*
+    const result = await wallet.eosApi.transact({
+      actions: [{
+        account: CONTRACT,
+        name: 'getpoolinfo',
+        authorization: [],
+        data: {}
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      broadcast: false,
+      sign: false
+    });
+    */
+
+    // 模拟池子数据
+    const mockPoolData = {
+      totalDFS: '12345.67890000', // 模拟池子总DFS
+      totalDailyReward: '123.45678900', // 模拟每日1%总奖励
+      individualDailyReward: '41.15226300', // 模拟每人可领取金额（假设3个拥有者）
+      legendaryOwnerCount: 3, // 模拟传世猫拥有者数量
+      poolId: 1
+    };
+
+    console.log('传世猫池信息:', mockPoolData);
+    return mockPoolData;
+  } catch (error) {
+    console.error('获取池子信息失败:', error);
+    // 返回默认数据而不是抛出错误
+    return {
+      totalDFS: '0.00000000',
+      dailyReward: '0.00000000',
+      poolId: 1
+    };
+  }
+}
+
+// 获取用户传世猫信息
+async function getMyLegendaryInfo(wallet, accountName) {
+  try {
+    console.log('获取用户传世猫信息...', accountName);
+
+    // 暂时返回模拟数据，等合约完善后再连接真实数据
+    // TODO: 实现真实的合约调用
+    /*
+    const result = await wallet.eosApi.transact({
+      actions: [{
+        account: CONTRACT,
+        name: 'getmylegendary',
+        authorization: [{
+          actor: accountName,
+          permission: getUserPermission('contract')
+        }],
+        data: {
+          owner: accountName
+        }
+      }]
+    }, {
+      blocksBehind: 3,
+      expireSeconds: 30,
+      broadcast: false,
+      sign: false
+    });
+    */
+
+    // 模拟用户传世猫数据
+    const mockLegendaryData = {
+      hasLegendary: true, // 模拟用户有传世猫
+      catId: 12345,
+      canClaim: true, // 模拟可以领取
+      totalClaimed: '567.89012300',
+      claimCount: 15,
+      lastClaimDay: '2024-01-15'
+    };
+
+    console.log('用户传世猫信息:', mockLegendaryData);
+    return mockLegendaryData;
+  } catch (error) {
+    console.error('获取传世猫信息失败:', error);
+    // 返回默认数据而不是抛出错误
+    return {
+      hasLegendary: false,
+      catId: 0,
+      canClaim: false,
+      totalClaimed: '0.00000000',
+      claimCount: 0,
+      lastClaimDay: 'Never'
+    };
+  }
+}
+
+// 领取每日奖励
+async function claimDailyReward(wallet, accountName) {
+  try {
+    console.log('领取每日奖励...', accountName);
+
+    // 暂时模拟领取过程，等合约完善后再连接真实数据
+    // TODO: 实现真实的合约调用
+    /*
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    const claimAction = {
+      account: CONTRACT,
+      name: 'claimdaily',
+      authorization: [{
+        actor: accountName,
+        permission: permission,
+      }],
+      data: {
+        owner: accountName,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [claimAction]);
+    */
+
+    // 模拟领取过程
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟网络延迟
+
+    console.log('每日奖励领取成功（模拟）');
+
+    // 记录交易
+    const txId = `claim-daily-${Date.now()}`;
+    recordCatTransaction('claim_daily', null, txId);
+
+    return {
+      success: true,
+      txHash: txId,
+      amount: '41.15226300' // 模拟领取的金额（与个人奖励一致）
+    };
+  } catch (error) {
+    console.error('领取每日奖励失败:', error);
+    throw error;
+  }
+}
+
 // 导出所有函数
 export {
 
@@ -1722,6 +1870,11 @@ export {
   removeArena,
   getCatStamina,
   calculatePowerRank,
+
+  // 传世猫池系统函数
+  getPoolInfo,
+  getMyLegendaryInfo,
+  claimDailyReward,
 
   // 猫咪属性解密函数
   decryptCatStats,
