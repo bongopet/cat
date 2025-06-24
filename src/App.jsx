@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button, message, Layout, Typography, Tabs, Modal, Tag, Drawer } from 'antd'
 import {
   WalletOutlined,
@@ -48,44 +48,35 @@ function App() {
   const [selectedCat, setSelectedCat] = useState(null)
   const [refreshCats, setRefreshCats] = useState(0)
 
-  // 余额刷新定时器
-  const [balanceTimer, setBalanceTimer] = useState(null)
+  // 移除定时器，只保留手动刷新
   const [activeTab, setActiveTab] = useState('home')
   const [catDetailsVisible, setCatDetailsVisible] = useState(false)
   const [mintingCat, setMintingCat] = useState(false)
 
   // 获取余额的函数
-  const fetchBalance = async () => {
-    if (dfsWallet && account && account.name) {
+  const fetchBalance = useCallback(async () => {
+    console.log('fetchBalance被调用，检查条件:', {
+      dfsWallet: !!dfsWallet,
+      account: !!account,
+      accountName: account?.name
+    });
+
+    if (dfsWallet && account ) {
       try {
+        console.log('开始获取余额...');
         const balanceStr = await getAccountBalance(dfsWallet, 'eosio.token', account.name, 'DFS');
         setBalance({ balance: balanceStr });
+        console.log('自动刷新余额成功:', balanceStr);
       } catch (balanceError) {
         console.error('自动刷新余额失败:', balanceError);
         // 如果获取失败，不更新余额状态，保持之前的值
       }
+    } else {
+      console.log('fetchBalance条件不满足，跳过余额获取');
     }
-  }
+  }, [dfsWallet, account]);
 
-  // 启动余额定时刷新
-  const startBalanceTimer = () => {
-    // 清除现有定时器
-    if (balanceTimer) {
-      clearInterval(balanceTimer);
-    }
-
-    // 设置新的定时器，每5秒刷新一次
-    const timer = setInterval(fetchBalance, 5000);
-    setBalanceTimer(timer);
-  }
-
-  // 停止余额定时刷新
-  const stopBalanceTimer = () => {
-    if (balanceTimer) {
-      clearInterval(balanceTimer);
-      setBalanceTimer(null);
-    }
-  }
+  // 移除定时器相关函数，只保留手动刷新
 
   // New BongoCat functionality state
   const [claimingFreeCat, setClaimingFreeCat] = useState(false)
@@ -111,14 +102,7 @@ function App() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // 组件卸载时清理定时器
-  useEffect(() => {
-    return () => {
-      if (balanceTimer) {
-        clearInterval(balanceTimer)
-      }
-    }
-  }, [balanceTimer])
+  // 移除定时器清理代码
 
   // Initialize DFS wallet
   useEffect(() => {
@@ -130,7 +114,33 @@ function App() {
     })
     setDfsWallet(wallet)
     console.log('钱包对象已初始化', wallet);
-    // 不再自动尝试连接钱包，只在用户点击连接按钮时连接
+
+    // 检查是否已经登录
+    const checkLoginStatus = async () => {
+      try {
+        // 尝试获取当前用户信息（如果已登录）
+        const userInfo = await wallet.getUser();
+        if (userInfo && userInfo.name) {
+          console.log('检测到已登录用户:', userInfo);
+          setAccount(userInfo);
+          setConnected(true);
+
+          // 获取余额
+          try {
+            const balanceStr = await getAccountBalance(wallet, 'eosio.token', userInfo.name, 'DFS');
+            setBalance({ balance: balanceStr });
+            console.log('恢复用户余额:', balanceStr);
+          } catch (balanceError) {
+            console.error('获取余额失败:', balanceError);
+          }
+        }
+      } catch (error) {
+        console.log('用户未登录或登录状态已过期');
+      }
+    };
+
+    // 延迟检查登录状态，确保钱包完全初始化
+    setTimeout(checkLoginStatus, 1000);
   }, []);
 
   // Get account information
@@ -215,9 +225,6 @@ function App() {
           console.log('尝试获取余额...');
           const balanceStr = await getAccountBalance(dfsWallet, 'eosio.token', userInfo.name, 'DFS');
           setBalance({ balance: balanceStr });
-
-          // 启动余额自动刷新
-          startBalanceTimer();
         } catch (balanceError) {
           console.error('获取余额失败:', balanceError);
           setBalance({ balance: '获取失败' });
@@ -239,7 +246,7 @@ function App() {
 
     try {
       // 停止余额自动刷新
-      stopBalanceTimer()
+   
 
       // Call logout method
       dfsWallet.logout()
@@ -580,7 +587,7 @@ function App() {
               <>
                 {/* 余额显示在按钮左边 */}
                 {balance && (
-                  <div className="balance-info">
+                  <div className="balance-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Text style={{ color: '#52c41a', fontWeight: 'bold' }}>
                       {(() => {
                         try {
@@ -592,6 +599,15 @@ function App() {
                         }
                       })()}
                     </Text>
+                    <Button
+                      size="small"
+                      type="text"
+                      onClick={fetchBalance}
+                      style={{ color: '#52c41a', padding: '0 4px' }}
+                      title="手动刷新余额"
+                    >
+                      🔄
+                    </Button>
                   </div>
                 )}
                 <Button
