@@ -29,14 +29,23 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
   // 加载池子信息
   const loadPoolInfo = async () => {
     if (!wallet) return;
-    
+
     try {
       setLoading(true);
       const info = await getPoolInfo(wallet);
       setPoolInfo(info);
+      console.log('池子信息加载成功:', info);
     } catch (error) {
       console.error('获取池子信息失败:', error);
-      message.error('获取池子信息失败');
+      message.error('获取池子信息失败: ' + (error.message || '未知错误'));
+      // 设置默认值，避免界面显示异常
+      setPoolInfo({
+        totalDFS: '0.00000000',
+        totalDailyReward: '0.00000000',
+        individualDailyReward: '0.00000000',
+        legendaryOwnerCount: 0,
+        poolId: 1
+      });
     } finally {
       setLoading(false);
     }
@@ -45,13 +54,14 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
   // 加载用户传世猫信息
   const loadLegendaryInfo = async () => {
     if (!wallet || !accountName) return;
-    
+
     try {
       const info = await getMyLegendaryInfo(wallet, accountName);
       setLegendaryInfo(info);
+      console.log('用户传世猫信息加载成功:', info);
     } catch (error) {
       console.error('获取传世猫信息失败:', error);
-      // 如果没有传世猫，不显示错误
+      // 如果没有传世猫或其他错误，设置默认状态
       setLegendaryInfo({
         hasLegendary: false,
         catId: 0,
@@ -60,6 +70,11 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
         claimCount: 0,
         lastClaimDay: 'Never'
       });
+
+      // 只有在非预期错误时才显示错误消息
+      if (error.message && !error.message.includes("doesn't own any legendary cats")) {
+        message.error('获取传世猫信息失败: ' + (error.message || '未知错误'));
+      }
     }
   };
 
@@ -82,14 +97,37 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
 
     try {
       setClaiming(true);
-      await claimDailyReward(wallet, accountName);
-      message.success('每日奖励领取成功！');
-      
-      // 刷新数据
-      await Promise.all([loadPoolInfo(), loadLegendaryInfo()]);
+      const result = await claimDailyReward(wallet, accountName);
+
+      if (result.success) {
+        message.success(`每日奖励领取成功！获得 ${result.amount} DFS`);
+        console.log('领取成功，交易ID:', result.txHash);
+
+        // 刷新数据
+        await Promise.all([loadPoolInfo(), loadLegendaryInfo()]);
+      } else {
+        message.error('领取失败，请重试');
+      }
     } catch (error) {
       console.error('领取奖励失败:', error);
-      message.error('领取奖励失败: ' + (error.message || '未知错误'));
+
+      // 解析具体的错误信息
+      let errorMessage = '领取奖励失败';
+      if (error.message) {
+        if (error.message.includes('Already claimed today')) {
+          errorMessage = '今日已领取，请明天再来';
+        } else if (error.message.includes("don't own any legendary cats")) {
+          errorMessage = '您没有传世猫，无法领取奖励';
+        } else if (error.message.includes('No rewards available')) {
+          errorMessage = '池子暂无奖励可领取';
+        } else if (error.message.includes('Insufficient pool balance')) {
+          errorMessage = '池子余额不足';
+        } else {
+          errorMessage = '领取奖励失败: ' + error.message;
+        }
+      }
+
+      message.error(errorMessage);
     } finally {
       setClaiming(false);
     }
@@ -299,10 +337,10 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
       </Row>
 
       {/* 说明信息 */}
-      <Card 
-        title="传世猫池说明" 
+      <Card
+        title="传世猫池说明"
         style={{ marginTop: '24px' }}
-        bodyStyle={{ padding: '16px' }}
+        styles={{ body: { padding: '16px' } }}
       >
         <Row gutter={[24, 16]}>
           <Col xs={24} md={8}>
