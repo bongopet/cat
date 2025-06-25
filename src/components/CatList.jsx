@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { List, Card, Button, Spin, Empty, Tag, message, Space } from 'antd';
+import { List, Card, Button, Spin, Empty, Tag, message, Space, Select, Dropdown, Menu } from 'antd';
 import {
   PlusOutlined,
   ReloadOutlined,
   GiftOutlined,
   SwapOutlined,
-  CameraOutlined
+  CameraOutlined,
+  FilterOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import { getUserCats, GENDER_NAMES } from '../utils/chainOperations';
 import CatRenderer from './CatRenderer';
@@ -24,7 +26,10 @@ const CatList = ({
   loading: externalLoading
 }) => {
   const [catsList, setCatsList] = useState([]);
+  const [filteredCatsList, setFilteredCatsList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState('all');
+  const [hasClaimedFreeCat, setHasClaimedFreeCat] = useState(false);
 
   // 品质颜色映射 - 与统计页面保持一致
   const QUALITY_COLORS = {
@@ -55,11 +60,14 @@ const CatList = ({
   // Get cats from blockchain
   const fetchCats = async () => {
     if (!DFSWallet || !userInfo) return;
-    
+
     try {
       setLoading(true);
       const cats = await getUserCats(DFSWallet, userInfo.name);
       setCatsList(cats);
+
+      // 检查是否已领取免费猫咪（如果有猫咪，说明已经领取过）
+      setHasClaimedFreeCat(cats.length > 0);
     } catch (error) {
       console.error('获取猫咪失败:', error);
     } finally {
@@ -71,6 +79,21 @@ const CatList = ({
   useEffect(() => {
     fetchCats();
   }, [DFSWallet, userInfo, refreshTrigger]);
+
+  // 品质筛选逻辑
+  useEffect(() => {
+    if (selectedQuality === 'all') {
+      setFilteredCatsList(catsList);
+    } else {
+      const filtered = catsList.filter(cat => cat.quality === parseInt(selectedQuality));
+      setFilteredCatsList(filtered);
+    }
+  }, [catsList, selectedQuality]);
+
+  // 处理品质筛选
+  const handleQualityFilter = (quality) => {
+    setSelectedQuality(quality);
+  };
 
   // Handle cat selection
   const handleSelectCat = (event, catId) => {
@@ -105,16 +128,18 @@ const CatList = ({
               }
             >
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Button
-                  type="primary"
-                  icon={<GiftOutlined />}
-                  onClick={onClaimFreeCat}
-                  disabled={!DFSWallet || !userInfo}
-                  size="large"
-                  style={{ width: '100%' }}
-                >
-                  领取免费猫咪
-                </Button>
+                {!hasClaimedFreeCat && (
+                  <Button
+                    type="primary"
+                    icon={<GiftOutlined />}
+                    onClick={onClaimFreeCat}
+                    disabled={!DFSWallet || !userInfo}
+                    size="large"
+                    style={{ width: '100%' }}
+                  >
+                    领取免费猫咪
+                  </Button>
+                )}
 
                 <Space wrap style={{ justifyContent: 'center' }}>
                   <Button
@@ -140,17 +165,44 @@ const CatList = ({
           <>
             <div className="cats-header">
               <div className="cats-count">
-                <span>我的猫咪 ({catsList.length})</span>
+                <span>我的猫咪 ({filteredCatsList.length}/{catsList.length})</span>
               </div>
               <Space>
-                <Button
-                  icon={<GiftOutlined />}
-                  onClick={onClaimFreeCat}
-                  disabled={!DFSWallet || !userInfo}
-                  size="small"
+                {/* 品质筛选下拉菜单 */}
+                <Dropdown
+                  overlay={
+                    <Menu
+                      selectedKeys={[selectedQuality]}
+                      onClick={({ key }) => handleQualityFilter(key)}
+                    >
+                      <Menu.Item key="all">全部品质</Menu.Item>
+                      <Menu.Divider />
+                      {Object.entries(QUALITY_NAMES).map(([quality, name]) => (
+                        <Menu.Item key={quality}>
+                          <Tag color={QUALITY_COLORS[quality]} style={{ margin: 0 }}>
+                            {name}
+                          </Tag>
+                        </Menu.Item>
+                      ))}
+                    </Menu>
+                  }
+                  trigger={['click']}
                 >
-                  免费猫咪
-                </Button>
+                  <Button size="small" icon={<FilterOutlined />}>
+                    {selectedQuality === 'all' ? '全部品质' : QUALITY_NAMES[selectedQuality]} <DownOutlined />
+                  </Button>
+                </Dropdown>
+
+                {!hasClaimedFreeCat && (
+                  <Button
+                    icon={<GiftOutlined />}
+                    onClick={onClaimFreeCat}
+                    disabled={!DFSWallet || !userInfo}
+                    size="small"
+                  >
+                    免费猫咪
+                  </Button>
+                )}
 
                 <Button
                   icon={<SwapOutlined />}
@@ -190,7 +242,7 @@ const CatList = ({
                 xl: 6,  // 超大屏幕显示6列
                 xxl: 8, // 超超大屏幕显示8列
               }}
-              dataSource={catsList}
+              dataSource={filteredCatsList}
               renderItem={cat => (
                 <List.Item>
                   <Card

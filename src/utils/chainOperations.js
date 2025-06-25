@@ -7,8 +7,9 @@ import { getUserPermission } from './permissionManager';
 
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CATTABLE = 'cat14s';
-const QATBLE='qualstat14s'
+const CATTABLE = 'cat15s';
+const QATBLE='qualstat15s'
+const MKTBLE='catmarket15'
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 
 // 品质常量定义 - 与合约保持一致
@@ -942,7 +943,7 @@ async function getCatInteractions(wallet, catId) {
 async function getCats(limit = 100) {
   try {
     let allCats = [];
-    let lower_bound = "100";
+    let lower_bound = "1";
     let hasMore = true;
 
     // 循环获取所有分页数据
@@ -1440,7 +1441,7 @@ async function getMarketCats(wallet, limit = 20) {
       wallet,
       CONTRACT,
       CONTRACT,
-      'catmarket',
+      MKTBLE,
       '', // lower_bound
       '', // upper_bound
       1, // index_position - 主键索引
@@ -1538,7 +1539,7 @@ async function checkCatInMarket(wallet, catId) {
       wallet,
       CONTRACT,
       CONTRACT,
-      'catmarket',
+      MKTBLE,
       catId.toString(), // lower_bound
       catId.toString(), // upper_bound
       2, // index_position - bycatid 索引
@@ -1574,7 +1575,7 @@ async function getMarketStats(wallet) {
       wallet,
       CONTRACT,
       CONTRACT,
-      'catmarket',
+      MKTBLE,  
       '', // lower_bound
       '', // upper_bound
       1, // index_position
