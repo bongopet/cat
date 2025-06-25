@@ -438,10 +438,10 @@ export function getCatAppearanceStyle(gene) {
       topFactor * 13
     ) % 16;
     
-    console.log(`getCatAppearanceStyle - 颜色计算: baseColorIndex=${baseColorIndex}, patternFactor=${patternFactor}, furFactor=${furFactor}, extraFactor1=${extraFactor1}, extraFactor2=${extraFactor2}, strFactor1=${strFactor1}, strFactor2=${strFactor2}, strFactor3=${strFactor3}, highFactor1=${highFactor1}, highFactor2=${highFactor2}, topFactor=${topFactor}, colorIndex=${colorIndex}`);
+   // console.log(`getCatAppearanceStyle - 颜色计算: baseColorIndex=${baseColorIndex}, patternFactor=${patternFactor}, furFactor=${furFactor}, extraFactor1=${extraFactor1}, extraFactor2=${extraFactor2}, strFactor1=${strFactor1}, strFactor2=${strFactor2}, strFactor3=${strFactor3}, highFactor1=${highFactor1}, highFactor2=${highFactor2}, topFactor=${topFactor}, colorIndex=${colorIndex}`);
     
     // 输出更详细的计算过程
-    console.log(`getCatAppearanceStyle - 颜色索引计算: (${baseColorIndex}*16 + ${patternFactor}*4 + ${furFactor} + ${extraFactor1} + ${extraFactor2} + ${strFactor1}*2 + ${strFactor2}*3 + ${strFactor3}*5 + ${highFactor1}*7 + ${highFactor2}*11 + ${topFactor}*13) % 16 = ${colorIndex}`);
+    //console.log(`getCatAppearanceStyle - 颜色索引计算: (${baseColorIndex}*16 + ${patternFactor}*4 + ${furFactor} + ${extraFactor1} + ${extraFactor2} + ${strFactor1}*2 + ${strFactor2}*3 + ${strFactor3}*5 + ${highFactor1}*7 + ${highFactor2}*11 + ${topFactor}*13) % 16 = ${colorIndex}`);
     
     const colorSchemes = [
       // 原始颜色
@@ -652,7 +652,7 @@ export function getCatAppearanceStyle(gene) {
       eyeColorName: isOddEyed ? 'Odd-eyed' : eyeColorName,
     };
   } catch (error) {
-    console.error('getCatAppearanceStyle 错误:', error);
+    //console.error('getCatAppearanceStyle 错误:', error);
     // 返回默认样式
     return {
       colors: {

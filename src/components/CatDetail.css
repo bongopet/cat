@@ -234,4 +234,68 @@
 /* Make sure the progress text has enough horizontal space */
 .ant-progress-status-normal .ant-progress-bg {
   max-width: 90% !important;
-} 
+}
+
+/* 可点击猫咪样式 */
+.clickable-cat {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.clickable-cat:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(24, 144, 255, 0.2);
+  border: 2px solid rgba(24, 144, 255, 0.3);
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 繁殖按钮样式 */
+.cat-illustration .ant-btn-circle {
+  transition: all 0.3s ease;
+}
+
+.cat-illustration .ant-btn-circle:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+.cat-illustration .ant-btn-circle:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* 繁殖按钮禁用状态 */
+.cat-illustration .ant-btn-circle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 属性查看按钮样式 */
+.cat-illustration .ant-btn-sm {
+  transition: all 0.3s ease;
+}
+
+.cat-illustration .ant-btn-sm:hover {
+  transform: scale(1.05);
+  background: rgba(24, 144, 255, 1) !important;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+}
+
+.cat-illustration .ant-btn-sm:active {
+  transform: scale(0.98);
+}

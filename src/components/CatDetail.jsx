@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Progress, Button, Spin, Tag, Divider, message, Space, Modal, Select, Tabs } from 'antd';
+import { Card, Progress, Button, Spin, Tag, Divider, message, Space, Modal, Select, Row, Col } from 'antd';
 import {
   HeartOutlined,
   ExperimentOutlined,
@@ -8,12 +8,14 @@ import {
   SwapOutlined,
   CameraOutlined,
   TeamOutlined,
-  LockOutlined,
-  EyeOutlined
+  EyeOutlined,
+  FireOutlined,
+  SafetyOutlined,
+  ThunderboltOutlined,
+  StarOutlined,
+  TrophyOutlined
 } from '@ant-design/icons';
 import CatRenderer from './CatRenderer';
-import CatAttributes from './CatAttributes';
-import SecureCatAttributes from './SecureCatAttributes';
 import CatCoinGuide from './CatCoinGuide';
 import { getCatGeneDetails } from '../utils/catGeneParser';
 import {
@@ -26,6 +28,8 @@ import {
   breedCats,
   checkSwapCat,
   grabImage,
+  calculateNextLevelCatCoinCost,
+  decryptCatStats,
   QUALITY_NAMES,
   GENDER_NAMES
 } from '../utils/chainOperations';
@@ -42,6 +46,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   const [breedModalVisible, setBreedModalVisible] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [feedingStates, setFeedingStates] = useState({}); // 跟踪每只猫的DFS喂养状态
+  const [attributeModalVisible, setAttributeModalVisible] = useState(false); // 属性弹窗状态
 
   // Calculate exp progress percentage
   const getExpProgressPercent = (exp, level) => {
@@ -70,7 +75,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   // Format stamina value (convert from 0-10000 to 0-100.00)
   const formatStamina = (stamina) => {
     if (!stamina && stamina !== 0) return 0;
-    return stamina / 100;
+    return stamina;
   };
 
   // Get stamina percentage for progress bar
@@ -87,6 +92,71 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   // Check if stamina is full
   const isStaminaFull = (stamina) => {
     return stamina >= 10000;
+  };
+
+  // Calculate total power (战力)
+  const calculateTotalPower = (cat) => {
+    console.log('计算战力 - 猫咪数据:', cat);
+    // console.log('解密属性:', cat.decryptedStats);
+
+    // 如果没有解密属性，尝试手动解密
+    let stats = cat.decryptedStats;
+    if (!stats && cat.encrypted_stats && cat.id) {
+      console.log('手动解密属性...');
+      stats = decryptCatStats(cat.encrypted_stats, cat.id);
+      console.log('手动解密结果:', stats);
+    }
+
+    if (!stats) {
+      console.log('没有解密属性，返回???');
+      return '???';
+    }
+
+    const totalPower = (stats.attack || 0) +
+                      (stats.defense || 0) +
+                      (stats.health || 0) +
+                      (stats.critical || 0) +
+                      (stats.dodge || 0) +
+                      (stats.luck || 0);
+
+    console.log('计算出的总战力:', totalPower);
+    return totalPower.toLocaleString();
+  };
+
+  // 获取属性颜色 (根据属性值高低)
+  const getStatColor = (value, maxValue = 100) => {
+    const percentage = (value / maxValue) * 100;
+    if (percentage >= 80) return '#52c41a'; // 绿色 - 优秀
+    if (percentage >= 60) return '#1890ff'; // 蓝色 - 良好
+    if (percentage >= 40) return '#faad14'; // 黄色 - 一般
+    if (percentage >= 20) return '#fa8c16'; // 橙色 - 较差
+    return '#f5222d'; // 红色 - 很差
+  };
+
+  // 获取属性等级描述
+  const getStatRank = (value, maxValue = 100) => {
+    const percentage = (value / maxValue) * 100;
+    if (percentage >= 80) return 'S';
+    if (percentage >= 60) return 'A';
+    if (percentage >= 40) return 'B';
+    if (percentage >= 20) return 'C';
+    return 'D';
+  };
+
+  // 获取解密后的属性 (确保属性被正确解密)
+  const getDecryptedStats = (cat) => {
+    if (cat.decryptedStats) {
+      return cat.decryptedStats;
+    }
+
+    if (cat.encrypted_stats && cat.id) {
+      console.log(`为猫咪#${cat.id}手动解密属性...`);
+      const stats = decryptCatStats(cat.encrypted_stats, cat.id);
+      console.log(`猫咪#${cat.id}解密结果:`, stats);
+      return stats;
+    }
+
+    return null;
   };
 
   // Format time
@@ -247,10 +317,23 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
       return;
     }
 
+    if (selectedCat.level >= 100) {
+      message.warning('猫咪已达到最高等级');
+      return;
+    }
+
     try {
       setLoading(true);
-      await upgradeCatWithCoin(DFSWallet, userInfo, selectedCat.id, '1.00000000');
+
+      // 计算升级成本
+      const requiredCoins = calculateNextLevelCatCoinCost(selectedCat);
+      console.log(`升级猫咪#${selectedCat.id} 需要 ${requiredCoins.toFixed(2)} BGCAT`);
+
+      await upgradeCatWithCoin(DFSWallet, userInfo, selectedCat.id, selectedCat);
       setHasActionPerformed(true);
+
+      message.success(`升级成功！消耗了 ${requiredCoins.toFixed(2)} BGCAT`);
+
       // 延迟刷新确保合约状态已更新
       setTimeout(() => {
         refreshCats();
@@ -263,23 +346,9 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     }
   };
 
-  // Pat the cat
+  // Pat the cat - now opens attribute modal
   const handlePatCat = () => {
-    const responses = [
-      '喵~',
-      '呼噜~',
-      '喵？',
-      '喵！',
-      '咕噜~',
-      '呼噜呼噜~',
-    ];
-
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-
-    message.success({
-      content: randomResponse,
-      duration: 2,
-    });
+    setAttributeModalVisible(true);
   };
 
   // Handle DFS feeding for specific cat (used in attributes panel)
@@ -288,11 +357,12 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
       message.warning('钱包未连接');
       return;
     }
-
+    console.log(`000000000000000000000000000000000000000000000000000000000000`);
     try {
       // 设置特定猫咪的喂养状态
       setFeedingStates(prev => ({ ...prev, [catId]: true }));
 
+      console.log(`开始为猫咪#进行DFS喂养`);
       await feedCatWithDFS(DFSWallet, userInfo.name, catId, '1.00000000');
       setHasActionPerformed(true);
 
@@ -508,6 +578,9 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <Tag color="orange">
                       Lv.{selectedCat.level}
                     </Tag>
+                    <Tag color="purple" icon={<TrophyOutlined />}>
+                      战力: {calculateTotalPower(selectedCat)}
+                    </Tag>
                   </Space>
                 </div>
                 <div className="cat-birth">
@@ -520,7 +593,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
         
         </div>
 
-        <div className="cat-illustration">
+        <div className="cat-illustration clickable-cat" style={{ position: 'relative', cursor: 'pointer' }}>
           {hasAvailableExp && (
             <div className="exp-notification">
               <GiftOutlined className="notification-icon" /> 有经验可以获取!
@@ -534,6 +607,72 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
               </Button>
             </div>
           )}
+
+          {/* 属性查看按钮 */}
+          <Button
+            size="small"
+            type="primary"
+            onClick={(e) => {
+              e.stopPropagation(); // 阻止触发猫咪点击事件
+              setAttributeModalVisible(true);
+            }}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              background: 'rgba(24, 144, 255, 0.9)',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              zIndex: 10,
+              animation: 'pulse 2s infinite',
+              padding: '4px 8px',
+              height: 'auto',
+              lineHeight: '1.2'
+            }}
+          >
+            点击查看属性
+          </Button>
+
+          {/* 繁殖按钮 - 右下角 */}
+          <div style={{
+            position: 'absolute',
+            bottom: '10px',
+            right: '10px',
+            zIndex: 10
+          }}>
+            <Button
+              type="primary"
+              shape="circle"
+              size="large"
+              icon={<TeamOutlined />}
+              onClick={(e) => {
+                e.stopPropagation(); // 阻止触发猫咪点击事件
+                console.log('点击繁殖按钮，可用伙伴:', breedingPartners);
+
+                if (breedingPartners.length > 0) {
+                  setSelectedPartner(null);
+                  setBreedModalVisible(true);
+                } else {
+                  message.info('没有可用的繁殖伙伴。需要一只异性猫咪才能繁殖。');
+                }
+              }}
+              disabled={breedingPartners.length === 0}
+              title={breedingPartners.length === 0 ? '没有可繁殖的伙伴' : `开始繁殖 (${breedingPartners.length}个伙伴可选)`}
+              style={{
+                background: breedingPartners.length === 0 ? '#d9d9d9' : 'linear-gradient(135deg, #52c41a, #389e0d)',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                width: '48px',
+                height: '48px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            />
+          </div>
+
           <CatRenderer
             parent="detail"
             gene={selectedCat.genes}
@@ -545,7 +684,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
         <Card title="🪙 猫币功能" size="small" style={{ marginBottom: 16 }}>
           <div className="attribute-item">
             <div className="attribute-label">
-              等级升级 (猫币)
+              等级升级 (需要 {selectedCat.level >= 100 ? '已满级' : `${calculateNextLevelCatCoinCost(selectedCat).toFixed(2)} BGCAT`})
             </div>
             <div className="attribute-progress">
               <div className="progress-container">
@@ -561,7 +700,11 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                   icon={<UpCircleOutlined />}
                   className="action-button"
                   onClick={handleUpgradeCatWithCoin}
-                  title="猫币升级 (消耗猫币提升等级)"
+                  disabled={selectedCat.level >= 100}
+                  title={selectedCat.level >= 100 ?
+                    "已达到最高等级" :
+                    `猫币升级 (需要 ${calculateNextLevelCatCoinCost(selectedCat).toFixed(2)} BGCAT)`
+                  }
                 />
               </div>
             </div>
@@ -593,46 +736,19 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           </div>
         </Card>
 
-
-
-
-        {/* 猫咪属性 */}
-        <Card title="猫咪属性" size="small" style={{ marginBottom: 16 }}>
-          <Tabs
-            defaultActiveKey="secure"
-            items={[
-              {
-                key: 'secure',
-                label: (
-                  <Space>
-                    <LockOutlined />
-                    安全属性
-                  </Space>
-                ),
-                children: (
-                  <SecureCatAttributes
-                    wallet={DFSWallet}
-                    accountName={userInfo?.name}
-                    showTitle={false}
-                    onDFSFeed={handleDFSFeedCat}
-                    feedingStates={feedingStates}
-                  />
-                )
-              },
-              {
-                key: 'legacy',
-                label: (
-                  <Space>
-                    <EyeOutlined />
-                    演示属性
-                  </Space>
-                ),
-                children: (
-                  <CatAttributes cat={selectedCat} showTitle={false} />
-                )
-              }
-            ]}
-          />
+        {/* 功能说明提示 */}
+        <Card size="small" style={{ marginBottom: 16, textAlign: 'center' }}>
+          <Space direction="vertical" size="small">
+            <div style={{ fontSize: '16px', color: '#1890ff' }}>
+              🐱 猫咪互动功能
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              • 点击猫咪图像或右上角蓝色按钮查看详细属性
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              • 点击右下角 <TeamOutlined style={{ color: '#52c41a' }} /> 按钮进行繁殖
+            </div>
+          </Space>
         </Card>
 
         {/* 调试信息 - 开发时使用 */}
@@ -649,33 +765,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           </Card>
         )}
 
-        {/* 繁殖功能卡片 */}
-        <Card className="cat-breeding" title="繁殖功能">
-          <div className="breeding-info">
-            <p>选择一只异性猫咪进行繁殖，将产生一只新的小猫。</p>
-            <p><strong>注意：</strong>繁殖后父母猫咪将被销毁！</p>
-          </div>
 
-          <Button
-            type="primary"
-            icon={<TeamOutlined />}
-            onClick={() => {
-              console.log('点击繁殖按钮，可用伙伴:', breedingPartners);
-
-              if (breedingPartners.length > 0) {
-                // 清除之前的选择，确保选择列表是最新的
-                setSelectedPartner(null);
-                setBreedModalVisible(true);
-              } else {
-                message.info('没有可用的繁殖伙伴。需要一只异性猫咪才能繁殖。');
-              }
-            }}
-            disabled={breedingPartners.length === 0}
-            block
-          >
-            {breedingPartners.length === 0 ? '没有可繁殖的伙伴' : `开始繁殖 (${breedingPartners.length}个伙伴可选)`}
-          </Button>
-        </Card>
 
         {/* 繁殖模态框 */}
         <Modal
@@ -693,7 +783,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           okButtonProps={{
             disabled: (() => {
               const isPartnerValid = selectedPartner && breedingPartners.find(p => p.id === selectedPartner);
-              console.log('确认按钮状态检查:', { selectedPartner, partnersCount: breedingPartners.length, isPartnerValid });
+              // console.log('确认按钮状态检查:', { selectedPartner, partnersCount: breedingPartners.length, isPartnerValid });
               return !selectedPartner || breedingPartners.length === 0 || !isPartnerValid;
             })()
           }}
@@ -744,88 +834,217 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           )}
         </Modal>
 
-        {/* {geneDetails && (
-          <Card className="cat-genes" title="Gene Details">
-            <div className="gene-section">
-              <h4>Appearance</h4>
-              <div className="gene-grid">
-                <div className="gene-item">
-                  <span className="gene-label">Base Color:</span>
-                  <span className="gene-value">{geneDetails.baseColor}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Fur Type:</span>
-                  <span className="gene-value">{geneDetails.furLength}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Ear Shape:</span>
-                  <span className="gene-value">{geneDetails.earShape}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Eye Color:</span>
-                  <span className="gene-value">{geneDetails.eyeColor}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Pattern:</span>
-                  <span className="gene-value">{geneDetails.pattern}</span>
-                </div>
-              </div>
-            </div>
-            
-            <Divider />
-            
-            <div className="gene-section">
-              <h4>Personality & Abilities</h4>
-              <div className="gene-grid">
-                <div className="gene-item">
-                  <span className="gene-label">Personality:</span>
-                  <span className="gene-value">{geneDetails.personality}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Rarity:</span>
-                  <span className="gene-value">{geneDetails.rarity}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Growth Potential:</span>
-                  <span className="gene-value">{geneDetails.growthPotential}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Stamina Recovery:</span>
-                  <span className="gene-value">{geneDetails.staminaRecovery}</span>
-                </div>
-                <div className="gene-item">
-                  <span className="gene-label">Luck:</span>
-                  <span className="gene-value">{geneDetails.luck}</span>
-                </div>
-              </div>
-            </div>
-            
-            <Divider />
-            
-            <div className="gene-section">
-              <h4>Special Abilities</h4>
-              {geneDetails.specialAbilities.length > 0 ? (
-                <div className="abilities-container">
-                  {geneDetails.specialAbilities.map((ability, index) => (
-                    <Tag color="blue" key={index}>{ability}</Tag>
-                  ))}
-                </div>
-              ) : (
-                <p>No special abilities unlocked yet</p>
-              )}
-              
-              {geneDetails.hiddenTrait && (
-                <div className="hidden-trait">
-                  <Tag color="purple">Hidden Trait: Mystery Gene</Tag>
-                </div>
-              )}
-            </div>
-          </Card>
-        )} */}
 
         {/* 功能使用指南 */}
-        <CatCoinGuide />
+        {/* <CatCoinGuide /> */}
       </Spin>
+
+      {/* 属性弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <TrophyOutlined style={{ color: '#1890ff' }} />
+            <span>猫咪 #{selectedCat.id} 的属性详情</span>
+            <Tag color="gold">
+              总战力: {selectedCat.decryptedStats ?
+                (selectedCat.decryptedStats.attack +
+                 selectedCat.decryptedStats.defense +
+                 selectedCat.decryptedStats.health +
+                 selectedCat.decryptedStats.critical +
+                 selectedCat.decryptedStats.dodge +
+                 selectedCat.decryptedStats.luck).toLocaleString() : '???'}
+            </Tag>
+          </Space>
+        }
+        open={attributeModalVisible}
+        onCancel={() => setAttributeModalVisible(false)}
+        footer={[
+          <Button
+            key="dfs"
+            type="primary"
+            icon={<GiftOutlined />}
+            loading={feedingStates[selectedCat.id] || false}
+            onClick={() => handleDFSFeedCat(selectedCat.id)}
+            style={{
+              background: 'linear-gradient(135deg, #1890ff, #722ed1)',
+              border: 'none'
+            }}
+          >
+            DFS提升属性
+          </Button>,
+          <Button key="close" onClick={() => setAttributeModalVisible(false)}>
+            关闭
+          </Button>
+        ]}
+        width={600}
+        centered
+      >
+        <div style={{ padding: '20px 0' }}>
+          <Row gutter={[16, 16]}>
+            {/* 基础属性 */}
+            <Col span={12}>
+              <Card size="small" title="基础属性" style={{ height: '100%' }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><FireOutlined style={{ color: '#f5222d' }} /> 攻击</span>
+                    <div>
+                      <Tag color={(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats ? getStatColor(stats.attack, 1023) : 'default';
+                      })()}>
+                        {(() => {
+                          const stats = getDecryptedStats(selectedCat);
+                          return stats?.attack || '???';
+                        })()}
+                      </Tag>
+                      {(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats && (
+                          <Tag size="small" style={{ marginLeft: 4 }}>
+                            {getStatRank(stats.attack, 1023)}
+                          </Tag>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><SafetyOutlined style={{ color: '#1890ff' }} /> 防御</span>
+                    <div>
+                      <Tag color={(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats ? getStatColor(stats.defense, 1023) : 'default';
+                      })()}>
+                        {(() => {
+                          const stats = getDecryptedStats(selectedCat);
+                          return stats?.defense || '???';
+                        })()}
+                      </Tag>
+                      {(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats && (
+                          <Tag size="small" style={{ marginLeft: 4 }}>
+                            {getStatRank(stats.defense, 1023)}
+                          </Tag>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><HeartOutlined style={{ color: '#52c41a' }} /> 血量</span>
+                    <div>
+                      <Tag color={(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats ? getStatColor(stats.health, 4095) : 'default';
+                      })()}>
+                        {(() => {
+                          const stats = getDecryptedStats(selectedCat);
+                          return stats?.health || '???';
+                        })()}
+                      </Tag>
+                      {(() => {
+                        const stats = getDecryptedStats(selectedCat);
+                        return stats && (
+                          <Tag size="small" style={{ marginLeft: 4 }}>
+                            {getStatRank(stats.health, 4095)}
+                          </Tag>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+
+            {/* 特殊属性 */}
+            <Col span={12}>
+              <Card size="small" title="特殊属性" style={{ height: '100%' }}>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><ThunderboltOutlined style={{ color: '#faad14' }} /> 暴击</span>
+                    <div>
+                      <Tag color={selectedCat.decryptedStats ? getStatColor(selectedCat.decryptedStats.critical, 255) : 'default'}>
+                        {selectedCat.decryptedStats?.critical || '???'}
+                      </Tag>
+                      {selectedCat.decryptedStats && (
+                        <Tag size="small" style={{ marginLeft: 4 }}>
+                          {getStatRank(selectedCat.decryptedStats.critical, 255)}
+                        </Tag>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><EyeOutlined style={{ color: '#722ed1' }} /> 闪避</span>
+                    <div>
+                      <Tag color={selectedCat.decryptedStats ? getStatColor(selectedCat.decryptedStats.dodge, 255) : 'default'}>
+                        {selectedCat.decryptedStats?.dodge || '???'}
+                      </Tag>
+                      {selectedCat.decryptedStats && (
+                        <Tag size="small" style={{ marginLeft: 4 }}>
+                          {getStatRank(selectedCat.decryptedStats.dodge, 255)}
+                        </Tag>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><StarOutlined style={{ color: '#eb2f96' }} /> 幸运</span>
+                    <div>
+                      <Tag color={selectedCat.decryptedStats ? getStatColor(selectedCat.decryptedStats.luck, 255) : 'default'}>
+                        {selectedCat.decryptedStats?.luck || '???'}
+                      </Tag>
+                      {selectedCat.decryptedStats && (
+                        <Tag size="small" style={{ marginLeft: 4 }}>
+                          {getStatRank(selectedCat.decryptedStats.luck, 255)}
+                        </Tag>
+                      )}
+                    </div>
+                  </div>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+
+          <Divider />
+
+          <div style={{
+            background: '#f0f5ff',
+            padding: '12px',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <Space direction="vertical" size="small">
+              <div style={{ fontSize: '14px', color: '#1890ff', fontWeight: 'bold' }}>
+                💎 DFS属性提升说明
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                使用1个DFS可以随机提升猫咪的攻击、防御、血量、暴击、闪避、幸运等属性
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                点击上方"DFS提升属性"按钮即可为这只猫咪进行属性强化
+              </div>
+
+              {/* 调试按钮 */}
+              <Button
+                size="small"
+                type="dashed"
+                onClick={() => {
+                  console.log('=== 调试信息 ===');
+                  console.log('selectedCat:', selectedCat);
+                  console.log('encrypted_stats:', selectedCat.encrypted_stats);
+                  console.log('decryptedStats:', selectedCat.decryptedStats);
+
+                  if (selectedCat.encrypted_stats) {
+                    const manualDecrypt = decryptCatStats(selectedCat.encrypted_stats, selectedCat.id);
+                    console.log('手动解密结果:', manualDecrypt);
+                    message.info(`手动解密成功！攻击:${manualDecrypt.attack}, 防御:${manualDecrypt.defense}, 血量:${manualDecrypt.health}`);
+                  }
+                }}
+              >
+                🔍 调试解密
+              </Button>
+            </Space>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

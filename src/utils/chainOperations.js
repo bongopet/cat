@@ -249,10 +249,10 @@ async function breedCats(wallet, accountName, maleCatId, femaleCatId) {
 // DFS喂养猫咪（通过转账实现）
 async function feedCatWithDFS(wallet, account, catId, amount = '1.00000000') {
   try {
-    console.log(`开始用DFS喂养猫咪#${catId}...`);
+    console.log(`开始用DFS喂养猫咪#${catId}... (: ${account} )`);
 
     // 检查DFS余额
-    const balanceStr = await getAccountBalance(wallet, 'eosio.token', account.name, 'DFS');
+    const balanceStr = await getAccountBalance(wallet, 'eosio.token', account, 'DFS');
     const balanceParts = balanceStr.split(' ');
     const balanceValue = Number.parseFloat(balanceParts[0]);
     const feedAmount = Number.parseFloat(amount);
@@ -268,7 +268,7 @@ async function feedCatWithDFS(wallet, account, catId, amount = '1.00000000') {
 
     // 执行DFS转账喂养
     const transferAction = buildTransferAction(
-      account.name,
+      account,
       CONTRACT,
       `${amount} DFS`,
       `feed:${catId}`, // 喂养备注格式
@@ -277,7 +277,7 @@ async function feedCatWithDFS(wallet, account, catId, amount = '1.00000000') {
 
     const result = await sendTransaction(wallet, [transferAction]);
 
-    message.success('DFS喂养成功！猫咪属性已提升，体力已恢复！');
+    message.success('DFS喂养成功！猫咪属性已提升');
     console.log('DFS喂养成功', result);
 
     // 记录交易
@@ -487,10 +487,134 @@ async function refundCat(wallet, accountName, catId) {
   }
 }
   
+// 品质基础猫币需求 (每级所需猫币数量)
+const QUALITY_CAT_COIN_BASE = [
+  1,  // 普通 1枚
+  2,  // 精良 2枚
+  3,  // 卓越 3枚
+  4,  // 非凡 4枚
+  5,  // 至尊 5枚
+  6,  // 神圣 6枚
+  7,  // 永恒 7枚
+  8   // 传世 8枚
+];
+
+// 计算升级到指定等级所需的猫币数量 (基于合约逻辑)
+function calculateCatCoinRequirement(quality, level) {
+  if (quality < 0 || quality >= 8) {
+    throw new Error("Invalid quality");
+  }
+  if (level <= 0 || level > 100) {
+    throw new Error("Invalid level");
+  }
+
+  // 品质基础猫币需求 (实际猫币数量)
+  const QUALITY_CAT_COIN_BASE = [
+    1,  // 普通 1枚
+    2,  // 精良 2枚
+    3,  // 卓越 3枚
+    4,  // 非凡 4枚
+    5,  // 至尊 5枚
+    6,  // 神圣 6枚
+    7,  // 永恒 7枚
+    8   // 传世 8枚
+  ];
+
+  const baseCost = QUALITY_CAT_COIN_BASE[quality];
+
+  if (level <= 1) return 0; // 1级不需要升级成本
+
+  // 计算1.1^(level-2)，升到2级的倍数是1.1^0=1
+  let multiplier = 1.0;
+  for (let i = 2; i < level; i++) {
+    multiplier *= 1.1;
+  }
+
+  // 最终成本 = 基数 × 1.1^(level-2)
+  const cost = baseCost * multiplier;
+
+  return cost; // 返回实际猫币数量
+}
+
+// 计算升级到下一级所需的猫币数量
+function calculateNextLevelCatCoinCost(cat) {
+  if (!cat || cat.level >= 100) return 0;
+
+  const nextLevel = cat.level + 1;
+  return calculateCatCoinRequirement(cat.quality, nextLevel);
+}
+
+// 解密猫咪属性 (基于合约的加密逻辑)
+function decryptCatStats(encryptedStats, catId) {
+  // console.log(`解密猫咪#${catId}属性: ${encryptedStats}`);
+
+  try {
+    // 将字符串转换为BigInt进行64位运算
+    const encrypted = BigInt(encryptedStats);
+    const id = BigInt(catId);
+
+    //console.log(`加密值: ${encrypted.toString()}, 猫咪ID: ${id.toString()}`);
+
+    // 使用与合约相同的密钥
+    const key = id ^ BigInt('0x123456789ABCDEF0');
+    const stats = encrypted ^ key;
+
+    //console.log(`密钥: ${key.toString(16)}, 解密后: ${stats.toString(16)}`);
+
+    // 按照合约的位运算提取各属性
+    const attack = Number((stats >> BigInt(54)) & BigInt(0x3FF));    // 10位攻击
+    const defense = Number((stats >> BigInt(44)) & BigInt(0x3FF));   // 10位防御
+    const health = Number((stats >> BigInt(32)) & BigInt(0xFFF));    // 12位血量
+    const critical = Number((stats >> BigInt(24)) & BigInt(0xFF));   // 8位暴击
+    const dodge = Number((stats >> BigInt(16)) & BigInt(0xFF));      // 8位闪避
+    const luck = Number((stats >> BigInt(8)) & BigInt(0xFF));        // 8位幸运
+
+    const result = {
+      attack,
+      defense,
+      health,
+      critical,
+      dodge,
+      luck
+    };
+
+    // console.log(`解密结果:`, result);
+    return result;
+  } catch (error) {
+    console.error('解密失败:', error);
+    return {
+      attack: 0,
+      defense: 0,
+      health: 0,
+      critical: 0,
+      dodge: 0,
+      luck: 0
+    };
+  }
+}
+
 // 使用猫币升级猫咪（通过转账实现）
-async function upgradeCatWithCoin(wallet, account, catId, amount = '1.00000000') {
+async function upgradeCatWithCoin(wallet, account, catId, cat) {
   try {
     console.log(`开始用猫币升级猫咪#${catId}...`);
+
+    // 计算升级到下一级所需的猫币数量
+    if (!cat) {
+      throw new Error('猫咪信息不完整');
+    }
+
+    if (cat.level >= 100) {
+      throw new Error('猫咪已达到最高等级');
+    }
+
+    const requiredCoins = calculateNextLevelCatCoinCost(cat);
+    const amount = requiredCoins.toFixed(8);
+
+    console.log(`=== 猫币升级调试信息 ===`);
+    console.log(`猫咪#${catId} 详细信息:`, cat);
+    console.log(`当前等级: ${cat.level}, 品质: ${cat.quality}`);
+    console.log(`升级到${cat.level + 1}级需要: ${requiredCoins.toFixed(2)} BGCAT`);
+    console.log(`将要转账: ${amount} BGCAT`);
 
     // 检查BGCAT余额
     const balanceStr = await getAccountBalance(wallet, 'dfsppptokens', account.name, 'BGCAT');
@@ -499,7 +623,7 @@ async function upgradeCatWithCoin(wallet, account, catId, amount = '1.00000000')
     const upgradeAmount = Number.parseFloat(amount);
 
     if (isNaN(balanceValue) || balanceValue < upgradeAmount) {
-      const errorMsg = `BGCAT余额不足，升级需要至少${amount} BGCAT (当前余额: ${balanceStr || '0 BGCAT'})`;
+      const errorMsg = `BGCAT余额不足，升级需要${requiredCoins.toFixed(2)} BGCAT (当前余额: ${balanceStr || '0 BGCAT'})`;
       throw new Error(errorMsg);
     }
 
@@ -703,6 +827,11 @@ async function getUserCats(wallet, accountName) {
       if (rows && rows.length > 0) {
         console.log(`从链上获取到 ${rows.length} 只猫咪`);
         const processedCats = rows.map(cat => {
+          // 解密属性
+          // console.log(`解密猫咪#${cat.id}属性:`, cat.encrypted_stats);
+          const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.id);
+          // console.log(`猫咪#${cat.id}解密结果:`, decryptedStats);
+
           const processedCat = {
             id: cat.id,
             owner: cat.owner,
@@ -713,6 +842,7 @@ async function getUserCats(wallet, accountName) {
             level: cat.level,
             experience: cat.experience,
             encrypted_stats: cat.encrypted_stats, // 加密属性
+            decryptedStats, // 解密后的属性
             genes: cat.genes,
             stamina: cat.stamina,
             maxStamina: 100, // 固定最大体力100
@@ -1566,43 +1696,7 @@ function calculatePowerRank(cat) {
   return 'Mythical';
 }
 
-// 解密猫咪属性（6个属性）
-function decryptCatStats(encryptedStats, catId) {
-
-  try {
-    // 使用与合约相同的解密逻辑
-    const key = BigInt(catId) ^ BigInt('0x123456789ABCDEF0');
-    const stats = BigInt(encryptedStats) ^ key;
-
-    // 提取各个属性（按照合约的位移逻辑）
-    const attack = Number((stats >> BigInt(54)) & BigInt(0x3FF));      // 10位攻击
-    const defense = Number((stats >> BigInt(44)) & BigInt(0x3FF));     // 10位防御
-    const health = Number((stats >> BigInt(32)) & BigInt(0xFFF));      // 12位血量
-    const critical = Number((stats >> BigInt(24)) & BigInt(0xFF));     // 8位暴击
-    const dodge = Number((stats >> BigInt(16)) & BigInt(0xFF));        // 8位闪避
-    const luck = Number((stats >> BigInt(8)) & BigInt(0xFF));          // 8位幸运
-
-    return {
-      attack,
-      defense,
-      health,
-      critical,
-      dodge,
-      luck
-    };
-  } catch (error) {
-    console.error('解密猫咪属性失败:', error);
-    // 返回默认值
-    return {
-      attack: 0,
-      defense: 0,
-      health: 0,
-      critical: 0,
-      dodge: 0,
-      luck: 0
-    };
-  }
-}
+// 注意：decryptCatStats 函数已在上面定义，这里删除重复声明
 
 // 计算总战斗力（基于解密的属性）
 function calculateTotalBattlePower(stats, level) {
@@ -2108,6 +2202,7 @@ export {
   // 猫币功能函数
   upgradeCatWithCoin,
   restoreStaminaWithCoin,
+  calculateNextLevelCatCoinCost,
 
   // 原有函数（保持兼容性）
   checkCatHasAvailableExp,
