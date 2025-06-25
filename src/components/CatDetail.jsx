@@ -578,7 +578,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <Tag color="orange">
                       Lv.{selectedCat.level}
                     </Tag>
-                    <Tag color="purple" icon={<TrophyOutlined />}>
+                    <Tag color="purple" icon={<ThunderboltOutlined />}>
                       战力: {calculateTotalPower(selectedCat)}
                     </Tag>
                   </Space>

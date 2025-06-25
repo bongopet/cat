@@ -146,8 +146,8 @@ const Arena = ({ DFSWallet, accountName }) => {
             <Statistic
               title="活跃擂台"
               value={totalArenas}
-              prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#1890ff' }}
+              prefix={<FireOutlined />}
+              valueStyle={{ color: '#ff4d4f' }}
             />
           </Card>
         </Col>
@@ -227,7 +227,7 @@ const Arena = ({ DFSWallet, accountName }) => {
         <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
             <h2 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-              <TrophyOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+              <FireOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
               猫咪擂台
             </h2>
             <p style={{ margin: '4px 0 0 0', color: '#666' }}>

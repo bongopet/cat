@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Statistic, Row, Col, Typography, Space, Alert, Spin, message, Tooltip } from 'antd';
-import { TrophyOutlined, GiftOutlined, InfoCircleOutlined, ReloadOutlined } from '@ant-design/icons';
+import { TrophyOutlined, GiftOutlined, InfoCircleOutlined, ReloadOutlined, GoldOutlined, DollarOutlined } from '@ant-design/icons';
 import { claimDailyReward, getPoolInfo, getMyLegendaryInfo } from '../utils/chainOperations';
 
 const { Title, Text } = Typography;
@@ -154,7 +154,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '24px', textAlign: 'center' }}>
         <Title level={2}>
-          <TrophyOutlined style={{ color: '#faad14', marginRight: '8px' }} />
+          <GoldOutlined style={{ color: '#faad14', marginRight: '8px' }} />
           传世猫池
         </Title>
         <Text type="secondary">
@@ -168,7 +168,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
           <Card
             title={
               <Space>
-                <TrophyOutlined style={{ color: '#faad14' }} />
+                <DollarOutlined style={{ color: '#faad14' }} />
                 池子信息
                 <Tooltip title="点击刷新数据">
                   <Button 
@@ -345,7 +345,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
         <Row gutter={[24, 16]}>
           <Col xs={24} md={8}>
             <div style={{ textAlign: 'center' }}>
-              <TrophyOutlined style={{ fontSize: '32px', color: '#faad14', marginBottom: '8px' }} />
+              <GoldOutlined style={{ fontSize: '32px', color: '#faad14', marginBottom: '8px' }} />
               <Title level={4}>获得传世猫</Title>
               <Text type="secondary">
                 通过繁殖系统培育出传世品质的猫咪
@@ -354,7 +354,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
           </Col>
           <Col xs={24} md={8}>
             <div style={{ textAlign: 'center' }}>
-              <GiftOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '8px' }} />
+              <DollarOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '8px' }} />
               <Title level={4}>均分奖励</Title>
               <Text type="secondary">
                 所有传世猫拥有者均分池子1%的DFS

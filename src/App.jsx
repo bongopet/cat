@@ -7,7 +7,13 @@ import {
   ShopOutlined,
   TrophyOutlined,
   MenuOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  CrownOutlined,
+  ThunderboltOutlined,
+  FireOutlined,
+  StarOutlined,
+  DollarOutlined,
+  GoldOutlined
 } from '@ant-design/icons'
 import Wallet from 'dfssdk'
 import { WalletType } from 'dfssdk/dist/types'
@@ -424,7 +430,7 @@ function App() {
     },
     {
       key: 'ranking',
-      icon: <TrophyOutlined />,
+      icon: <CrownOutlined />,
       label: '排行榜',
     },
     {
@@ -434,12 +440,12 @@ function App() {
     },
     {
       key: 'arena',
-      icon: <TrophyOutlined />,
+      icon: <FireOutlined />,
       label: '擂台',
     },
     {
       key: 'legendary-pool',
-      icon: <TrophyOutlined />,
+      icon: <GoldOutlined />,
       label: '传世猫池',
     },
     {
