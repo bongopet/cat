@@ -132,14 +132,6 @@ const CatList = ({
                   >
                     抢图获得猫咪
                   </Button>
-
-                  <Button
-                    icon={<PlusOutlined />}
-                    onClick={onMintCat}
-                    disabled={!DFSWallet || !userInfo}
-                  >
-                    铸造猫咪 (30 DFS)
-                  </Button>
                 </Space>
               </Space>
             </Empty>

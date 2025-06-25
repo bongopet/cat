@@ -2,7 +2,7 @@
 // 将TypeScript转换为JavaScript，移除类型声明
 
 import { message } from 'antd';
-import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction } from './eosUtils';
+import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction,getTableRowsmore } from './eosUtils';
 import { getUserPermission } from './permissionManager';
 
 // 常量定义
@@ -487,49 +487,100 @@ async function refundCat(wallet, accountName, catId) {
   }
 }
   
-// 喂养猫咪
-async function feedCat(wallet, accountName, catId) {
+// 使用猫币升级猫咪（通过转账实现）
+async function upgradeCatWithCoin(wallet, account, catId, amount = '1.00000000') {
   try {
-    // 为其他代币类型检查余额
-    const assetBalanceStr = await getAccountBalance(wallet, 'dfsppptokens', accountName, 'BGFISH');
-    
-    // 解析余额字符串，例如 "10.0000 BGFISH"
-    const balanceParts = assetBalanceStr.split(' ');
-    const balance = Number.parseFloat(balanceParts[0]);
-    if (isNaN(balance) || balance < 1.0) {
-      const errorMsg = `BGFISH余额不足，喂养猫咪需要至少1 BGFISH (当前余额: ${assetBalanceStr || '0 BGFISH'})`;
-      message.warning(errorMsg);
-      console.log('喂养猫咪余额不足:', { balance, required: '1 BGFISH' });
+    console.log(`开始用猫币升级猫咪#${catId}...`);
+
+    // 检查BGCAT余额
+    const balanceStr = await getAccountBalance(wallet, 'dfsppptokens', account.name, 'BGCAT');
+    const balanceParts = balanceStr.split(' ');
+    const balanceValue = Number.parseFloat(balanceParts[0]);
+    const upgradeAmount = Number.parseFloat(amount);
+
+    if (isNaN(balanceValue) || balanceValue < upgradeAmount) {
+      const errorMsg = `BGCAT余额不足，升级需要至少${amount} BGCAT (当前余额: ${balanceStr || '0 BGCAT'})`;
       throw new Error(errorMsg);
     }
-     // 使用全局权限
-     const permission = getUserPermission('contract');
-     console.log(`使用权限: ${permission}`);
- 
-    // 执行喂养操作
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    // 执行BGCAT转账升级
     const transferAction = buildTransferAction(
-      accountName,
+      account.name,
       CONTRACT,
-      '1.00000000 BGFISH',
-      `feed:${catId}`, // 特定备注，标识为喂养操作
-       permission
+      `${amount} BGCAT`,
+      `upgrade:${catId}`, // 升级备注格式
+      permission,
+      'dfsppptokens' // 猫币合约
     );
-    
+
     const result = await sendTransaction(wallet, [transferAction]);
-    
-    message.success('喂养猫咪交易已提交');
-    console.log('喂养猫咪交易已提交', result);
-    
-    // 记录交易到钱包历史
-    const txId = result?.transaction_id || `feed-${Date.now()}`;
-    recordCatTransaction(
-      'feed',
-      catId,
-      txId
-    );
-    return true;
+
+    message.success('猫币升级成功！猫咪等级已提升！');
+    console.log('猫币升级成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `upgrade-${Date.now()}`;
+    recordCatTransaction('upgrade', catId, txId, amount, 'BGCAT');
+
+    return {
+      success: true,
+      txHash: txId
+    };
   } catch (error) {
-    console.error(`喂养猫咪失败:${error}`);
+    console.error('猫币升级失败:', error);
+    throw error;
+  }
+}
+
+// 使用猫币恢复体力（通过转账实现）
+async function restoreStaminaWithCoin(wallet, account, catId, amount = '1.00000000') {
+  try {
+    console.log(`开始用猫币恢复猫咪#${catId}体力...`);
+
+    // 检查BGCAT余额
+    const balanceStr = await getAccountBalance(wallet, 'dfsppptokens', account.name, 'BGCAT');
+    const balanceParts = balanceStr.split(' ');
+    const balanceValue = Number.parseFloat(balanceParts[0]);
+    const restoreAmount = Number.parseFloat(amount);
+
+    if (isNaN(balanceValue) || balanceValue < restoreAmount) {
+      const errorMsg = `BGCAT余额不足，恢复体力需要至少${amount} BGCAT (当前余额: ${balanceStr || '0 BGCAT'})`;
+      throw new Error(errorMsg);
+    }
+
+    // 使用全局权限
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    // 执行BGCAT转账恢复体力
+    const transferAction = buildTransferAction(
+      account.name,
+      CONTRACT,
+      `${amount} BGCAT`,
+      `stamina:${catId}`, // 体力恢复备注格式
+      permission,
+      'dfsppptokens' // 猫币合约
+    );
+
+    const result = await sendTransaction(wallet, [transferAction]);
+
+    message.success('猫币恢复体力成功！每个猫币恢复10-20体力！');
+    console.log('猫币恢复体力成功', result);
+
+    // 记录交易
+    const txId = result?.transaction_id || `stamina-${Date.now()}`;
+    recordCatTransaction('stamina', catId, txId, amount, 'BGCAT');
+
+    return {
+      success: true,
+      txHash: txId
+    };
+  } catch (error) {
+    console.error('猫币恢复体力失败:', error);
     throw error;
   }
 }
@@ -680,7 +731,7 @@ async function getUserCats(wallet, accountName) {
           return processedCat;
         });
 
-        console.log('处理后的猫咪数据:', processedCats);
+        // console.log('处理后的猫咪数据:', processedCats);
         return processedCats;
       } else {
         console.log('链上未找到猫咪数据，返回空数组');
@@ -748,6 +799,59 @@ async function getCatInteractions(wallet, catId) {
     return [];
   }
 }
+
+// 获取所有的猫咪  支持分页 查询 more  next_key
+async function getCats(limit = 100) {
+  try {
+    let allCats = [];
+    let lower_bound = "100";
+    let hasMore = true;
+
+    // 循环获取所有分页数据
+    while (hasMore) {
+      const {rows,more,next_key} = await getTableRowsmore(
+         '',
+         CONTRACT,
+         CONTRACT,
+         CATTABLE,
+         lower_bound, 
+         '',
+         1, // index_position - 主键索引
+         'i64', // key_type
+         limit, // limit
+      );
+
+      // 添加当前页的数据到总数组
+      if (rows && rows.length > 0) {
+        allCats = allCats.concat(rows);
+      }
+
+      // 检查是否还有更多数据
+      hasMore = more;
+
+      // 如果有更多数据，设置下一页的起始位置
+      if (hasMore && next_key) {
+        lower_bound = next_key;
+      } else {
+        hasMore = false;
+      }
+
+      // 防止无限循环的安全检查
+      if (allCats.length > 10000) {
+        console.warn('getCats: 数据量过大，停止获取以防止无限循环');
+        break;
+      }
+    }
+
+    console.log(`getCats: 总共获取到 ${allCats.length} 只猫咪`);
+    return allCats;
+
+  } catch (error) {
+    console.error('获取猫咪列表失败:', error);
+    throw error;
+  }
+}
+
 
 // 获取所有猫咪列表（排行榜）
 async function getAllCats(wallet, limit = 50) {
@@ -1567,14 +1671,15 @@ async function placeInArena(wallet, accountName, catId, totalAmount, betAmount) 
     // 挑战金额需要转换为最小单位（8位小数）
     const betAmountInMinUnits = Math.round(betAmount * 100000000);
     const memo = `arena:${catId}:${betAmountInMinUnits}`;
-
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
     const result = await wallet.transact({
       actions: [{
         account: 'eosio.token',
         name: 'transfer',
         authorization: [{
           actor: accountName,
-          permission: 'active',
+          permission: permission,
         }],
         data: {
           from: accountName,
@@ -2000,14 +2105,18 @@ export {
   getAttributeRank,
   getAttributeColor,
 
+  // 猫币功能函数
+  upgradeCatWithCoin,
+  restoreStaminaWithCoin,
+
   // 原有函数（保持兼容性）
   checkCatHasAvailableExp,
   mintCat,
   refundCat,
-  feedCat,
   upgradeCat,
   checkCatAction,
   getUserCats,
+  getCats,
   getCatInteractions,
   getAllCats,
   recordCatTransaction,

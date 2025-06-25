@@ -14,10 +14,12 @@ import {
 import CatRenderer from './CatRenderer';
 import CatAttributes from './CatAttributes';
 import SecureCatAttributes from './SecureCatAttributes';
+import CatCoinGuide from './CatCoinGuide';
 import { getCatGeneDetails } from '../utils/catGeneParser';
 import {
   checkCatAction,
-  feedCat,
+  upgradeCatWithCoin,
+  restoreStaminaWithCoin,
   upgradeCat,
   checkCatHasAvailableExp,
   feedCatWithDFS,
@@ -39,7 +41,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   // New BongoCat functionality state
   const [breedModalVisible, setBreedModalVisible] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
-  const [feedingWithDFS, setFeedingWithDFS] = useState(false);
+  const [feedingStates, setFeedingStates] = useState({}); // 跟踪每只猫的DFS喂养状态
 
   // Calculate exp progress percentage
   const getExpProgressPercent = (exp, level) => {
@@ -210,8 +212,8 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     }
   };
 
-  // Handle cat feeding
-  const handleFeedCat = async () => {
+  // Handle cat stamina restore with cat coin
+  const handleRestoreStamina = async () => {
     if (!DFSWallet || !userInfo || !selectedCat) {
       message.warning('钱包未连接或未选择猫咪');
       return;
@@ -224,45 +226,38 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
 
     try {
       setLoading(true);
-      await feedCat(DFSWallet, userInfo.name, selectedCat.id);
-      message.success('喂食成功！');
+      await restoreStaminaWithCoin(DFSWallet, userInfo, selectedCat.id, '1.00000000');
       setHasActionPerformed(true);
       // 延迟刷新确保合约状态已更新
       setTimeout(() => {
         refreshCats();
       }, 1000);
     } catch (error) {
-      console.error('喂食失败:', error);
-      message.error('喂食失败: ' + (error.message || String(error)));
+      console.error('猫币恢复体力失败:', error);
+      message.error('猫币恢复体力失败: ' + (error.message || String(error)));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle cat upgrade
-  const handleUpgradeCat = async () => {
+  // Handle cat upgrade with cat coin
+  const handleUpgradeCatWithCoin = async () => {
     if (!DFSWallet || !userInfo || !selectedCat) {
       message.warning('钱包未连接或未选择猫咪');
       return;
     }
 
-    if (!canUpgrade(selectedCat.experience, selectedCat.level)) {
-      message.info('经验不足，无法升级！');
-      return;
-    }
-
     try {
       setLoading(true);
-      await upgradeCat(DFSWallet, userInfo.name, selectedCat.id);
-      message.success('升级成功！');
+      await upgradeCatWithCoin(DFSWallet, userInfo, selectedCat.id, '1.00000000');
       setHasActionPerformed(true);
       // 延迟刷新确保合约状态已更新
       setTimeout(() => {
         refreshCats();
       }, 1000);
     } catch (error) {
-      console.error('升级失败:', error);
-      message.error('升级失败: ' + (error.message || String(error)));
+      console.error('猫币升级失败:', error);
+      message.error('猫币升级失败: ' + (error.message || String(error)));
     } finally {
       setLoading(false);
     }
@@ -287,17 +282,20 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     });
   };
 
-  // Handle DFS feeding
-  const handleFeedWithDFS = async () => {
-    if (!DFSWallet || !userInfo || !selectedCat) {
-      message.warning('钱包未连接或未选择猫咪');
+  // Handle DFS feeding for specific cat (used in attributes panel)
+  const handleDFSFeedCat = async (catId) => {
+    if (!DFSWallet || !userInfo) {
+      message.warning('钱包未连接');
       return;
     }
 
     try {
-      setFeedingWithDFS(true);
-      await feedCatWithDFS(DFSWallet, userInfo.name, selectedCat.id, '1.00000000');
+      // 设置特定猫咪的喂养状态
+      setFeedingStates(prev => ({ ...prev, [catId]: true }));
+
+      await feedCatWithDFS(DFSWallet, userInfo.name, catId, '1.00000000');
       setHasActionPerformed(true);
+
       // 延迟刷新确保合约状态已更新
       setTimeout(() => {
         refreshCats();
@@ -306,8 +304,18 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
       console.error('DFS喂养失败:', error);
       message.error('DFS喂养失败: ' + (error.message || String(error)));
     } finally {
-      setFeedingWithDFS(false);
+      // 清除特定猫咪的喂养状态
+      setFeedingStates(prev => ({ ...prev, [catId]: false }));
     }
+  };
+
+  // Handle DFS feeding for current selected cat (legacy function)
+  const handleFeedWithDFS = async () => {
+    if (!selectedCat) {
+      message.warning('未选择猫咪');
+      return;
+    }
+    await handleDFSFeedCat(selectedCat.id);
   };
 
   // Handle check swap
@@ -497,6 +505,9 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <Tag color="gold">
                       {QUALITY_NAMES[selectedCat.quality] || '普通'}
                     </Tag>
+                    <Tag color="orange">
+                      Lv.{selectedCat.level}
+                    </Tag>
                   </Space>
                 </div>
                 <div className="cat-birth">
@@ -506,32 +517,15 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
             </div>
           </div>
 
-          <Space>
-          
-            <Button
-              icon={<CameraOutlined />}
-              onClick={handleGrabImage}
-              size="small"
-            >
-              抢图
-            </Button>
-
-            <Button
-              icon={<ExperimentOutlined />}
-              onClick={handleCheckAction}
-              type="primary"
-            >
-              检查
-            </Button>
-          </Space>
-        </div>
         
+        </div>
+
         <div className="cat-illustration">
           {hasAvailableExp && (
             <div className="exp-notification">
               <GiftOutlined className="notification-icon" /> 有经验可以获取!
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 type="primary"
                 className="notification-button"
                 onClick={handleCheckAction}
@@ -540,50 +534,42 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
               </Button>
             </div>
           )}
-          <CatRenderer 
+          <CatRenderer
             parent="detail"
-            gene={selectedCat.genes} 
-            onClick={handlePatCat} 
+            gene={selectedCat.genes}
+            onClick={handlePatCat}
           />
         </div>
-        
-        <Card className="cat-attributes" title="属性">
+
+        {/* 猫币功能区 */}
+        <Card title="🪙 猫币功能" size="small" style={{ marginBottom: 16 }}>
           <div className="attribute-item">
             <div className="attribute-label">
-              等级
-            </div>
-            <div className="attribute-value">
-              {selectedCat.level}
-            </div>
-          </div>
-          
-          <div className="attribute-item">
-            <div className="attribute-label">
-              经验
+              等级升级 (猫币)
             </div>
             <div className="attribute-progress">
               <div className="progress-container">
-                <Progress 
-                  percent={getExpProgressPercent(selectedCat.experience, selectedCat.level)} 
+                <Progress
+                  percent={getExpProgressPercent(selectedCat.experience, selectedCat.level)}
                   strokeColor="#1890ff"
                   format={() => getExpDisplayText(selectedCat.experience, selectedCat.level)}
                 />
-                <Button 
+                <Button
                   type="primary"
                   shape="circle"
                   size="middle"
                   icon={<UpCircleOutlined />}
                   className="action-button"
-                  disabled={!canUpgrade(selectedCat.experience, selectedCat.level)}
-                  onClick={handleUpgradeCat}
+                  onClick={handleUpgradeCatWithCoin}
+                  title="猫币升级 (消耗猫币提升等级)"
                 />
               </div>
             </div>
           </div>
-          
+
           <div className="attribute-item">
             <div className="attribute-label">
-              体力
+              体力恢复 (猫币)
             </div>
             <div className="attribute-progress">
               <div className="progress-container">
@@ -592,32 +578,23 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                   strokeColor={getStaminaColor(selectedCat.stamina)}
                   format={() => `${formatStamina(selectedCat.stamina).toFixed(2)}/100`}
                 />
-                <Space className="action-buttons">
-                  <Button
-                    type="primary"
-                    danger
-                    shape="circle"
-                    size="middle"
-                    icon={<HeartOutlined />}
-                    disabled={isStaminaFull(selectedCat.stamina)}
-                    onClick={handleFeedCat}
-                    title="BGFISH喂养"
-                  />
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    size="middle"
-                    icon={<GiftOutlined />}
-                    disabled={isStaminaFull(selectedCat.stamina)}
-                    onClick={handleFeedWithDFS}
-                    loading={feedingWithDFS}
-                    title="DFS喂养 (1 DFS)"
-                  />
-                </Space>
+                <Button
+                  type="primary"
+                  danger
+                  shape="circle"
+                  size="middle"
+                  icon={<HeartOutlined />}
+                  disabled={isStaminaFull(selectedCat.stamina)}
+                  onClick={handleRestoreStamina}
+                  title="猫币恢复体力 (1 BGCAT = 10-20体力)"
+                />
               </div>
             </div>
           </div>
         </Card>
+
+
+
 
         {/* 猫咪属性 */}
         <Card title="猫咪属性" size="small" style={{ marginBottom: 16 }}>
@@ -637,6 +614,8 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     wallet={DFSWallet}
                     accountName={userInfo?.name}
                     showTitle={false}
+                    onDFSFeed={handleDFSFeedCat}
+                    feedingStates={feedingStates}
                   />
                 )
               },
@@ -843,6 +822,9 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
             </div>
           </Card>
         )} */}
+
+        {/* 功能使用指南 */}
+        <CatCoinGuide />
       </Spin>
     </div>
   );

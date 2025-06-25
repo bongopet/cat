@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Spin, message, Row, Col, Statistic, Progress, Table, Tag, Button } from 'antd';
 import { PieChartOutlined, BarChartOutlined, TrophyOutlined, StarOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getCatStats, getAllCats, QUALITY_NAMES, TARGET_PERCENTAGES } from '../utils/chainOperations';
+import { getCatStats, getAllCats, QUALITY_NAMES, TARGET_PERCENTAGES,getCats } from '../utils/chainOperations';
 import './CatStats.css';
 
 const CatStats = ({ DFSWallet }) => {
@@ -35,11 +35,12 @@ const CatStats = ({ DFSWallet }) => {
       // 同时获取统计数据和实际猫咪数据
       const [stats, actualCats] = await Promise.all([
         getCatStats(DFSWallet),
-        getAllCats(DFSWallet, 1000) // 获取更多猫咪数据
+        // getAllCats(DFSWallet, 1000) // 获取更多猫咪数据
+        getCats(200)
       ]);
 
       console.log('获取到的统计数据:', stats);
-      console.log('获取到的实际猫咪数据:', actualCats);
+      // console.log('获取到的实际猫咪数据:', actualCats);
 
       setStatsData(stats);
 

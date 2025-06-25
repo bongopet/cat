@@ -69,7 +69,7 @@ export async function tryAllNodes(rpcCallFunction) {
  * @param {string} key_type - 键类型
  * @param {number} limit - 查询限制数量
  * @param {boolean} reverse - 是否反向查询（默认为false）
- * @returns {Array} 表格数据行
+ * @returns {Array} 表格数据行 
  */
 export async function getTableRows(
   wallet,
@@ -101,8 +101,68 @@ export async function getTableRows(
         reverse
       });
       
-      // console.log(`JsonRpc获取表数据成功, 返回 ${result.rows ? result.rows.length : 0} 行`);
+      console.log(`JsonRpc获取表数据成功, 返回 ${result.rows ? result.rows.length : 0} 行`);
+     
       return result.rows || [];
+    });
+  } catch (error) {
+    console.error('获取表数据失败:', error);
+    // 返回空数组，避免前端错误
+    return [];
+  }
+}
+
+/**
+ * 获取表格数据的工具函数
+ * 
+ * @param {Object} wallet - 钱包实例(可选，不再使用)
+ * @param {string} code - 合约账户名
+ * @param {string} scope - 表的作用域
+ * @param {string} table - 表名
+ * @param {string} lower_bound - 查询范围下限
+ * @param {string} upper_bound - 查询范围上限
+ * @param {number} index_position - 索引位置
+ * @param {string} key_type - 键类型
+ * @param {number} limit - 查询限制数量
+ * @param {boolean} reverse - 是否反向查询（默认为false）
+ * @returns {Array} 表格数据行  
+ */
+export async function getTableRowsmore(
+  wallet,
+  code, 
+  scope, 
+  table, 
+  lower_bound = '', 
+  upper_bound = '', 
+  index_position = 1, 
+  key_type = 'i64', 
+  limit = 10, 
+  reverse = false
+) {
+  try {
+    // 使用tryAllNodes尝试所有节点
+    return await tryAllNodes(async (rpc) => {
+      // console.log(`使用JsonRpc获取表数据: ${table} from ${code}`);
+      
+      const result = await rpc.get_table_rows({
+        json: true,
+        code,
+        scope,
+        table,
+        lower_bound,
+        upper_bound,
+        index_position,
+        key_type,
+        limit,
+        reverse
+      });
+      
+      console.log(`JsonRpc获取表数据成功, 返回 ${result.rows ? result.rows.length : 0} 行`);
+      return {
+        rows: result.rows || [],
+        more: result.more || false,
+        next_key: result.next_key || ''
+      }
     });
   } catch (error) {
     console.error('获取表数据失败:', error);
@@ -246,8 +306,8 @@ export function buildTransferAction(from, to, quantity, memo = '', permission = 
   let contractAccount = 'eosio.token'; // 默认EOS代币合约
   if (symbol === 'DFS') {
     contractAccount = 'eosio.token';  // DFS代币合约
-  } else if (symbol === 'BGFISH') {
-    contractAccount = 'dfsppptokens'; // BGFISH代币合约
+  } else if (symbol === 'BGCAT') {
+    contractAccount = 'dfsppptokens'; // BGCAT代币合约
   }
   
   return {

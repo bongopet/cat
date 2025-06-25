@@ -169,14 +169,14 @@ export async function mintCat(wallet: any, accountName: string, debugLog?: (mess
 export async function feedCat(wallet: any, accountName: string, catId: number, debugLog?: (message: string, data?: any) => void): Promise<any> {
   try {
     // 为其他代币类型检查余额
-    const assetBalance = await wallet.dfsWallet.get_currency_balance('dfsppptokens', accountName, 'BGFISH')
+    const assetBalance = await wallet.dfsWallet.get_currency_balance('dfsppptokens', accountName, 'BGCAT')
 
-    // 解析余额字符串，例如 "10.0000 BGFISH"
+    // 解析余额字符串，例如 "10.0000 BGCAT"
     const balance = Number.parseFloat(assetBalance)
     if (isNaN(balance) || balance < 0.01) {
-      const errorMsg = `BGFISH余额不足，喂养猫咪需要至少1 BGFISH (当前余额: ${balance || '1 BGFISH'})`
+      const errorMsg = `BGCAT余额不足，喂养猫咪需要至少1 BGCAT (当前余额: ${balance || '1 BGCAT'})`
       message.warning(errorMsg)
-      debugLog?.('喂养猫咪余额不足:', { balance, required: '1 BGFISH' })
+      debugLog?.('喂养猫咪余额不足:', { balance, required: '1 BGCAT' })
       throw new Error(errorMsg)
     }
 
@@ -192,7 +192,7 @@ export async function feedCat(wallet: any, accountName: string, catId: number, d
         data: {
           from: accountName,
           to: CONTRACT, // 合约账户
-          quantity: '1.00000000 BGFISH', // 固定费用
+          quantity: '1.00000000 BGCAT', // 固定费用
           memo: `feed:${catId}`, // 特定备注，标识为喂养操作
         },
       }],
@@ -208,7 +208,7 @@ export async function feedCat(wallet: any, accountName: string, catId: number, d
       txId,
       'feed',
       '1.00000000',
-      'BGFISH',
+      'BGCAT',
       accountName,
       CONTRACT,
       catId,
