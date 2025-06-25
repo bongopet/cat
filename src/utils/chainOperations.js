@@ -544,30 +544,38 @@ function calculateNextLevelCatCoinCost(cat) {
   return calculateCatCoinRequirement(cat.quality, nextLevel);
 }
 
-// 解密猫咪属性 (基于合约的加密逻辑)
-function decryptCatStats(encryptedStats, catId) {
-  // console.log(`解密猫咪#${catId}属性: ${encryptedStats}`);
+// 解密猫咪属性 (基于合约的128位加密逻辑)
+function decryptCatStats(encryptedStats, catId, encryptedStatsHigh) {
+  console.log(`解密猫咪#${catId}属性: low=${encryptedStats}, high=${encryptedStatsHigh}`);
 
   try {
-    // 将字符串转换为BigInt进行64位运算
-    const encrypted = BigInt(encryptedStats);
+    // 将字符串转换为BigInt进行128位运算
+    const encryptedLow = BigInt(encryptedStats);
+    const encryptedHigh = BigInt(encryptedStatsHigh || '0'); // 如果没有高位数据，默认为0
     const id = BigInt(catId);
 
-    //console.log(`加密值: ${encrypted.toString()}, 猫咪ID: ${id.toString()}`);
+    console.log(`加密值: low=${encryptedLow.toString()}, high=${encryptedHigh.toString()}, 猫咪ID: ${id.toString()}`);
 
-    // 使用与合约相同的密钥
-    const key = id ^ BigInt('0x123456789ABCDEF0');
-    const stats = encrypted ^ key;
+    // 生成128位密钥
+    const keyLow = id ^ BigInt('0x123456789ABCDEF0');
+    const keyHigh = (id << BigInt(32)) ^ BigInt('0xFEDCBA0987654321');
 
-    //console.log(`密钥: ${key.toString(16)}, 解密后: ${stats.toString(16)}`);
+    // 解密
+    const statsLow = encryptedLow ^ keyLow;
+    const statsHigh = encryptedHigh ^ keyHigh;
 
-    // 按照合约的位运算提取各属性
-    const attack = Number((stats >> BigInt(54)) & BigInt(0x3FF));    // 10位攻击
-    const defense = Number((stats >> BigInt(44)) & BigInt(0x3FF));   // 10位防御
-    const health = Number((stats >> BigInt(32)) & BigInt(0xFFF));    // 12位血量
-    const critical = Number((stats >> BigInt(24)) & BigInt(0xFF));   // 8位暴击
-    const dodge = Number((stats >> BigInt(16)) & BigInt(0xFF));      // 8位闪避
-    const luck = Number((stats >> BigInt(8)) & BigInt(0xFF));        // 8位幸运
+    console.log(`密钥: low=${keyLow.toString(16)}, high=${keyHigh.toString(16)}`);
+    console.log(`解密后: low=${statsLow.toString(16)}, high=${statsHigh.toString(16)}`);
+
+    // 从低64位提取: attack(20) + defense(20) + health(24)
+    const attack = Number((statsLow >> BigInt(44)) & BigInt(0xFFFFF));     // 20位攻击 (位44-63)
+    const defense = Number((statsLow >> BigInt(24)) & BigInt(0xFFFFF));    // 20位防御 (位24-43)
+    const health = Number(statsLow & BigInt(0xFFFFFF));                    // 24位血量 (位0-23)
+
+    // 从高64位提取: critical(20) + dodge(20) + luck(24)
+    const critical = Number((statsHigh >> BigInt(44)) & BigInt(0xFFFFF));  // 20位暴击 (位44-63)
+    const dodge = Number((statsHigh >> BigInt(24)) & BigInt(0xFFFFF));     // 20位闪避 (位24-43)
+    const luck = Number(statsHigh & BigInt(0xFFFFFF));                     // 24位幸运 (位0-23)
 
     const result = {
       attack,
@@ -578,7 +586,7 @@ function decryptCatStats(encryptedStats, catId) {
       luck
     };
 
-    // console.log(`解密结果:`, result);
+    console.log(`解密结果:`, result);
     return result;
   } catch (error) {
     console.error('解密失败:', error);
@@ -827,10 +835,10 @@ async function getUserCats(wallet, accountName) {
       if (rows && rows.length > 0) {
         console.log(`从链上获取到 ${rows.length} 只猫咪`);
         const processedCats = rows.map(cat => {
-          // 解密属性
-          // console.log(`解密猫咪#${cat.id}属性:`, cat.encrypted_stats);
-          const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.id);
-          // console.log(`猫咪#${cat.id}解密结果:`, decryptedStats);
+          // 解密属性 (128位)
+          console.log(`解密猫咪#${cat.id}属性:`, cat.encrypted_stats, cat.encrypted_stats_high);
+          const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.id, cat.encrypted_stats_high);
+          console.log(`猫咪#${cat.id}解密结果:`, decryptedStats);
 
           const processedCat = {
             id: cat.id,

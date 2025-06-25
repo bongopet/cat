@@ -143,7 +143,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     return 'D';
   };
 
-  // 获取解密后的属性 (确保属性被正确解密)
+  // 获取解密后的属性 (确保属性被正确解密) - 128位支持
   const getDecryptedStats = (cat) => {
     if (cat.decryptedStats) {
       return cat.decryptedStats;
@@ -151,7 +151,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
 
     if (cat.encrypted_stats && cat.id) {
       console.log(`为猫咪#${cat.id}手动解密属性...`);
-      const stats = decryptCatStats(cat.encrypted_stats, cat.id);
+      const stats = decryptCatStats(cat.encrypted_stats, cat.id, cat.encrypted_stats_high);
       console.log(`猫咪#${cat.id}解密结果:`, stats);
       return stats;
     }
@@ -890,7 +890,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <div>
                       <Tag color={(() => {
                         const stats = getDecryptedStats(selectedCat);
-                        return stats ? getStatColor(stats.attack, 1023) : 'default';
+                        return stats ? getStatColor(stats.attack, 1048575) : 'default'; // 128位: 20位攻击
                       })()}>
                         {(() => {
                           const stats = getDecryptedStats(selectedCat);
@@ -901,7 +901,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                         const stats = getDecryptedStats(selectedCat);
                         return stats && (
                           <Tag size="small" style={{ marginLeft: 4 }}>
-                            {getStatRank(stats.attack, 1023)}
+                            {getStatRank(stats.attack, 1048575)}
                           </Tag>
                         );
                       })()}
@@ -912,7 +912,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <div>
                       <Tag color={(() => {
                         const stats = getDecryptedStats(selectedCat);
-                        return stats ? getStatColor(stats.defense, 1023) : 'default';
+                        return stats ? getStatColor(stats.defense, 1048575) : 'default'; // 128位: 20位防御
                       })()}>
                         {(() => {
                           const stats = getDecryptedStats(selectedCat);
@@ -923,7 +923,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                         const stats = getDecryptedStats(selectedCat);
                         return stats && (
                           <Tag size="small" style={{ marginLeft: 4 }}>
-                            {getStatRank(stats.defense, 1023)}
+                            {getStatRank(stats.defense, 1048575)}
                           </Tag>
                         );
                       })()}
@@ -934,7 +934,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <div>
                       <Tag color={(() => {
                         const stats = getDecryptedStats(selectedCat);
-                        return stats ? getStatColor(stats.health, 4095) : 'default';
+                        return stats ? getStatColor(stats.health, 16777215) : 'default'; // 128位: 24位血量
                       })()}>
                         {(() => {
                           const stats = getDecryptedStats(selectedCat);
@@ -945,7 +945,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                         const stats = getDecryptedStats(selectedCat);
                         return stats && (
                           <Tag size="small" style={{ marginLeft: 4 }}>
-                            {getStatRank(stats.health, 4095)}
+                            {getStatRank(stats.health, 16777215)}
                           </Tag>
                         );
                       })()}
@@ -1033,7 +1033,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                   console.log('decryptedStats:', selectedCat.decryptedStats);
 
                   if (selectedCat.encrypted_stats) {
-                    const manualDecrypt = decryptCatStats(selectedCat.encrypted_stats, selectedCat.id);
+                    const manualDecrypt = decryptCatStats(selectedCat.encrypted_stats, selectedCat.id, selectedCat.encrypted_stats_high);
                     console.log('手动解密结果:', manualDecrypt);
                     message.info(`手动解密成功！攻击:${manualDecrypt.attack}, 防御:${manualDecrypt.defense}, 血量:${manualDecrypt.health}`);
                   }
