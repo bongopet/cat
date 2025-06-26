@@ -124,24 +124,63 @@ function App() {
     // 检查是否已经登录
     const checkLoginStatus = async () => {
       try {
-        // 尝试获取当前用户信息（如果已登录）
-        const userInfo = await wallet.getUser();
-        if (userInfo && userInfo.name) {
-          console.log('检测到已登录用户:', userInfo);
+        // 从localStorage获取保存的钱包类型和用户信息
+        const savedWalletType = localStorage.getItem('dfs_wallet_type');
+        const savedUserInfo = localStorage.getItem('dfs_user_info');
+
+        console.log('检查保存的钱包状态:', { savedWalletType, savedUserInfo });
+
+        if (savedWalletType && savedUserInfo) {
+          const userInfo = JSON.parse(savedUserInfo);
+          console.log('尝试恢复钱包连接:', { walletType: savedWalletType, userInfo });
+
+          // 使用保存的钱包类型重新初始化
+          const walletType = savedWalletType === 'DFSWALLET' ? WalletType.DFSWALLET :
+                           savedWalletType === 'WEB' ? WalletType.WEB :
+                           WalletType.TELEGRAMAPP;
+
+          await wallet.init(walletType);
+          console.log('钱包重新初始化完成，钱包类型:', walletType);
+
+          // 直接使用保存的用户信息恢复连接状态
+          console.log('使用保存的用户信息恢复连接:', userInfo);
           setAccount(userInfo);
           setConnected(true);
 
-          // 获取余额
+          // 设置全局权限
+          if (userInfo.authority) {
+            setUserPermission(userInfo.authority);
+            console.log('已设置全局权限:', userInfo.authority);
+          } else {
+            setUserPermission('active');
+            console.log('使用默认权限: active');
+          }
+
+          // 获取余额并验证连接有效性
           try {
             const balanceStr = await getAccountBalance(wallet, 'eosio.token', userInfo.name, 'DFS');
             setBalance({ balance: balanceStr });
             console.log('恢复用户余额:', balanceStr);
+            console.log('钱包连接状态恢复成功');
           } catch (balanceError) {
-            console.error('获取余额失败:', balanceError);
+            console.error('获取余额失败，可能连接已过期:', balanceError);
+            // 如果余额获取失败，可能是连接已过期，清除保存的状态
+            console.log('清除可能过期的连接状态');
+            localStorage.removeItem('dfs_wallet_type');
+            localStorage.removeItem('dfs_user_info');
+            setConnected(false);
+            setAccount(null);
+            setBalance(null);
+            resetUserPermission();
           }
+        } else {
+          console.log('没有保存的钱包连接信息');
         }
       } catch (error) {
-        console.log('用户未登录或登录状态已过期');
+        console.log('恢复钱包连接失败:', error);
+        // 清除可能损坏的保存信息
+        localStorage.removeItem('dfs_wallet_type');
+        localStorage.removeItem('dfs_user_info');
       }
     };
 
@@ -213,6 +252,14 @@ function App() {
       setAccount(userInfo);
       setConnected(true);
 
+      // 保存钱包连接状态到localStorage
+      const walletTypeStr = walletType === WalletType.DFSWALLET ? 'DFSWALLET' :
+                           walletType === WalletType.WEB ? 'WEB' :
+                           'TELEGRAMAPP';
+      localStorage.setItem('dfs_wallet_type', walletTypeStr);
+      localStorage.setItem('dfs_user_info', JSON.stringify(userInfo));
+      console.log('已保存钱包连接状态:', { walletType: walletTypeStr, userInfo });
+
       // 设置全局权限
       if (userInfo && userInfo.authority) {
         setUserPermission(userInfo.authority);
@@ -252,7 +299,7 @@ function App() {
 
     try {
       // 停止余额自动刷新
-   
+
 
       // Call logout method
       dfsWallet.logout()
@@ -260,6 +307,11 @@ function App() {
       setAccount(null)
       setBalance(null)
       setSelectedCat(null)
+
+      // 清除保存的钱包连接状态
+      localStorage.removeItem('dfs_wallet_type')
+      localStorage.removeItem('dfs_user_info')
+      console.log('已清除保存的钱包连接状态')
 
       // 重置权限
       resetUserPermission()
