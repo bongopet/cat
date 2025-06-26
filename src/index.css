@@ -99,3 +99,72 @@ html {
   color: #222222 !important;
   font-weight: 600 !important;
 }
+
+/* 防止移动端输入框获得焦点时自动缩放 */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  .ant-select-selector {
+    font-size: 16px !important;
+  }
+
+  .ant-select-selection-search-input {
+    font-size: 16px !important;
+  }
+
+  .ant-input {
+    font-size: 16px !important;
+  }
+
+  /* 防止iOS Safari的自动缩放 */
+  input:focus,
+  select:focus,
+  textarea:focus,
+  .ant-select-focused .ant-select-selector,
+  .ant-input:focus {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  /* 修复移动端Select下拉列表滚动问题 */
+  .ant-select-dropdown {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+    max-height: 400px !important;
+  }
+
+  .ant-select-dropdown .rc-virtual-list {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+
+  .ant-select-dropdown .rc-virtual-list-holder {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+
+  /* 确保下拉选项可以正常滚动 */
+  .ant-select-item-group,
+  .ant-select-item-option {
+    touch-action: manipulation !important;
+  }
+
+  /* 修复移动端模态框内的滚动问题 */
+  .ant-modal-body {
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* 确保Select下拉框在移动端可以正常滚动 */
+  .ant-select-dropdown-placement-bottomLeft,
+  .ant-select-dropdown-placement-bottomRight,
+  .ant-select-dropdown-placement-topLeft,
+  .ant-select-dropdown-placement-topRight {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+  }
+}

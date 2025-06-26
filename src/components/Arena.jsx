@@ -140,8 +140,8 @@ const Arena = ({ DFSWallet, accountName }) => {
     }, 0);
 
     return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }} className="arena-stats">
-        <Col xs={24} sm={8} md={8}>
+      <Row gutter={[8, 16]} style={{ marginBottom: 24 }} className="arena-stats">
+        <Col xs={8} sm={8} md={8}>
           <Card>
             <Statistic
               title="活跃擂台"
@@ -151,7 +151,7 @@ const Arena = ({ DFSWallet, accountName }) => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8} md={8}>
+        <Col xs={8} sm={8} md={8}>
           <Card>
             <Statistic
               title="我的擂台"
@@ -161,7 +161,7 @@ const Arena = ({ DFSWallet, accountName }) => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8} md={8}>
+        <Col xs={8} sm={8} md={8}>
           <Card>
             <Statistic
               title="总奖池"
@@ -226,11 +226,11 @@ const Arena = ({ DFSWallet, accountName }) => {
       <div style={{ marginBottom: 24 }}>
         <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
-            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
               <FireOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
               猫咪擂台
             </h2>
-            <p style={{ margin: '4px 0 0 0', color: '#666' }}>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
               放置你的猫咪到擂台，或挑战其他玩家获得奖励
             </p>
           </div>

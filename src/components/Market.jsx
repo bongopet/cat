@@ -20,9 +20,9 @@ import {
   DollarOutlined,
   EyeOutlined,
   ShoppingCartOutlined,
-  BarChartOutlined,
   SortAscendingOutlined,
-  SortDescendingOutlined
+  SortDescendingOutlined,
+  ReloadOutlined
 } from '@ant-design/icons'
 import {
   getMarketCats,
@@ -217,8 +217,8 @@ function Market({ DFSWallet, userInfo }) {
     }
 
     return (
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }} className="market-stats">
-        <Col xs={24} sm={12} md={12} lg={12}>
+      <Row gutter={[8, 16]} style={{ marginBottom: 24 }} className="market-stats">
+        <Col xs={12} sm={12} md={12} lg={12}>
           <Card>
             <Statistic
               title="在售猫咪"
@@ -227,7 +227,7 @@ function Market({ DFSWallet, userInfo }) {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={12} lg={12}>
+        <Col xs={12} sm={12} md={12} lg={12}>
           <Card>
             <Statistic
               title="市场总值"
@@ -246,20 +246,17 @@ function Market({ DFSWallet, userInfo }) {
   const renderFilters = () => (
     <Card style={{ marginBottom: 16 }}>
       <Space wrap>
-        <span>筛选:</span>
         <Select
           value={qualityFilter}
           onChange={setQualityFilter}
           style={{ width: 120 }}
           placeholder="品质"
         >
-          <Option value="all">全部品质</Option>
+          <Option value="all">全部</Option>
           {Object.entries(QUALITY_NAMES).map(([key, name]) => (
             <Option key={key} value={key}>{name}</Option>
           ))}
         </Select>
-        
-        <span>排序:</span>
         <Select
           value={priceSort}
           onChange={setPriceSort}
@@ -273,8 +270,8 @@ function Market({ DFSWallet, userInfo }) {
           </Option>
         </Select>
         
-        <Button 
-          icon={<BarChartOutlined />} 
+        <Button
+          icon={<ReloadOutlined />}
           onClick={fetchMarketData}
           loading={loading}
         >

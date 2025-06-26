@@ -84,15 +84,31 @@
 /* 响应式优化 */
 @media (max-width: 768px) {
   .market-stats .ant-statistic-content {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .market-stats .ant-card-body {
-    padding: 20px 16px;
+    padding: 16px 12px;
   }
 
   .market-stats .ant-statistic-title {
-    font-size: 13px;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 576px) {
+  .market-stats .ant-statistic-content {
+    font-size: 16px;
+  }
+
+  .market-stats .ant-card-body {
+    padding: 12px 8px;
+  }
+
+  .market-stats .ant-statistic-title {
+    font-size: 11px;
+    margin-bottom: 2px;
   }
 }
 

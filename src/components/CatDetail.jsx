@@ -771,6 +771,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
         <Modal
           title="选择繁殖伙伴"
           open={breedModalVisible}
+          width={480}
           onCancel={() => {
             console.log('取消繁殖，重置状态');
             setBreedModalVisible(false);
@@ -806,6 +807,16 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           <Select
             style={{ width: '100%' }}
             placeholder="选择一只异性猫咪"
+            showSearch
+            optionFilterProp="label"
+            listHeight={400}
+            dropdownStyle={{
+              maxHeight: 400,
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            }}
+            virtual={false}
+            popupMatchSelectWidth={true}
             value={(() => {
               // 实时验证选择的有效性
               const currentPartners = breedingPartners;

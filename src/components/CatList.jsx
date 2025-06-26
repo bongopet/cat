@@ -175,7 +175,7 @@ const CatList = ({
                       selectedKeys={[selectedQuality]}
                       onClick={({ key }) => handleQualityFilter(key)}
                     >
-                      <Menu.Item key="all">全部品质</Menu.Item>
+                      <Menu.Item key="all">全部</Menu.Item>
                       <Menu.Divider />
                       {Object.entries(QUALITY_NAMES).map(([quality, name]) => (
                         <Menu.Item key={quality}>
@@ -189,7 +189,7 @@ const CatList = ({
                   trigger={['click']}
                 >
                   <Button size="small" icon={<FilterOutlined />}>
-                    {selectedQuality === 'all' ? '全部品质' : QUALITY_NAMES[selectedQuality]} <DownOutlined />
+                    {selectedQuality === 'all' ? '全部' : QUALITY_NAMES[selectedQuality]} <DownOutlined />
                   </Button>
                 </Dropdown>
 

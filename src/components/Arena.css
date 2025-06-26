@@ -3,6 +3,21 @@
   padding: 24px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  color: white;
+}
+
+/* 确保标题和描述文字在深色背景上清晰可见 */
+.arena-container h1,
+.arena-container h2,
+.arena-container h3,
+.arena-container h4,
+.arena-container h5,
+.arena-container h6 {
+  color: white !important;
+}
+
+.arena-container p {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* 擂台统计卡片 */
@@ -170,19 +185,24 @@
   .arena-container {
     padding: 16px;
   }
-  
+
   .arena-stats .ant-statistic-content {
-    font-size: 20px;
+    font-size: 18px;
   }
-  
+
   .arena-stats .ant-card-body {
     padding: 16px 12px;
   }
-  
+
+  .arena-stats .ant-statistic-title {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
   .arena-card .ant-card-meta-title {
     font-size: 14px;
   }
-  
+
   .arena-card .ant-card-meta-description {
     font-size: 12px;
   }
@@ -192,16 +212,25 @@
   .arena-container {
     padding: 12px;
   }
-  
+
   .arena-stats .ant-statistic-content {
-    font-size: 18px;
+    font-size: 16px;
   }
-  
+
+  .arena-stats .ant-card-body {
+    padding: 12px 8px;
+  }
+
+  .arena-stats .ant-statistic-title {
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
   .arena-cat-overlay {
     top: 4px;
     right: 4px;
   }
-  
+
   .arena-cat-overlay .ant-tag {
     font-size: 10px;
     padding: 1px 4px;
