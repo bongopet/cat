@@ -283,21 +283,28 @@ function Market({ DFSWallet, userInfo }) {
   )
 
   // 渲染市场猫咪卡片
-  const renderMarketCat = (cat) => (
-    <Col xs={12} sm={8} md={6} lg={4} xl={4} xxl={3} key={cat.catId}>
-      <div className="market-cat-wrapper">
-        <UnifiedCatCard
-          cat={cat}
-          isMarketMode={true}
-          showPrice={true}
-          onBuy={(cat) => {
-            setSelectedCat(cat)
-            setBuyModalVisible(true)
-          }}
-        />
-      </div>
-    </Col>
-  )
+  const renderMarketCat = (cat) => {
+    // 检查是否是自己的猫咪
+    const isOwnCat = userInfo && cat.seller === userInfo.name;
+
+    return (
+      <Col xs={12} sm={8} md={6} lg={4} xl={4} xxl={3} key={cat.catId}>
+        <div className="market-cat-wrapper">
+          <UnifiedCatCard
+            cat={cat}
+            isMarketMode={true}
+            showPrice={true}
+            // showSeller={true}
+            isOwnCat={isOwnCat}
+            onBuy={isOwnCat ? null : (cat) => {
+              setSelectedCat(cat)
+              setBuyModalVisible(true)
+            }}
+          />
+        </div>
+      </Col>
+    )
+  }
 
   // 渲染用户猫咪卡片
   const renderUserCat = (cat) => (

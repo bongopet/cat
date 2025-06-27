@@ -327,16 +327,38 @@ function App() {
   }
 
   // Handle cat selection
-  const handleCatSelect = (catId) => {
+  const handleCatSelect = async (catId) => {
     console.log('选择猫咪:', catId);
-    const cat = catList.find(c => c.id === catId);
+    let cat = catList.find(c => c.id === catId);
+
     if (cat) {
       console.log('找到猫咪数据:', cat);
       setSelectedCat(cat);
       setCatDetailsVisible(true);
     } else {
-      console.error('未找到猫咪数据:', catId, '可用猫咪:', catList.map(c => c.id));
-      message.error('未找到猫咪数据，请刷新页面重试');
+      console.log('本地未找到猫咪数据，尝试重新获取...', catId);
+
+      // 如果本地没找到，可能是新购买的猫咪，尝试重新获取猫咪列表
+      try {
+        if (dfsWallet && account) {
+          const cats = await getUserCats(dfsWallet, account.name);
+          setCatList(cats);
+
+          // 在新获取的列表中查找
+          cat = cats.find(c => c.id === catId);
+          if (cat) {
+            console.log('重新获取后找到猫咪数据:', cat);
+            setSelectedCat(cat);
+            setCatDetailsVisible(true);
+          } else {
+            console.error('重新获取后仍未找到猫咪数据:', catId, '可用猫咪:', cats.map(c => c.id));
+            message.error('未找到猫咪数据，请稍后重试');
+          }
+        }
+      } catch (error) {
+        console.error('重新获取猫咪列表失败:', error);
+        message.error('获取猫咪数据失败，请刷新页面重试');
+      }
     }
   }
 

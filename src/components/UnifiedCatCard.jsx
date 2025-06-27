@@ -20,6 +20,7 @@ function UnifiedCatCard({
   isMarketMode = false,
   onBuy,
   isSelected = false,
+  isOwnCat = false,  // 是否是自己的猫咪
   actionButton = null  // 外部操作按钮（如上架/下架）
 }) {
   if (!cat) return null
@@ -152,15 +153,23 @@ function UnifiedCatCard({
           {renderCardContent()}
         </Card>
         <Button
-          type="primary"
+          type={isOwnCat ? "default" : "primary"}
           size="small"
           onClick={(e) => {
             e.stopPropagation();
-            onBuy && onBuy(cat);
+            if (!isOwnCat && onBuy) {
+              onBuy(cat);
+            }
           }}
-          className="unified-buy-button"
+          disabled={isOwnCat}
+          className={`unified-buy-button ${isOwnCat ? 'own-cat-button' : ''}`}
         >
-          {cat.price ? `${parseFloat(cat.price).toFixed(2)} DFS 购买` : '价格未知'}
+          {isOwnCat
+            ? '我的猫咪'
+            : cat.price
+              ? `${parseFloat(cat.price).toFixed(2)} DFS 购买`
+              : '价格未知'
+          }
         </Button>
       </div>
     )
