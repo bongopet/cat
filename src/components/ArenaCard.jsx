@@ -21,12 +21,13 @@ import {
 } from '@ant-design/icons';
 import { QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
 
-const ArenaCard = ({ 
-  arena, 
-  isOwner, 
-  onChallenge, 
-  onRemove, 
-  userCats 
+const ArenaCard = ({
+  arena,
+  isOwner,
+  onChallenge,
+  onRemove,
+  userCats,
+  showChallengeButton = true // 默认显示挑战按钮
 }) => {
   // 获取战斗力等级颜色
   const getPowerRankColor = (rank) => {
@@ -127,7 +128,7 @@ const ArenaCard = ({
               移除
             </Button>
           </Tooltip>
-        ] : [
+        ] : showChallengeButton ? [
           <Tooltip title={hasAvailableCats ? "挑战这个擂台" : "没有可用的猫咪"}>
             <Button
               type="primary"
@@ -138,7 +139,7 @@ const ArenaCard = ({
               挑战
             </Button>
           </Tooltip>
-        ]
+        ] : []
       }
     >
       <Card.Meta

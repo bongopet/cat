@@ -25,24 +25,36 @@ import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRank } from '../utils/chainO
 const { Option } = Select;
 const { Text } = Typography;
 
-const ChallengeModal = ({ 
-  visible, 
-  onCancel, 
-  onConfirm, 
-  arena, 
-  userCats, 
-  loading 
+// 挑战等级配置
+const BET_LEVELS = [
+  { level: 0, amount: 2, label: '2 DFS', color: '#52c41a' },
+  { level: 1, amount: 5, label: '5 DFS', color: '#1890ff' },
+  { level: 2, amount: 10, label: '10 DFS', color: '#f5222d' }
+];
+
+const ChallengeModal = ({
+  visible,
+  onCancel,
+  onConfirm,
+  arenaStats, // 改为传入擂台统计信息
+  userCats,
+  loading,
+  preselectedBetLevel = null // 预选的挑战等级
 }) => {
   const [form] = Form.useForm();
   const [selectedCat, setSelectedCat] = useState(null);
+  const [betLevel, setBetLevel] = useState(0);
 
   // 重置表单
   useEffect(() => {
     if (visible) {
+      const initialBetLevel = preselectedBetLevel !== null ? preselectedBetLevel : 0;
       form.resetFields();
+      form.setFieldsValue({ betLevel: initialBetLevel });
       setSelectedCat(null);
+      setBetLevel(initialBetLevel);
     }
-  }, [visible, form]);
+  }, [visible, form, preselectedBetLevel]);
 
   // 获取可用的挑战猫咪
   const getAvailableCats = () => {
@@ -60,27 +72,27 @@ const ChallengeModal = ({
 
   // 处理确认挑战
   const handleConfirm = () => {
-    if (!arena || !selectedCat || !arena.bet_amount) return;
+    if (!selectedCat) return;
 
     form.validateFields().then(values => {
-      const betAmount = parseFloat(arena.bet_amount.split(' ')[0]);
-      onConfirm(arena.id, values.catId, betAmount);
+      // 如果有预选等级，使用预选等级，否则使用表单中的等级
+      const finalBetLevel = preselectedBetLevel !== null ? preselectedBetLevel : values.betLevel;
+      onConfirm(values.catId, finalBetLevel);
     });
   };
 
-  // 计算胜率估算
+  // 计算胜率估算（基于挑战等级的平均胜率）
   const calculateWinChance = () => {
-    if (!selectedCat || !arena || !arena.cat) return 50;
+    if (!selectedCat) return 50;
 
-    // 简单的胜率计算（基于等级和品质）
-    const challengerPower = selectedCat.level * 15 + selectedCat.quality * 50;
-    const defenderPower = arena.cat.level * 15 + arena.cat.quality * 50;
+    // 基于猫咪品质和等级的基础胜率
+    const basePower = selectedCat.level * 10 + selectedCat.quality * 20;
 
-    const totalPower = challengerPower + defenderPower;
-    const winChance = Math.round((challengerPower / totalPower) * 100);
+    // 根据挑战等级调整胜率（高等级擂台通常有更强的猫咪）
+    const levelModifier = betLevel * 5; // 每个等级降低5%胜率
+    const winChance = Math.round(50 + (basePower / 20) - levelModifier);
 
-    // 限制在10-90%之间，增加不确定性
-    return Math.max(10, Math.min(90, winChance));
+    return Math.max(10, Math.min(90, winChance)); // 限制在10%-90%之间
   };
 
   // 获取品质颜色
@@ -97,20 +109,22 @@ const ChallengeModal = ({
     return '#f5222d';
   };
 
-  // 早期返回检查
-  if (!arena) return null;
-
   const availableCats = getAvailableCats();
-  const betAmount = arena.bet_amount ? parseFloat(arena.bet_amount.split(' ')[0]) : 0;
-  const totalPool = arena.total_pool ? parseFloat(arena.total_pool.split(' ')[0]) : 0;
+
+  // 获取当前显示的等级（预选等级优先）
+  const currentBetLevel = preselectedBetLevel !== null ? preselectedBetLevel : betLevel;
+  const betAmount = BET_LEVELS[currentBetLevel]?.amount || 2;
   const winChance = calculateWinChance();
+
+  // 获取当前bet_level的擂台数量
+  const currentLevelArenaCount = arenaStats ? arenaStats[`level${currentBetLevel}Count`] || 0 : 0;
 
   return (
     <Modal
       title={
         <Space>
           <ThunderboltOutlined style={{ color: '#f5222d' }} />
-          挑战擂台 #{arena.id}
+          挑战擂台 - {BET_LEVELS[currentBetLevel]?.label}
         </Space>
       }
       open={visible}
@@ -126,11 +140,11 @@ const ChallengeModal = ({
       }}
     >
       <Alert
-        message="挑战规则"
+        message="新挑战规则"
         description={
           <ul style={{ margin: 0, paddingLeft: 20 }}>
-            <li>支付挑战费用参与战斗</li>
-            <li>挑战成功：获得挑战费用作为奖励，失败费用按比例分配</li>
+            <li>选择挑战等级，系统随机匹配同等级擂台</li>
+            <li>每个等级需要至少3个擂台才能挑战</li>
             <li>挑战失败：费用的1.5%给开发者，1.5%进传世猫池，97%加入奖池</li>
             <li>挑战成功：获得退还的挑战费用 + 97%的奖池奖励</li>
             <li>战斗结果基于猫咪属性和随机因素</li>
@@ -143,71 +157,91 @@ const ChallengeModal = ({
         style={{ marginBottom: 16 }}
       />
 
-      {/* 擂台信息 */}
-      <Card title="擂台信息" size="small" style={{ marginBottom: 16 }}>
-        <Row gutter={16}>
-          <Col span={8}>
-            {arena.cat && (
-              <img
-                src={`/images/cat_${arena.cat.genes}.png`}
-                alt={`Defender Cat #${arena.cat.id}`}
-                style={{ width: '100%', borderRadius: 8 }}
-                onError={(e) => {
-                  e.target.src = '/images/logo.png';
-                }}
-              />
-            )}
-          </Col>
-          <Col span={16}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div>
-                <Text strong>防守方: {arena.owner}</Text>
-                {arena.cat && (
-                  <div style={{ marginTop: 4 }}>
-                    <Tag color={getQualityColor(arena.cat.quality)}>
-                      {QUALITY_NAMES[arena.cat.quality]}
-                    </Tag>
-                    <Tag>{GENDER_NAMES[arena.cat.gender]}</Tag>
-                    <Tag color="blue">{arena.powerRank}</Tag>
-                  </div>
-                )}
-              </div>
-              
-              <Row gutter={8}>
-                <Col span={8}>
-                  <Statistic
-                    title="奖池"
-                    value={totalPool}
-                    suffix="DFS"
-                    precision={2}
-                    valueStyle={{ fontSize: 14, color: '#f5222d' }}
-                    prefix={<TrophyOutlined />}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title="挑战费"
-                    value={betAmount}
-                    suffix="DFS"
-                    precision={2}
-                    valueStyle={{ fontSize: 14, color: '#1890ff' }}
-                  />
-                </Col>
-                <Col span={8}>
-                  <Statistic
-                    title="战绩"
-                    value={`${arena.wins}胜${arena.losses}负`}
-                    valueStyle={{ fontSize: 14 }}
-                  />
-                </Col>
-              </Row>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          betLevel: preselectedBetLevel !== null ? preselectedBetLevel : 0
+        }}
+      >
+        {preselectedBetLevel !== null ? (
+          // 预选等级时显示隐藏字段
+          <Form.Item name="betLevel" style={{ display: 'none' }}>
+            <input type="hidden" />
+          </Form.Item>
+        ) : (
+          <Form.Item
+            label="挑战等级"
+            name="betLevel"
+            rules={[{ required: true, message: '请选择挑战等级' }]}
+          >
+            <Select
+              placeholder="选择挑战等级"
+              onChange={setBetLevel}
+              style={{ width: '100%' }}
+            >
+              {BET_LEVELS.map(level => {
+                const arenaCount = arenaStats ? arenaStats[`level${level.level}Count`] || 0 : 0;
+                const canChallenge = arenaCount >= 3;
 
-      {/* 选择挑战猫咪 */}
-      <Form form={form} layout="vertical">
+                return (
+                  <Option key={level.level} value={level.level} disabled={!canChallenge}>
+                    <Space>
+                      <Tag color={level.color}>{level.label}</Tag>
+                      <span>费用: {level.amount} DFS</span>
+                      <span style={{ color: canChallenge ? '#52c41a' : '#f5222d' }}>
+                        ({arenaCount} 个擂台)
+                      </span>
+                      {!canChallenge && <span style={{ color: '#f5222d' }}>需要至少3个</span>}
+                    </Space>
+                  </Option>
+                );
+              })}
+            </Select>
+          </Form.Item>
+        )}
+
+        {/* 挑战等级信息 */}
+        {(betLevel !== undefined || preselectedBetLevel !== null) && (
+          <Card
+            title="挑战信息"
+            size="small"
+            style={{
+              marginBottom: 16,
+              backgroundColor: BET_LEVELS[currentBetLevel]?.color + '10'
+            }}
+          >
+            <Row gutter={16} align="middle">
+              <Col span={12}>
+                <Statistic
+                  title="挑战等级"
+                  value={BET_LEVELS[currentBetLevel]?.label}
+                  prefix={<TrophyOutlined />}
+                  valueStyle={{ color: BET_LEVELS[currentBetLevel]?.color, fontSize: 18 }}
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title="挑战费用"
+                  value={BET_LEVELS[currentBetLevel]?.amount}
+                  suffix="DFS"
+                  prefix={<FireOutlined />}
+                  valueStyle={{ color: '#1890ff', fontSize: 18 }}
+                />
+              </Col>
+            </Row>
+
+            <div style={{ marginTop: 12 }}>
+              <Text type="secondary">
+                可用擂台: {currentLevelArenaCount} 个
+                {currentLevelArenaCount < 3 && (
+                  <span style={{ color: '#f5222d' }}> (需要至少3个才能挑战)</span>
+                )}
+              </Text>
+            </div>
+          </Card>
+        )}
+        {/* 选择挑战猫咪 */}
         <Form.Item
           label="选择挑战猫咪"
           name="catId"
@@ -245,10 +279,9 @@ const ChallengeModal = ({
             style={{ marginBottom: 16 }}
           />
         )}
-      </Form>
 
-      {/* 战斗预览 */}
-      {selectedCat && (
+        {/* 战斗预览 */}
+        {selectedCat && (
         <>
           <Divider>战斗预览</Divider>
           <Row gutter={16}>
@@ -293,63 +326,34 @@ const ChallengeModal = ({
               </div>
             </Col>
             
-            <Col span={10}>
-              <Card size="small" title={<Space><SafetyOutlined />防守方</Space>}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  {arena.cat && (
-                    <>
-                      <img
-                        src={`/images/cat_${arena.cat.genes}.png`}
-                        alt={`Defender Cat #${arena.cat.id}`}
-                        style={{ width: '100%', borderRadius: 8 }}
-                        onError={(e) => {
-                          e.target.src = '/images/logo.png';
-                        }}
-                      />
-                      <div>
-                        <Text strong>#{arena.cat.id}</Text>
-                        <div style={{ marginTop: 4 }}>
-                          <Tag color={getQualityColor(arena.cat.quality)}>
-                            {QUALITY_NAMES[arena.cat.quality]}
-                          </Tag>
-                          <Tag>{GENDER_NAMES[arena.cat.gender]}</Tag>
-                        </div>
-                        <div style={{ marginTop: 8 }}>
-                          <Text type="secondary">等级: {arena.cat.level}</Text><br/>
-                          <Text type="secondary">体力: {arena.cat.stamina}/100</Text><br/>
-                          <Text type="secondary">战力: {arena.powerRank}</Text>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </Space>
-              </Card>
-            </Col>
           </Row>
 
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <Progress
-              percent={winChance}
-              strokeColor={getWinChanceColor(winChance)}
-              format={(percent) => `胜率 ${percent}%`}
-            />
-            <Alert
-              message={
-                <Space>
-                  <FireOutlined />
-                  <span>
-                    支付 <strong>{betAmount.toFixed(2)} DFS</strong> 挑战费用，
-                    胜利可获得 <strong>{(betAmount + betAmount * 0.97).toFixed(2)} DFS</strong> 奖励！
-                    (退还 {betAmount.toFixed(2)} + 97%奖池奖励 {(betAmount * 0.97).toFixed(2)})
-                  </span>
-                </Space>
-              }
-              type="info"
-              style={{ marginTop: 12 }}
-            />
-          </div>
+          {selectedCat && (
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <Progress
+                percent={winChance}
+                strokeColor={getWinChanceColor(winChance)}
+                format={(percent) => `胜率 ${percent}%`}
+              />
+              <Alert
+                message={
+                  <Space>
+                    <FireOutlined />
+                    <span>
+                      支付 <strong>{betAmount} DFS</strong> 挑战费用，
+                      胜利可获得退还费用 + 97%的随机擂台奖池奖励！
+                      失败时97%费用会加入擂台奖池。
+                    </span>
+                  </Space>
+                }
+                type="info"
+                style={{ marginTop: 12 }}
+              />
+            </div>
+          )}
         </>
       )}
+      </Form>
     </Modal>
   );
 };

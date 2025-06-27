@@ -1766,14 +1766,13 @@ function getAttributeColor(rank) {
 }
 
 // 放置猫咪到擂台
-async function placeInArena(wallet, accountName, catId, totalAmount, betAmount) {
+async function placeInArena(wallet, accountName, catId, betLevel, totalAmount) {
   try {
-    console.log('正在放置猫咪到擂台...', { catId, totalAmount, betAmount });
+    console.log('正在放置猫咪到擂台...', { catId, betLevel, totalAmount });
 
-    // 通过DFS转账放置擂台，memo格式: "arena:猫咪ID:挑战金额"
-    // 挑战金额需要转换为最小单位（8位小数）
-    const betAmountInMinUnits = Math.round(betAmount * 100000000);
-    const memo = `arena:${catId}:${betAmountInMinUnits}`;
+    // 通过DFS转账放置擂台，memo格式: "arena:猫咪ID:挑战等级"
+    // betLevel: 0=2DFS, 1=5DFS, 2=10DFS
+    const memo = `arena:${catId}:${betLevel}`;
     const permission = getUserPermission('contract');
     console.log(`使用权限: ${permission}`);
     const result = await wallet.transact({
@@ -1794,7 +1793,7 @@ async function placeInArena(wallet, accountName, catId, totalAmount, betAmount) 
     }, {
       blocksBehind: 3,
       expireSeconds: 30,
-      useFreeCpu: true, 
+      useFreeCpu: true,
     });
 
     console.log('放置擂台成功:', result);
@@ -1806,15 +1805,21 @@ async function placeInArena(wallet, accountName, catId, totalAmount, betAmount) 
 }
 
 // 挑战擂台
-async function challengeArena(wallet, accountName, arenaId, challengerCatId, betAmount) {
+async function challengeArena(wallet, accountName, challengerCatId, betLevel) {
   try {
-    console.log('正在挑战擂台...', { arenaId, challengerCatId, betAmount });
+    console.log('正在挑战擂台...', { challengerCatId, betLevel });
 
-    // 通过DFS转账挑战，memo格式: "challenge:擂台ID:猫咪ID"
-    const memo = `challenge:${arenaId}:${challengerCatId}`;
+    // 通过DFS转账挑战，memo格式: "challenge:挑战等级:猫咪ID"
+    // betLevel: 0=2DFS, 1=5DFS, 2=10DFS
+    const memo = `challenge:${betLevel}:${challengerCatId}`;
+
+    // 根据betLevel计算挑战费用
+    const betAmounts = [2, 5, 10]; // 对应bet_level 0, 1, 2
+    const betAmount = betAmounts[betLevel] || 2;
+
     const permission = getUserPermission('contract');
     console.log(`使用权限: ${permission}`);
- 
+
     const result = await wallet.transact({
       actions: [{
         account: 'eosio.token',
@@ -2005,30 +2010,50 @@ async function getMyLegendaryInfo(wallet, accountName) {
   try {
     console.log('获取用户传世猫信息...', accountName);
 
-    // 查询用户的猫咪，找出传世猫
+    // 查询所有猫咪，然后过滤用户的传世猫
     const catsRows = await getTableRows(
       wallet,
       CONTRACT,
       CONTRACT,
       CATTABLE,
-      accountName, // lower_bound
-      accountName, // upper_bound
-      2, // index_position - 按所有者索引
-      'name', // key_type
-      100 // limit
+      '', // lower_bound
+      '', // upper_bound
+      1, // index_position - 主键索引
+      'i64', // key_type
+      1000 // limit - 增加限制以获取更多数据
     );
 
     console.log('用户猫咪查询结果:', catsRows);
 
+    // 详细调试：显示所有猫咪的品质信息
+    if (catsRows && catsRows.length > 0) {
+      console.log('用户所有猫咪的品质信息:');
+      catsRows.forEach(cat => {
+        console.log(`猫咪#${cat.id}: owner=${cat.owner}, quality=${cat.quality}, qualityName=${QUALITY_NAMES[cat.quality] || '未知'}`);
+      });
+    }
+
     // 查找传世猫
     let legendaryCat = null;
     if (catsRows) {
-      legendaryCat = catsRows.find(cat =>
-        cat.owner === accountName && cat.quality === 7 // LEGENDARY = 7
-      );
+      // 先查找该用户的所有猫咪
+      const userCats = catsRows.filter(cat => cat.owner === accountName);
+      console.log(`用户${accountName}的所有猫咪(${userCats.length}只):`, userCats);
+
+      // 在用户的猫咪中查找传世猫
+      legendaryCat = userCats.find(cat => cat.quality === 7); // LEGENDARY = 7
+
+      // 额外调试：查找所有传世品质的猫咪（不限制owner）
+      const allLegendaryCats = catsRows.filter(cat => cat.quality === 7);
+      console.log(`所有传世猫咪(${allLegendaryCats.length}只):`, allLegendaryCats);
+
+      // 查找该用户拥有的传世猫
+      const userLegendaryCats = userCats.filter(cat => cat.quality === 7);
+      console.log(`用户${accountName}的传世猫咪(${userLegendaryCats.length}只):`, userLegendaryCats);
     }
 
     if (!legendaryCat) {
+      console.log(`用户${accountName}没有传世猫`);
       return {
         hasLegendary: false,
         catId: 0,

@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Spin, Alert, Space, Tag, Row, Col, Progress, Tooltip } from 'antd';
-import {
-    TrophyOutlined,
-    ReloadOutlined,
-    LockOutlined,
+import { 
+    TrophyOutlined, 
+    ReloadOutlined, 
+    LockOutlined, 
     FireOutlined,
     SafetyOutlined,
     HeartOutlined,
     ThunderboltOutlined,
     EyeOutlined,
-    StarOutlined,
-    GiftOutlined
+    StarOutlined
 } from '@ant-design/icons';
 import SimpleCatStatsManager from '../utils/SimpleCatStatsManager';
 
-const SecureCatAttributes = ({
-    wallet,
-    accountName,
-    showTitle = true,
-    onDFSFeed = null,
-    feedingStates = {}
-}) => {
+const SecureCatAttributes = ({ wallet, accountName, showTitle = true }) => {
     const [loading, setLoading] = useState(false);
     const [allCatsStats, setAllCatsStats] = useState(null);
     const [error, setError] = useState(null);
@@ -134,60 +127,29 @@ const SecureCatAttributes = ({
         ];
 
         return (
-            <Card
+            <Card 
                 key={catStats.catId}
-                size="small"
+                size="small" 
                 title={
-                    <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                        <Space>
-                            <span>猫咪 #{catStats.catId}</span>
-                            <Tag color="gold">
-                                <TrophyOutlined /> {catStats.totalPower.toLocaleString()}
-                            </Tag>
-                        </Space>
-                        {onDFSFeed && (
-                            <Button
-                                type="primary"
-                                size="small"
-                                icon={<GiftOutlined />}
-                                loading={feedingStates[catStats.catId] || false}
-                                onClick={() => onDFSFeed(catStats.catId)}
-                                title="使用DFS提升属性 (1 DFS)"
-                                style={{
-                                    background: 'linear-gradient(135deg, #1890ff, #722ed1)',
-                                    border: 'none'
-                                }}
-                            >
-                                DFS提升
-                            </Button>
-                        )}
+                    <Space>
+                        <span>猫咪 #{catStats.catId}</span>
+                        <Tag color="gold">
+                            <TrophyOutlined /> {catStats.totalPower.toLocaleString()}
+                        </Tag>
                     </Space>
                 }
                 style={{ marginBottom: '16px' }}
             >
                 <Row gutter={[12, 8]}>
                     {attributes.map(attr => renderAttribute(
-                        attr.name,
-                        attr.value,
-                        attr.type,
-                        attr.icon,
-                        attr.color,
+                        attr.name, 
+                        attr.value, 
+                        attr.type, 
+                        attr.icon, 
+                        attr.color, 
                         attr.max
                     ))}
                 </Row>
-
-                {onDFSFeed && (
-                    <div style={{
-                        marginTop: '12px',
-                        padding: '8px',
-                        background: '#f0f5ff',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        color: '#666'
-                    }}>
-                        💎 使用DFS随机提升猫咪的攻击、防御、血量、暴击、闪避、幸运等属性
-                    </div>
-                )}
             </Card>
         );
     };

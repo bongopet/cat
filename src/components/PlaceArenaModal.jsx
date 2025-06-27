@@ -22,25 +22,32 @@ import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRank } from '../utils/chainO
 
 const { Option } = Select;
 
-const PlaceArenaModal = ({ 
-  visible, 
-  onCancel, 
-  onConfirm, 
-  userCats, 
-  loading 
+// 挑战等级配置
+const BET_LEVELS = [
+  { level: 0, amount: 2, label: '2 DFS', color: '#52c41a' },
+  { level: 1, amount: 5, label: '5 DFS', color: '#1890ff' },
+  { level: 2, amount: 10, label: '10 DFS', color: '#f5222d' }
+];
+
+const PlaceArenaModal = ({
+  visible,
+  onCancel,
+  onConfirm,
+  userCats,
+  loading
 }) => {
   const [form] = Form.useForm();
   const [selectedCat, setSelectedCat] = useState(null);
-  const [totalAmount, setTotalAmount] = useState(10);
-  const [betAmount, setBetAmount] = useState(1);
+  const [betLevel, setBetLevel] = useState(0); // 0=2DFS, 1=5DFS, 2=10DFS
+  const [totalAmount, setTotalAmount] = useState(10); // 初始奖池金额
 
   // 重置表单
   useEffect(() => {
     if (visible) {
       form.resetFields();
       setSelectedCat(null);
+      setBetLevel(0);
       setTotalAmount(10);
-      setBetAmount(1);
     }
   }, [visible, form]);
 
@@ -61,7 +68,7 @@ const PlaceArenaModal = ({
   // 处理确认
   const handleConfirm = () => {
     form.validateFields().then(values => {
-      onConfirm(values.catId, values.totalAmount, values.betAmount);
+      onConfirm(values.catId, values.betLevel, values.totalAmount);
     });
   };
 
@@ -93,17 +100,17 @@ const PlaceArenaModal = ({
         form={form}
         layout="vertical"
         initialValues={{
-          totalAmount: 10,
-          betAmount: 1
+          betLevel: 0,
+          totalAmount: 10
         }}
       >
         <Alert
-          message="擂台规则"
+          message="新擂台规则"
           description={
             <ul style={{ margin: 0, paddingLeft: 20 }}>
-              <li>选择一只猫咪，设置奖池金额和挑战费用</li>
-              <li>其他玩家需要支付挑战费用来挑战你的猫咪</li>
-              <li>挑战费用最低1 DFS，不能超过奖池金额</li>
+              <li>选择一只猫咪和挑战等级（2 DFS / 5 DFS / 10 DFS）</li>
+              <li>每个等级需要至少3个擂台才能被挑战</li>
+              <li>挑战者随机匹配同等级的擂台进行战斗</li>
               <li>战斗基于猫咪属性和随机因素</li>
               <li>挑战失败：费用的1.5%给开发者，1.5%进传世猫池，97%加入奖池</li>
               <li>挑战成功：获得退还的挑战费用 + 97%的奖池奖励</li>
@@ -154,48 +161,53 @@ const PlaceArenaModal = ({
         )}
 
         <Form.Item
-          label="奖池金额 (DFS)"
-          name="totalAmount"
-          rules={[
-            { required: true, message: '请设置奖池金额' },
-            { type: 'number', min: 10, max: 100, message: '奖池金额必须在10-100 DFS之间' }
-          ]}
+          label="挑战等级"
+          name="betLevel"
+          rules={[{ required: true, message: '请选择挑战等级' }]}
         >
-          <InputNumber
+          <Select
+            placeholder="选择挑战等级"
+            onChange={setBetLevel}
             style={{ width: '100%' }}
-            min={10}
-            max={100}
-            step={1}
-            precision={2}
-            onChange={setTotalAmount}
-            addonAfter="DFS"
-          />
+          >
+            {BET_LEVELS.map(level => (
+              <Option key={level.level} value={level.level}>
+                <Space>
+                  <Tag color={level.color}>{level.label}</Tag>
+                  <span>挑战费用: {level.amount} DFS</span>
+                </Space>
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Form.Item
-          label="挑战费用 (DFS)"
-          name="betAmount"
+          label="初始奖池金额 (DFS)"
+          name="totalAmount"
           rules={[
-            { required: true, message: '请设置挑战费用' },
-            { type: 'number', min: 1, message: '挑战费用至少为1 DFS' },
+            { required: true, message: '请设置初始奖池金额' },
+            { type: 'number', min: 2, max: 100, message: '奖池金额必须在2-100 DFS之间' },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                const totalAmount = getFieldValue('totalAmount');
-                if (!value || !totalAmount || value <= totalAmount) {
+                const betLevel = getFieldValue('betLevel');
+                const minAmount = BET_LEVELS[betLevel]?.amount || 2;
+                if (!value || value >= minAmount) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error('挑战费用不能超过奖池金额'));
+                return Promise.reject(new Error(`奖池金额不能少于挑战费用 ${minAmount} DFS`));
               },
             }),
           ]}
         >
           <InputNumber
             style={{ width: '100%' }}
-            min={1}
-            step={0.1}
+            min={2}
+            max={100}
+            step={1}
             precision={2}
-            onChange={setBetAmount}
+            onChange={setTotalAmount}
             addonAfter="DFS"
+            placeholder="设置初始奖池金额"
           />
         </Form.Item>
 
@@ -256,42 +268,48 @@ const PlaceArenaModal = ({
           </>
         )}
 
-        {totalAmount > 0 && betAmount > 0 && (
+        {betLevel !== undefined && totalAmount > 0 && (
           <>
             <Divider>擂台设置</Divider>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card size="small">
+            <Card size="small" style={{ backgroundColor: BET_LEVELS[betLevel]?.color + '10' }}>
+              <Row gutter={16} align="middle">
+                <Col span={8}>
                   <Statistic
-                    title="奖池金额"
+                    title="挑战等级"
+                    value={BET_LEVELS[betLevel]?.label}
+                    prefix={<TrophyOutlined />}
+                    valueStyle={{ color: BET_LEVELS[betLevel]?.color, fontSize: 16 }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="挑战费用"
+                    value={BET_LEVELS[betLevel]?.amount}
+                    suffix="DFS"
+                    prefix={<FireOutlined />}
+                    valueStyle={{ color: '#1890ff', fontSize: 16 }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="初始奖池"
                     value={totalAmount}
                     suffix="DFS"
                     prefix={<FireOutlined />}
-                    valueStyle={{ color: '#f5222d' }}
+                    valueStyle={{ color: '#f5222d', fontSize: 16 }}
                   />
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small">
-                  <Statistic
-                    title="挑战费用"
-                    value={betAmount}
-                    suffix="DFS"
-                    precision={2}
-                    valueStyle={{ color: '#1890ff' }}
-                  />
-                </Card>
-              </Col>
-            </Row>
+                </Col>
+              </Row>
+            </Card>
 
             <Alert
               message={
                 <Space>
                   <InfoCircleOutlined />
                   <span>
-                    其他玩家需要支付 <strong>{betAmount.toFixed(2)} DFS</strong> 来挑战你的猫咪，
-                    成功挑战将获得 <strong>{(betAmount + betAmount * 0.97).toFixed(2)} DFS</strong> 奖励
-                    (退还 {betAmount.toFixed(2)} + 97%奖池奖励 {(betAmount * 0.97).toFixed(2)})
+                    其他玩家需要支付 <strong>{BET_LEVELS[betLevel]?.amount} DFS</strong> 来挑战你的猫咪。
+                    挑战失败时，97%的费用会加入奖池。挑战成功时，获得退还费用 + 97%的当前奖池奖励。
+                    初始奖池: <strong>{totalAmount} DFS</strong>
                   </span>
                 </Space>
               }

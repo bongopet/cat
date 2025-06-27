@@ -11,7 +11,9 @@ import {
   Statistic,
   Badge,
   Space,
-  Tooltip
+  Tooltip,
+  Tag,
+  Typography
 } from 'antd';
 import {
   TrophyOutlined,
@@ -34,6 +36,7 @@ import {
 import './Arena.css';
 
 const { TabPane } = Tabs;
+const { Text } = Typography;
 
 const Arena = ({ DFSWallet, accountName }) => {
   const [loading, setLoading] = useState(false);
@@ -44,7 +47,24 @@ const Arena = ({ DFSWallet, accountName }) => {
   // 模态框状态
   const [placeModalVisible, setPlaceModalVisible] = useState(false);
   const [challengeModalVisible, setChallengeModalVisible] = useState(false);
-  const [selectedArena, setSelectedArena] = useState(null);
+  const [selectedBetLevel, setSelectedBetLevel] = useState(null);
+
+  // 计算擂台统计信息
+  const getArenaStats = () => {
+    const stats = {
+      level0Count: 0,
+      level1Count: 0,
+      level2Count: 0
+    };
+
+    arenas.forEach(arena => {
+      if (arena.bet_level !== undefined) {
+        stats[`level${arena.bet_level}Count`]++;
+      }
+    });
+
+    return stats;
+  };
 
   // 加载数据
   useEffect(() => {
@@ -84,10 +104,10 @@ const Arena = ({ DFSWallet, accountName }) => {
   };
 
   // 处理放置擂台
-  const handlePlaceArena = async (catId, totalAmount, betAmount) => {
+  const handlePlaceArena = async (catId, betLevel, totalAmount) => {
     try {
       setLoading(true);
-      await placeInArena(DFSWallet, accountName, catId, totalAmount, betAmount);
+      await placeInArena(DFSWallet, accountName, catId, betLevel, totalAmount);
       message.success('猫咪已成功放置到擂台！');
       setPlaceModalVisible(false);
       await loadData(); // 重新加载数据
@@ -100,13 +120,12 @@ const Arena = ({ DFSWallet, accountName }) => {
   };
 
   // 处理挑战擂台
-  const handleChallengeArena = async (arenaId, challengerCatId, betAmount) => {
+  const handleChallengeArena = async (challengerCatId, betLevel) => {
     try {
       setLoading(true);
-      await challengeArena(DFSWallet, accountName, arenaId, challengerCatId, betAmount);
+      await challengeArena(DFSWallet, accountName, challengerCatId, betLevel);
       message.success('挑战已发起！等待战斗结果...');
       setChallengeModalVisible(false);
-      setSelectedArena(null);
       await loadData(); // 重新加载数据
     } catch (error) {
       console.error('挑战擂台失败:', error);
@@ -176,6 +195,99 @@ const Arena = ({ DFSWallet, accountName }) => {
     );
   };
 
+  // 渲染挑战等级卡片
+  const renderChallengeLevels = () => {
+    const stats = getArenaStats();
+    const betLevels = [
+      { level: 0, amount: 2, label: '2 DFS', color: '#52c41a', name: '初级擂台' },
+      { level: 1, amount: 5, label: '5 DFS', color: '#1890ff', name: '中级擂台' },
+      { level: 2, amount: 10, label: '10 DFS', color: '#f5222d', name: '高级擂台' }
+    ];
+
+    return (
+      <Row gutter={[16, 16]}>
+        {betLevels.map(level => {
+          const arenaCount = stats[`level${level.level}Count`] || 0;
+          const canChallenge = arenaCount >= 3;
+
+          return (
+            <Col xs={24} sm={12} lg={8} key={level.level}>
+              <Card
+                hoverable
+                style={{
+                  borderColor: level.color,
+                  borderWidth: 2,
+                  background: canChallenge
+                    ? `linear-gradient(135deg, ${level.color}10, ${level.color}05)`
+                    : '#f5f5f5'
+                }}
+                styles={{ body: { padding: '20px' } }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: level.color,
+                    marginBottom: '8px'
+                  }}>
+                    {level.name}
+                  </div>
+
+                  <Tag
+                    color={level.color}
+                    style={{
+                      fontSize: '14px',
+                      padding: '4px 12px',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    {level.label}
+                  </Tag>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <Statistic
+                      title="可挑战擂台"
+                      value={arenaCount}
+                      suffix="个"
+                      valueStyle={{
+                        color: canChallenge ? level.color : '#999',
+                        fontSize: '32px'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <Text type={canChallenge ? 'success' : 'danger'}>
+                      {canChallenge ? '✓ 可以挑战' : '✗ 需要至少3个擂台'}
+                    </Text>
+                  </div>
+
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<ThunderboltOutlined />}
+                    onClick={() => {
+                      setSelectedBetLevel(level.level);
+                      setChallengeModalVisible(true);
+                    }}
+                    disabled={!canChallenge}
+                    style={{
+                      backgroundColor: canChallenge ? level.color : undefined,
+                      borderColor: canChallenge ? level.color : undefined,
+                      width: '100%'
+                    }}
+                  >
+                    挑战 {level.label}
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+    );
+  };
+
   // 渲染擂台列表
   const renderArenaList = () => {
     const filteredArenas = getFilteredArenas();
@@ -184,8 +296,8 @@ const Arena = ({ DFSWallet, accountName }) => {
       return (
         <Empty
           description={
-            activeTab === 'my' 
-              ? "您还没有放置任何擂台" 
+            activeTab === 'my'
+              ? "您还没有放置任何擂台"
               : "暂无可挑战的擂台"
           }
           image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -201,11 +313,12 @@ const Arena = ({ DFSWallet, accountName }) => {
               arena={arena}
               isOwner={arena.owner === accountName}
               onChallenge={() => {
-                setSelectedArena(arena);
+                setSelectedBetLevel(null); // 从擂台卡片挑战时不预选等级
                 setChallengeModalVisible(true);
               }}
               onRemove={() => handleRemoveArena(arena.id)}
               userCats={userCats}
+              showChallengeButton={activeTab !== 'all'} // 全部擂台页面不显示挑战按钮
             />
           </Col>
         ))}
@@ -278,7 +391,7 @@ const Arena = ({ DFSWallet, accountName }) => {
           </TabPane>
           <TabPane tab="可挑战" key="others">
             <Spin spinning={loading}>
-              {renderArenaList()}
+              {renderChallengeLevels()}
             </Spin>
           </TabPane>
         </Tabs>
@@ -298,12 +411,13 @@ const Arena = ({ DFSWallet, accountName }) => {
         visible={challengeModalVisible}
         onCancel={() => {
           setChallengeModalVisible(false);
-          setSelectedArena(null);
+          setSelectedBetLevel(null);
         }}
         onConfirm={handleChallengeArena}
-        arena={selectedArena}
+        arenaStats={getArenaStats()}
         userCats={userCats}
         loading={loading}
+        preselectedBetLevel={selectedBetLevel}
       />
     </div>
   );

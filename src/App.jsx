@@ -13,7 +13,8 @@ import {
   FireOutlined,
   StarOutlined,
   DollarOutlined,
-  GoldOutlined
+  GoldOutlined,
+  LockOutlined
 } from '@ant-design/icons'
 import Wallet from 'dfssdk'
 import { WalletType } from 'dfssdk/dist/types'
@@ -24,6 +25,8 @@ import CatStats from './components/CatStats'
 import Market from './components/Market'
 import Arena from './components/Arena'
 import LegendaryPool from './components/LegendaryPool'
+import WalletSigner from './components/WalletSigner'
+import SignatureEncryption from './components/SignatureEncryption'
 import {
   getUserCats,
   mintCat,
@@ -500,6 +503,16 @@ function App() {
       icon: <GoldOutlined />,
       label: '传世猫池',
     },
+    // {
+    //   key: 'wallet-signer',
+    //   icon: <WalletOutlined />,
+    //   label: '签名工具',
+    // },
+    // {
+    //   key: 'signature-encryption',
+    //   icon: <LockOutlined />,
+    //   label: '签名加密',
+    // },
     {
       key: 'stats',
       icon: <BarChartOutlined />,
@@ -563,6 +576,20 @@ function App() {
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
             <LegendaryPool DFSWallet={dfsWallet} userInfo={account} />
+          </div>
+        );
+
+      case 'wallet-signer':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <WalletSigner DFSWallet={dfsWallet} userInfo={account} />
+          </div>
+        );
+
+      case 'signature-encryption':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <SignatureEncryption DFSWallet={dfsWallet} userInfo={account} />
           </div>
         );
 
