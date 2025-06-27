@@ -33,6 +33,7 @@ import {
   QUALITY_NAMES,
   GENDER_NAMES
 } from '../utils/chainOperations';
+import { formatTime, formatRelativeTime, getAgeInDays } from '../utils/timeUtils';
 import './CatDetail.css';
 
 const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = [] }) => {
@@ -159,12 +160,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     return null;
   };
 
-  // Format time
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '未知';
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString();
-  };
+
 
   // 定时检查是否有可获取的经验
   const startCheckingForExp = () => {

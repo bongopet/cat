@@ -4,12 +4,13 @@
 import { message } from 'antd';
 import { getTableRows, getAccountBalance, sendTransaction, buildTransferAction,getTableRowsmore } from './eosUtils';
 import { getUserPermission } from './permissionManager';
-
+import { formatTime, formatRelativeTime, getAgeInDays } from '../utils/timeUtils';
 // 常量定义
 const CONTRACT = 'ifwzjalq2lg1'; // 猫咪合约账户名
-const CATTABLE = 'cat15s';
-const QATBLE='qualstat15s'
-const MKTBLE='catmarket15'
+const CATTABLE = 'cat21s';
+const QATBLE='qualstat21s'
+const MKTBLE='catmarket21'
+const LEGTBLE='legpool21'
 const LOCAL_STORAGE_KEY = 'dfs_cat_transactions';
 
 // 品质常量定义 - 与合约保持一致
@@ -1953,7 +1954,7 @@ async function getPoolInfo(wallet) {
       wallet,
       CONTRACT,
       CONTRACT,
-      'legpool',
+      LEGTBLE,
       null, // lower_bound
       null, // upper_bound
       1, // index_position - 主键索引
@@ -2118,9 +2119,9 @@ async function getMyLegendaryInfo(wallet, accountName) {
       );
     }
 
-    // 计算是否可以领取（简化版本，实际应该基于天数计算）
-    const currentTime = Math.floor(Date.now() / 1000);
-    const currentDay = Math.floor((currentTime - 1704067200) / 86400); // 基于2024-01-01计算天数
+    // 计算是否可以领取（基于时间比较）
+    const currentTime = new Date();
+    const currentDay = Math.floor(currentTime / (86400 * 1000)); // 当前日期的天数
 
     let canClaim = true;
     let totalClaimed = '0.00000000';
@@ -2131,22 +2132,20 @@ async function getMyLegendaryInfo(wallet, accountName) {
       totalClaimed = claimRecord.total_claimed || '0.00000000';
       claimCount = claimRecord.claim_count || 0;
 
-      // 转换合约天数为可读日期
-      if (claimRecord.last_claim_day && claimRecord.last_claim_day !== 'Never') {
-        // 合约使用从1970-01-01开始的天数，转换为日期字符串
-        const lastClaimTimestamp = claimRecord.last_claim_day * 86400 * 1000; // 转换为毫秒
-        const lastClaimDate = new Date(lastClaimTimestamp);
-        lastClaimDay = lastClaimDate.toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
+      // 处理ISO格式的时间字符串 "2025-06-27T07:56:09"
+      if (claimRecord.last_claim_time) {
+        // 使用时间工具函数格式化显示
+        lastClaimDay = formatTime(claimRecord.last_claim_time);
+
+        // 计算上次领取的日期（UTC日期转换为天数）
+        const lastClaimDate = new Date(claimRecord.last_claim_time + 'Z');
+        const lastClaimDateDay = Math.floor(lastClaimDate.getTime() / (86400 * 1000));
+
+        // 如果上次领取是今天，则不能再领取
+        canClaim = lastClaimDateDay < currentDay;
       } else {
         lastClaimDay = 'Never';
       }
-
-      // 如果上次领取是今天，则不能再领取
-      canClaim = claimRecord.last_claim_day < currentDay;
 
       // 移除DFS后缀
       if (typeof totalClaimed === 'string' && totalClaimed.includes(' DFS')) {

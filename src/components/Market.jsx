@@ -409,7 +409,7 @@ function Market({ DFSWallet, userInfo }) {
         {selectedCat && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <CatCard cat={selectedCat} showDetails={true} showPrice={true} showSeller={true} />
+               <UnifiedCatCard cat={selectedCat} />
             </div>
             <Divider />
             <div>
@@ -443,7 +443,7 @@ function Market({ DFSWallet, userInfo }) {
         {selectedCat && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <CatCard cat={selectedCat} showDetails={true} />
+              <UnifiedCatCard cat={selectedCat} />
             </div>
             <Divider />
 
