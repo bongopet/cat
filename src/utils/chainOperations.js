@@ -2101,7 +2101,7 @@ async function getMyLegendaryInfo(wallet, accountName) {
       wallet,
       CONTRACT,
       CONTRACT,
-      'dailyclaims',
+      'dailyclaim1s',
       null, // lower_bound
       null, // upper_bound
       1, // index_position - 主键索引
@@ -2111,11 +2111,11 @@ async function getMyLegendaryInfo(wallet, accountName) {
 
     console.log('每日领取记录查询结果:', claimsRows);
 
-    // 查找用户的领取记录
+    // 查找该传世猫的领取记录（新表结构：以cat_id为主键）
     let claimRecord = null;
     if (claimsRows) {
       claimRecord = claimsRows.find(claim =>
-        claim.owner === accountName && claim.legendary_cat_id === legendaryCat.id
+        claim.legendary_cat_id === legendaryCat.id
       );
     }
 

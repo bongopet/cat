@@ -94,7 +94,7 @@ function Market({ DFSWallet, userInfo }) {
     try {
       const cats = await getUserCats(DFSWallet, userInfo.name)
       // 只显示可交易的猫咪（卓越品质以上）
-      const tradeableCats = cats.filter(cat => cat.is_tradeable && cat.quality >= 2)
+      const tradeableCats = cats.filter(cat => cat.is_tradeable && cat.quality >= 1)
 
       // 检查每只猫咪是否已经在市场上出售
       const catsWithMarketStatus = await Promise.all(
