@@ -237,13 +237,7 @@ const CatStats = ({ DFSWallet }) => {
 
   return (
     <div className="cat-stats">
-      <div className="stats-header">
-        <h2>
-          <PieChartOutlined style={{ marginRight: 8 }} />
-          猫咪品质统计
-        </h2>
-        <p>查看全服猫咪品质分布情况</p>
-      </div>
+    
 
       {/* 详细统计表格 */}
       <Card

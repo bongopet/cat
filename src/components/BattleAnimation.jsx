@@ -90,64 +90,93 @@ const BattleAnimation = ({
       let challengerCurrentHP = 100;
       let arenaCurrentHP = 100;
 
-      // 强制至少5回合，通过调整伤害来实现
+      // 强制至少5回合，最多8回合
       const minRounds = 5;
       const maxRounds = 8;
 
-      for (let round = 1; round <= maxRounds; round++) {
+      // 根据battleResult决定谁应该获胜
+      const challengerWins = battleResult.winner === 'challenger';
+
+      // 预先计算每回合的伤害，确保双方都会受伤但结果正确
+      const totalRounds = Math.min(maxRounds, minRounds + Math.floor(Math.random() * 3)); // 5-8回合
+
+      // 计算总伤害分配
+      let challengerTotalDamage, arenaTotalDamage;
+      if (challengerWins) {
+        // 挑战者获胜：擂台猫死亡，挑战者剩余10-40血
+        challengerTotalDamage = 100; // 对擂台猫造成100伤害
+        arenaTotalDamage = 60 + Math.floor(Math.random() * 30); // 对挑战者造成60-90伤害
+      } else {
+        // 擂台猫获胜：挑战者死亡，擂台猫剩余10-40血
+        arenaTotalDamage = 100; // 对挑战者造成100伤害
+        challengerTotalDamage = 60 + Math.floor(Math.random() * 30); // 对擂台猫造成60-90伤害
+      }
+
+      // 将总伤害分配到各个回合
+      const challengerDamagePerRound = [];
+      const arenaDamagePerRound = [];
+
+      for (let i = 0; i < totalRounds; i++) {
+        // 基础伤害 + 随机波动
+        const baseChallengerDamage = Math.floor(challengerTotalDamage / totalRounds);
+        const baseArenaDamage = Math.floor(arenaTotalDamage / totalRounds);
+
+        challengerDamagePerRound.push(baseChallengerDamage + Math.floor(Math.random() * 6) - 3); // ±3随机
+        arenaDamagePerRound.push(baseArenaDamage + Math.floor(Math.random() * 6) - 3); // ±3随机
+      }
+
+      // 调整最后一回合的伤害，确保总伤害正确
+      const challengerDamageSum = challengerDamagePerRound.reduce((a, b) => a + b, 0);
+      const arenaDamageSum = arenaDamagePerRound.reduce((a, b) => a + b, 0);
+
+      challengerDamagePerRound[totalRounds - 1] += challengerTotalDamage - challengerDamageSum;
+      arenaDamagePerRound[totalRounds - 1] += arenaTotalDamage - arenaDamageSum;
+
+      // 生成战斗回合
+      for (let round = 1; round <= totalRounds; round++) {
+        const roundIndex = round - 1;
+
         // 挑战者攻击
-        let challengerAttack = calculateDamage(challengerStats, arenaStats);
+        const challengerAttack = calculateDamage(challengerStats, arenaStats);
+        const actualChallengerDamage = Math.max(1, challengerDamagePerRound[roundIndex]);
 
-        // 如果还没到最小回合数，减少伤害确保不会太早结束
-        if (round < minRounds) {
-          challengerAttack.damage = Math.min(challengerAttack.damage, Math.floor(arenaCurrentHP / (minRounds - round + 1)));
-        }
-
-        arenaCurrentHP = Math.max(0, arenaCurrentHP - challengerAttack.damage);
+        arenaCurrentHP = Math.max(0, arenaCurrentHP - actualChallengerDamage);
 
         rounds.push({
           round,
           attacker: 'challenger',
-          ...challengerAttack,
+          damage: actualChallengerDamage,
+          isCritical: challengerAttack.isCritical,
+          isDodged: challengerAttack.isDodged,
           challengerHP: challengerCurrentHP,
           arenaHP: arenaCurrentHP
         });
 
-        // 如果擂台猫咪死亡且已经达到最小回合数
-        if (arenaCurrentHP <= 0 && round >= minRounds) {
+        // 如果擂台猫咪死亡
+        if (arenaCurrentHP <= 0) {
           break;
         }
 
         // 擂台猫咪反击
-        let arenaAttack = calculateDamage(arenaStats, challengerStats);
+        const arenaAttack = calculateDamage(arenaStats, challengerStats);
+        const actualArenaDamage = Math.max(1, arenaDamagePerRound[roundIndex]);
 
-        // 如果还没到最小回合数，减少伤害确保不会太早结束
-        if (round < minRounds) {
-          arenaAttack.damage = Math.min(arenaAttack.damage, Math.floor(challengerCurrentHP / (minRounds - round + 1)));
-        }
-
-        challengerCurrentHP = Math.max(0, challengerCurrentHP - arenaAttack.damage);
+        challengerCurrentHP = Math.max(0, challengerCurrentHP - actualArenaDamage);
 
         rounds.push({
           round,
           attacker: 'arena',
-          ...arenaAttack,
+          damage: actualArenaDamage,
+          isCritical: arenaAttack.isCritical,
+          isDodged: arenaAttack.isDodged,
           challengerHP: challengerCurrentHP,
           arenaHP: arenaCurrentHP
         });
 
-        // 如果挑战者死亡且已经达到最小回合数
-        if (challengerCurrentHP <= 0 && round >= minRounds) {
+        // 如果挑战者死亡
+        if (challengerCurrentHP <= 0) {
           break;
         }
-      }
-
-      // 确保最终结果符合battleResult
-      const lastRound = rounds[rounds.length - 1];
-      if (battleResult.winner === 'challenger' && lastRound.arenaHP > 0) {
-        lastRound.arenaHP = 0;
-      } else if (battleResult.winner !== 'challenger' && lastRound.challengerHP > 0) {
-        lastRound.challengerHP = 0;
       }
 
       return rounds;
