@@ -128,24 +128,7 @@ const PlaceArenaModal = ({
           totalAmount: 10
         }}
       >
-        <Alert
-          message="擂台规则"
-          description={
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
-              <li>选择一只猫咪和挑战等级（2 DFS / 5 DFS / 10 DFS）</li>
-              <li>每个等级需要至少3个擂台才能被挑战</li>
-              <li>挑战者随机匹配同等级的擂台进行战斗</li>
-              <li>战斗基于猫咪属性和随机因素</li>
-              <li>挑战失败：费用的1.5%给开发者，1.5%进传世猫池，97%加入奖池</li>
-              <li>挑战成功：获得退还的挑战费用 + 97%的奖池奖励</li>
-              <li>移除擂台：获得奖池内所有奖金</li>
-            </ul>
-          }
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-
+     
         <Form.Item
           label="选择猫咪"
           name="catId"

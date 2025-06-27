@@ -1,0 +1,83 @@
+/* 战斗动画样式 */
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(24, 144, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(24, 144, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(24, 144, 255, 0.5);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.battle-animation-container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.battle-cat-container {
+  transition: all 0.3s ease;
+}
+
+.battle-cat-container:hover {
+  transform: translateY(-2px);
+}
+
+.battle-cat-attacking {
+  animation: pulse 0.5s ease-in-out;
+}
+
+.battle-cat-hit {
+  animation: shake 0.3s ease-in-out;
+}
+
+.battle-progress-bar {
+  transition: all 0.5s ease;
+}
+
+.battle-log-entry {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.battle-vs-text {
+  animation: glow 2s ease-in-out infinite;
+}

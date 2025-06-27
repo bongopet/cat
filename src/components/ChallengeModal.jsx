@@ -20,7 +20,8 @@ import {
   TrophyOutlined,
   FireOutlined
 } from '@ant-design/icons';
-import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRankFromContract } from '../utils/chainOperations';
+import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRankFromContract, decryptCatStats, getUserCats } from '../utils/chainOperations';
+import BattleAnimation from './BattleAnimation';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -44,6 +45,8 @@ const ChallengeModal = ({
   const [form] = Form.useForm();
   const [selectedCat, setSelectedCat] = useState(null);
   const [betLevel, setBetLevel] = useState(0);
+  const [showBattleAnimation, setShowBattleAnimation] = useState(false);
+  const [battleData, setBattleData] = useState(null);
 
   // 重置表单
   useEffect(() => {
@@ -139,23 +142,7 @@ const ChallengeModal = ({
         danger: true 
       }}
     >
-      <Alert
-        message="新挑战规则"
-        description={
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
-            <li>选择挑战等级，系统随机匹配同等级擂台</li>
-            <li>每个等级需要至少3个擂台才能挑战</li>
-            <li>挑战失败：费用的1.5%给开发者，1.5%进传世猫池，97%加入奖池</li>
-            <li>挑战成功：获得退还的挑战费用 + 97%的奖池奖励</li>
-            <li>战斗结果基于猫咪属性和随机因素</li>
-            <li>每只猫咪每天只能挑战一次</li>
-            <li>挑战消耗20点体力</li>
-          </ul>
-        }
-        type="warning"
-        showIcon
-        style={{ marginBottom: 16 }}
-      />
+     
 
       <Form
         form={form}

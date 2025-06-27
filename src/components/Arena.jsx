@@ -21,17 +21,21 @@ import {
   PlusOutlined,
   ReloadOutlined,
   FireOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import ArenaCard from './ArenaCard';
 import PlaceArenaModal from './PlaceArenaModal';
 import ChallengeModal from './ChallengeModal';
+import BattleAnimation from './BattleAnimation';
+import ArenaRules from './ArenaRules';
 import {
   getArenas,
   getUserCats,
   placeInArena,
   challengeArena,
-  removeArena
+  removeArena,
+  decryptCatStats
 } from '../utils/chainOperations';
 import './Arena.css';
 
@@ -48,6 +52,82 @@ const Arena = ({ DFSWallet, accountName }) => {
   const [placeModalVisible, setPlaceModalVisible] = useState(false);
   const [challengeModalVisible, setChallengeModalVisible] = useState(false);
   const [selectedBetLevel, setSelectedBetLevel] = useState(null);
+
+  // 战斗动画状态
+  const [battleAnimationVisible, setBattleAnimationVisible] = useState(false);
+  const [battleData, setBattleData] = useState(null);
+
+  // 规则说明状态
+  const [rulesVisible, setRulesVisible] = useState(false);
+
+  // 解析战斗结果
+  const parseBattleResult = (consoleOutput) => {
+    try {
+      // 解析console输出: "Cat #123 defeated cat #456 in bet level 1 arena. Total prize: 4.50000000 DFS..."
+      const defeatedMatch = consoleOutput.match(/Cat #(\d+) defeated cat #(\d+) in bet level (\d+) arena/);
+      if (defeatedMatch) {
+        return {
+          challengerCatId: parseInt(defeatedMatch[1]),
+          arenaCatId: parseInt(defeatedMatch[2]),
+          betLevel: parseInt(defeatedMatch[3]),
+          winner: 'challenger',
+          result: 'victory'
+        };
+      }
+
+      // 如果没有找到defeated，可能是挑战失败的情况
+      // 这里需要根据实际的失败输出格式来解析
+      return null;
+    } catch (error) {
+      console.error('解析战斗结果失败:', error);
+      return null;
+    }
+  };
+
+  // 显示战斗动画
+  const showBattleAnimation = async (challengerCatId, arenaCatId, battleInfo) => {
+    try {
+      // 获取挑战者猫咪信息
+      const challengerCat = userCats.find(cat => cat.id === challengerCatId);
+      if (!challengerCat) {
+        console.error('未找到挑战者猫咪:', challengerCatId);
+        return;
+      }
+
+      // 获取擂台猫咪信息
+      const arenaCat = arenas.find(arena => arena.cat_id === arenaCatId)?.cat;
+      if (!arenaCat) {
+        console.error('未找到擂台猫咪:', arenaCatId);
+        return;
+      }
+
+      // 解密猫咪属性
+      const challengerStats = decryptCatStats(
+        challengerCat.encrypted_stats,
+        challengerCat.encrypted_stats_high,
+        challengerCat.id
+      );
+
+      const arenaStats = decryptCatStats(
+        arenaCat.encrypted_stats,
+        arenaCat.encrypted_stats_high,
+        arenaCat.id
+      );
+
+      // 设置战斗数据并显示动画
+      setBattleData({
+        challengerCat,
+        arenaCat,
+        challengerStats,
+        arenaStats,
+        battleResult: battleInfo
+      });
+
+      setBattleAnimationVisible(true);
+    } catch (error) {
+      console.error('准备战斗动画失败:', error);
+    }
+  };
 
   // 计算擂台统计信息
   const getArenaStats = () => {
@@ -123,8 +203,42 @@ const Arena = ({ DFSWallet, accountName }) => {
   const handleChallengeArena = async (challengerCatId, betLevel) => {
     try {
       setLoading(true);
-      await challengeArena(DFSWallet, accountName, challengerCatId, betLevel);
-      message.success('挑战已发起！等待战斗结果...');
+      const result = await challengeArena(DFSWallet, accountName, challengerCatId, betLevel);
+
+      // 解析挑战结果 - 遍历所有action traces寻找console输出
+      let consoleOutput = '';
+      const actionTraces = result.processed?.action_traces || [];
+
+      // 遍历所有action traces寻找包含战斗结果的console输出
+      for (const trace of actionTraces) {
+        if (trace.console && trace.console.includes('defeated')) {
+          consoleOutput = trace.console;
+          break;
+        }
+        // 也检查inline traces
+        if (trace.inline_traces) {
+          for (const inlineTrace of trace.inline_traces) {
+            if (inlineTrace.console && inlineTrace.console.includes('defeated')) {
+              consoleOutput = inlineTrace.console;
+              break;
+            }
+          }
+        }
+        if (consoleOutput) break;
+      }
+
+      console.log('挑战结果console输出:', consoleOutput);
+
+      // 提取战斗信息
+      const battleInfo = parseBattleResult(consoleOutput);
+
+      if (battleInfo) {
+        // 获取两只猫咪的详细信息并显示战斗动画
+        await showBattleAnimation(challengerCatId, battleInfo.arenaCatId, battleInfo);
+      } else {
+        message.success('挑战已发起！等待战斗结果...');
+      }
+
       setChallengeModalVisible(false);
       await loadData(); // 重新加载数据
     } catch (error) {
@@ -338,10 +452,21 @@ const Arena = ({ DFSWallet, accountName }) => {
     <div className="arena-container">
       <div style={{ marginBottom: 24 }}>
         <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
-          <div>
+          <div style={{ position: 'relative' }}>
             <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
               <FireOutlined style={{ marginRight: 8, color: '#ff4d4f' }} />
               猫咪擂台
+              <Button
+                type="text"
+                icon={<QuestionCircleOutlined />}
+                onClick={() => setRulesVisible(true)}
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  marginLeft: 8,
+                  fontSize: '16px'
+                }}
+                title="查看擂台规则"
+              />
             </h2>
             <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
               放置你的猫咪到擂台，或挑战其他玩家获得奖励
@@ -384,16 +509,17 @@ const Arena = ({ DFSWallet, accountName }) => {
               {renderArenaList()}
             </Spin>
           </TabPane>
-          <TabPane tab="我的擂台" key="my">
-            <Spin spinning={loading}>
-              {renderArenaList()}
-            </Spin>
-          </TabPane>
           <TabPane tab="可挑战" key="others">
             <Spin spinning={loading}>
               {renderChallengeLevels()}
             </Spin>
           </TabPane>
+          <TabPane tab="我的擂台" key="my">
+            <Spin spinning={loading}>
+              {renderArenaList()}
+            </Spin>
+          </TabPane>
+     
         </Tabs>
       </Card>
 
@@ -418,6 +544,28 @@ const Arena = ({ DFSWallet, accountName }) => {
         userCats={userCats}
         loading={loading}
         preselectedBetLevel={selectedBetLevel}
+      />
+
+      {/* 战斗动画模态框 */}
+      {battleData && (
+        <BattleAnimation
+          visible={battleAnimationVisible}
+          challengerCat={battleData.challengerCat}
+          arenaCat={battleData.arenaCat}
+          challengerStats={battleData.challengerStats}
+          arenaStats={battleData.arenaStats}
+          battleResult={battleData.battleResult}
+          onClose={() => {
+            setBattleAnimationVisible(false);
+            setBattleData(null);
+          }}
+        />
+      )}
+
+      {/* 规则说明模态框 */}
+      <ArenaRules
+        visible={rulesVisible}
+        onClose={() => setRulesVisible(false)}
       />
     </div>
   );
