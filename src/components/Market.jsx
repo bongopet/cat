@@ -35,6 +35,7 @@ import {
   QUALITY_NAMES
 } from '../utils/chainOperations'
 import CatCard from './CatCard'
+import UnifiedCatCard from './UnifiedCatCard'
 import './Market.css'
 
 const { TabPane } = Tabs
@@ -285,63 +286,15 @@ function Market({ DFSWallet, userInfo }) {
   const renderMarketCat = (cat) => (
     <Col xs={12} sm={8} md={6} lg={4} xl={4} xxl={3} key={cat.catId}>
       <div className="market-cat-wrapper">
-        <CatCard
+        <UnifiedCatCard
           cat={cat}
+          isMarketMode={true}
           showPrice={true}
-          showSeller={true}
-          onClick={() => {
+          onBuy={(cat) => {
             setSelectedCat(cat)
             setBuyModalVisible(true)
           }}
         />
-
-        {/* 操作按钮 */}
-        <div className="cat-actions">
-          {userInfo && cat.seller !== userInfo.name ? (
-            <Button
-              type="primary"
-              icon={<ShoppingCartOutlined />}
-              size="small"
-              className="buy-button"
-              onClick={(e) => {
-                e.stopPropagation()
-                setSelectedCat(cat)
-                setBuyModalVisible(true)
-              }}
-              block
-            >
-              购买
-            </Button>
-          ) : userInfo && cat.seller === userInfo.name ? (
-            <Button
-              danger
-              size="small"
-              className="unlist-button"
-              onClick={(e) => {
-                e.stopPropagation()
-                handleUnlistCat(cat.catId)
-              }}
-              loading={actionLoading}
-              block
-            >
-              下架
-            </Button>
-          ) : (
-            <Button
-              type="default"
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation()
-                setSelectedCat(cat)
-                setBuyModalVisible(true)
-              }}
-              block
-            >
-              查看
-            </Button>
-          )}
-        </div>
       </div>
     </Col>
   )
@@ -350,43 +303,42 @@ function Market({ DFSWallet, userInfo }) {
   const renderUserCat = (cat) => (
     <Col xs={12} sm={8} md={6} lg={4} xl={4} xxl={3} key={cat.id}>
       <div className="user-cat-wrapper">
-        <CatCard
+        <UnifiedCatCard
           cat={cat}
-          showDetails={true}
+          actionButton={
+            <div className="cat-actions">
+              <Space direction="vertical" style={{ width: '100%' }}>
+                {cat.isListedInMarket ? (
+                  <Button
+                    danger
+                    icon={<DollarOutlined />}
+                    size="small"
+                    className="unlist-button"
+                    onClick={() => handleUnlistCat(cat.id)}
+                    loading={actionLoading}
+                    block
+                  >
+                    下架
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    icon={<DollarOutlined />}
+                    size="small"
+                    className="sell-button"
+                    onClick={() => {
+                      setSelectedCat(cat)
+                      setSellModalVisible(true)
+                    }}
+                    block
+                  >
+                    上架出售
+                  </Button>
+                )}
+              </Space>
+            </div>
+          }
         />
-
-        {/* 操作按钮 */}
-        <div className="cat-actions">
-          <Space direction="vertical" style={{ width: '100%' }}>
-            {cat.isListedInMarket ? (
-              <Button
-                danger
-                icon={<DollarOutlined />}
-                size="small"
-                className="unlist-button"
-                onClick={() => handleUnlistCat(cat.id)}
-                loading={actionLoading}
-                block
-              >
-                下架
-              </Button>
-            ) : (
-              <Button
-                type="primary"
-                icon={<DollarOutlined />}
-                size="small"
-                className="sell-button"
-                onClick={() => {
-                  setSelectedCat(cat)
-                  setSellModalVisible(true)
-                }}
-                block
-              >
-                上架出售
-              </Button>
-            )}
-          </Space>
-        </div>
       </div>
     </Col>
   )
@@ -466,7 +418,7 @@ function Market({ DFSWallet, userInfo }) {
               )}
               {selectedCat.price && (
                 <p style={{ fontSize: '18px', color: '#1890ff' }}>
-                  <strong>价格: {selectedCat.price}</strong>
+                  <strong>{selectedCat.price}</strong>
                 </p>
               )}
             </div>

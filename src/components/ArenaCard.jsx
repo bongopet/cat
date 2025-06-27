@@ -40,6 +40,7 @@ const ArenaCard = ({
       'Legendary': '#fa8c16',
       'Mythical': '#f5222d'
     };
+    console.log('Rank:', rank, 'Color:', colors[rank] || '#d9d9d9');
     return colors[rank] || '#d9d9d9';
   };
 
@@ -76,46 +77,6 @@ const ArenaCard = ({
     <Card
       className="arena-card"
       hoverable
-      cover={
-        arena.cat ? (
-          <div className="arena-cat-cover">
-            <img
-              src={`/images/cat_${arena.cat.genes}.png`}
-              alt={`Cat #${arena.cat.id}`}
-              style={{ width: '100%', height: 200, objectFit: 'cover' }}
-              onError={(e) => {
-                e.target.src = '/images/logo.png';
-              }}
-            />
-            <div className="arena-cat-overlay">
-              <Tag 
-                color={getQualityColor(arena.cat.quality)}
-                style={{ margin: 4 }}
-              >
-                {QUALITY_NAMES[arena.cat.quality]}
-              </Tag>
-              <Tag 
-                color={getPowerRankColor(arena.powerRank)}
-                style={{ margin: 4 }}
-              >
-                {arena.powerRank}
-              </Tag>
-            </div>
-          </div>
-        ) : (
-          <div 
-            style={{ 
-              height: 200, 
-              background: 'linear-gradient(45deg, #f0f0f0, #e0e0e0)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <SafetyOutlined style={{ fontSize: 48, color: '#ccc' }} />
-          </div>
-        )
-      }
       actions={
         isOwner ? [
           <Tooltip title="移除擂台">
@@ -144,22 +105,47 @@ const ArenaCard = ({
     >
       <Card.Meta
         avatar={
-          <Avatar 
-            icon={<UserOutlined />} 
-            style={{ backgroundColor: isOwner ? '#52c41a' : '#1890ff' }}
-          />
+          <Avatar
+            style={{
+              backgroundColor: isOwner ? '#52c41a' : '#1890ff',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}
+          >
+            #{arena.id}
+          </Avatar>
         }
         title={
-          <Space>
-            <span>擂台 #{arena.id}</span>
-            {isOwner && <Tag color="green">我的</Tag>}
-          </Space>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Space size="small">
+              <span>擂台</span>
+              {isOwner && <Tag color="green" size="small">我的</Tag>}
+            </Space>
+            {arena.cat && (
+              <Space size={4}>
+                <Tag
+                  color={getQualityColor(arena.cat.quality)}
+                  size="small"
+                  style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}
+                >
+                  {QUALITY_NAMES[arena.cat.quality]}
+                </Tag>
+                <Tag
+                  color={getPowerRankColor(arena.powerRank)}
+                  size="small"
+                  style={{ fontSize: '10px', padding: '0 4px', margin: 0 }}
+                >
+                  {arena.powerRank}
+                </Tag>
+              </Space>
+            )}
+          </div>
         }
         description={
           <Tooltip title={arena.owner}>
-            <span style={{ color: '#666' }}>
-              主人: {arena.owner.length > 10 ? 
-                `${arena.owner.substring(0, 8)}...` : 
+            <span style={{ color: '#666', fontSize: '12px' }}>
+              主人: {arena.owner.length > 10 ?
+                `${arena.owner.substring(0, 8)}...` :
                 arena.owner
               }
             </span>
@@ -177,14 +163,14 @@ const ArenaCard = ({
               value={totalPool}
               suffix="DFS"
               precision={2}
-              valueStyle={{ fontSize: 16, color: '#f5222d' }}
+              valueStyle={{ fontSize: 14, color: '#f5222d' }}
             />
             <Statistic
               title="挑战费"
               value={betAmount}
               suffix="DFS"
               precision={2}
-              valueStyle={{ fontSize: 16, color: '#1890ff' }}
+              valueStyle={{ fontSize: 14, color: '#1890ff' }}
             />
           </div>
 
@@ -207,8 +193,8 @@ const ArenaCard = ({
           </div>
 
           {arena.cat && (
-            <div style={{ fontSize: 12, color: '#999', marginTop: 8 }}>
-              <Space split={<span>•</span>}>
+            <div style={{ fontSize: 11, color: '#999', marginTop: 6 }}>
+              <Space split={<span>•</span>} size="small">
                 <span>等级 {arena.cat.level}</span>
                 <span>{GENDER_NAMES[arena.cat.gender]}</span>
                 <span>体力 {arena.cat.stamina}/100</span>
@@ -216,7 +202,7 @@ const ArenaCard = ({
             </div>
           )}
 
-          <div style={{ fontSize: 11, color: '#ccc', marginTop: 4 }}>
+          <div style={{ fontSize: 10, color: '#ccc', marginTop: 4 }}>
             <ClockCircleOutlined style={{ marginRight: 4 }} />
             创建于 {new Date(arena.created_at + 'Z').toLocaleDateString()}
           </div>

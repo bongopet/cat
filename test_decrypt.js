@@ -51,7 +51,7 @@ console.log('=== 测试猫咪属性解密 ===');
 console.log(`猫咪ID: ${testCat.id}`);
 console.log(`加密属性: ${testCat.encrypted_stats}`);
 
-const decryptedStats = decryptCatStats(testCat.encrypted_stats, testCat.id);
+const decryptedStats = decryptCatStats(testCat.encrypted_stats, 0, testCat.id);
 
 console.log('\n=== 解密结果 ===');
 console.log(`攻击力: ${decryptedStats.attack}`);

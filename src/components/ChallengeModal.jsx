@@ -20,7 +20,7 @@ import {
   TrophyOutlined,
   FireOutlined
 } from '@ant-design/icons';
-import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRank } from '../utils/chainOperations';
+import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRankFromContract } from '../utils/chainOperations';
 
 const { Option } = Select;
 const { Text } = Typography;

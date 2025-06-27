@@ -57,11 +57,11 @@
 
 /* 猫咪图像容器 */
 .cat-card-image {
-  height: 120px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .cat-card-image .cat-renderer {
@@ -79,6 +79,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  gap: 4px;
 }
 
 .cat-id-text {
@@ -287,4 +288,148 @@
 
 .quality-6:hover {
   box-shadow: 0 6px 24px rgba(250, 219, 20, 0.3);
+}
+
+/* 市场模式样式 */
+.cat-card-market {
+  width: 180px;
+  height: auto;
+}
+
+.market-mode {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.market-attributes {
+  margin: 8px 0;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.attributes-title {
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.attributes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.attr-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 4px;
+  font-size: 10px;
+  background: white;
+  border-radius: 2px;
+}
+
+.attr-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.attr-value {
+  color: #333;
+  font-weight: bold;
+}
+
+.market-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.market-actions .ant-btn {
+  height: 28px;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+/* 属性图标行样式 */
+.attributes-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.attr-icon-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+.attr-icon-item .attr-value {
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* 市场价格显示 */
+.market-price {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #1890ff;
+  padding: 6px 0;
+  margin: 4px 0;
+  background: #f0f9ff;
+  border-radius: 4px;
+  border: 1px solid #d6f7ff;
+}
+
+/* 市场信息行 */
+.market-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 6px 0;
+  padding: 0 4px;
+}
+
+/* 市场操作行样式 */
+.market-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.market-price-inline {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1890ff;
+  flex-shrink: 0;
+}
+
+/* 卡片包装器 */
+.cat-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* 市场购买按钮 */
+.market-buy-button {
+  width: 100%;
+  margin-top: 0;
+  border-radius: 8px;
+  font-weight: bold;
 }

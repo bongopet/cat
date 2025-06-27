@@ -50,59 +50,76 @@
 
 /* 擂台卡片 */
 .arena-card {
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
 }
 
-.arena-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  transform: translateY(-4px);
+/* 卡片内容区域紧凑化 */
+.arena-card .ant-card-body {
+  padding: 16px;
 }
 
-.arena-card .ant-card-cover {
-  position: relative;
-  overflow: hidden;
+.arena-card .ant-card-meta {
+  margin-bottom: 12px;
 }
 
-.arena-card .ant-card-cover img {
-  transition: transform 0.3s ease;
-}
-
-.arena-card:hover .ant-card-cover img {
-  transform: scale(1.05);
-}
-
-/* 擂台猫咪封面 */
-.arena-cat-cover {
-  position: relative;
-  overflow: hidden;
-}
-
-.arena-cat-overlay {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+.arena-card .ant-card-meta-title {
+  font-size: 14px;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  min-height: 24px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
 }
 
-.arena-cat-overlay .ant-tag {
-  margin: 0;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+.arena-card .ant-card-meta-description {
+  font-size: 12px;
 }
+
+/* 优化Avatar显示 */
+.arena-card .ant-avatar {
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* 标题区域标签优化 */
+.arena-card .ant-card-meta-title .ant-tag {
+  font-size: 10px !important;
+  padding: 0 4px !important;
+  margin: 0 2px !important;
+  line-height: 16px !important;
+  height: 16px !important;
+  border-radius: 8px !important;
+}
+
+/* 确保标题内容不换行 */
+.arena-card .ant-card-meta-title > div {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 右侧标签容器 */
+.arena-card .ant-card-meta-title .ant-space {
+  flex-shrink: 0;
+}
+
+.arena-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* 移除封面相关样式，因为不再使用顶部图片 */
 
 /* 擂台统计信息 */
 .arena-stats {
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .arena-stats .ant-statistic-title {
@@ -112,7 +129,7 @@
 }
 
 .arena-stats .ant-statistic-content {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -130,10 +147,11 @@
   background: rgba(250, 250, 250, 0.8);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(240, 240, 240, 0.8);
+  padding: 8px 0;
 }
 
 .arena-card .ant-card-actions > li {
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .arena-card .ant-card-actions .ant-btn {
@@ -200,11 +218,19 @@
   }
 
   .arena-card .ant-card-meta-title {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .arena-card .ant-card-meta-description {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  /* 小屏幕上进一步缩小标签 */
+  .arena-card .ant-card-meta-title .ant-tag {
+    font-size: 9px !important;
+    padding: 0 3px !important;
+    height: 14px !important;
+    line-height: 14px !important;
   }
 }
 
@@ -226,14 +252,25 @@
     margin-bottom: 2px;
   }
 
-  .arena-cat-overlay {
-    top: 4px;
-    right: 4px;
+  .arena-card .ant-card-meta-title {
+    font-size: 12px;
   }
 
-  .arena-cat-overlay .ant-tag {
+  .arena-card .ant-card-meta-description {
     font-size: 10px;
-    padding: 1px 4px;
+  }
+
+  /* 超小屏幕上最小化标签 */
+  .arena-card .ant-card-meta-title .ant-tag {
+    font-size: 8px !important;
+    padding: 0 2px !important;
+    height: 12px !important;
+    line-height: 12px !important;
+  }
+
+  /* 超小屏幕上可能隐藏部分标签 */
+  .arena-card .ant-card-body {
+    padding: 12px;
   }
 }
 

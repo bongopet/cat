@@ -18,7 +18,7 @@ import {
   FireOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
-import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRank } from '../utils/chainOperations';
+import { QUALITY_NAMES, GENDER_NAMES,calculatePowerRankFromContract } from '../utils/chainOperations';
 
 const { Option } = Select;
 
@@ -256,7 +256,7 @@ const PlaceArenaModal = ({
                       <Col span={8}>
                         <Statistic
                           title="战力"
-                          value={calculatePowerRank(selectedCat)}
+                          // value={calculatePowerRankFromContract(selectedCat)}
                           valueStyle={{ fontSize: 12 }}
                         />
                       </Col>

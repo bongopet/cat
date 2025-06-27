@@ -306,9 +306,9 @@ const Arena = ({ DFSWallet, accountName }) => {
     }
 
     return (
-      <Row gutter={[16, 16]}>
+      <Row gutter={[12, 12]}>
         {filteredArenas.map(arena => (
-          <Col xs={24} sm={12} lg={8} xl={6} key={arena.id}>
+          <Col xs={24} sm={12} md={8} lg={6} xl={4} key={arena.id}>
             <ArenaCard
               arena={arena}
               isOwner={arena.owner === accountName}

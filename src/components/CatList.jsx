@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import { getUserCats, GENDER_NAMES } from '../utils/chainOperations';
 import CatRenderer from './CatRenderer';
+import UnifiedCatCard from './UnifiedCatCard';
 import './CatList.css';
 
 const CatList = ({
@@ -245,57 +246,11 @@ const CatList = ({
               dataSource={filteredCatsList}
               renderItem={cat => (
                 <List.Item>
-                  <Card
-                    className={`cat-card ${selectedCatId === cat.id ? 'cat-card-selected' : ''}`}
-                    hoverable
+                  <UnifiedCatCard
+                    cat={cat}
                     onClick={(event) => handleSelectCat(event, cat.id)}
-                    size="small"
-                    styles={{
-                      body: { padding: '12px' }
-                    }}
-                    style={{
-                      border: `2px solid ${QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0]}`,
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
-                    }}
-                  >
-                    <div className="cat-card-content">
-                      {/* 左上角等级 */}
-                      <div className="cat-level-badge">
-                        LV {cat.level}
-                      </div>
-
-                      {/* 右上角性别图标 */}
-                      <div className={`cat-gender-badge ${cat.gender === 0 ? 'male' : 'female'}`}>
-                        {cat.gender === 0 ? '♂' : '♀'}
-                      </div>
-
-                      {/* 猫咪SVG图像 */}
-                      <div className="cat-card-image">
-                        <CatRenderer
-                          parent={`list-${cat.id}`}
-                          gene={cat.genes}
-                        />
-                      </div>
-
-                      {/* 猫咪信息 */}
-                      <div className="cat-card-info">
-                        <div className="cat-info-row">
-                          <span className="cat-id-text">猫咪 #{cat.id}</span>
-                          <Tag
-                            size="small"
-                            style={{
-                              backgroundColor: QUALITY_COLORS[cat.quality] || QUALITY_COLORS[0],
-                              color: 'white',
-                              border: 'none'
-                            }}
-                          >
-                            {cat.qualityName || QUALITY_NAMES[cat.quality] || '普通'}
-                          </Tag>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+                    isSelected={selectedCatId === cat.id}
+                  />
                 </List.Item>
               )}
             />

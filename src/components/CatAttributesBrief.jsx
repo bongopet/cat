@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import {
   decryptCatStats,
-  calculateTotalBattlePower,
+  calculatePowerRankFromContract,
   getAttributeRank,
   getAttributeColor
 } from '../utils/chainOperations';
@@ -19,8 +19,10 @@ const CatAttributesBrief = ({ cat, showPower = true, showTopStats = true }) => {
   }
 
   // 解密猫咪属性
-  const stats = decryptCatStats(cat.encrypted_stats, cat.id);
-  const totalPower = calculateTotalBattlePower(stats, cat.level);
+  const stats = decryptCatStats(cat.encrypted_stats, cat.encrypted_stats_high, cat.id);
+
+  // 计算总战力
+  const totalPower = calculatePowerRankFromContract(stats, cat.level);
 
   // 获取最高的3个属性
   const topStats = [
@@ -32,8 +34,8 @@ const CatAttributesBrief = ({ cat, showPower = true, showTopStats = true }) => {
   return (
     <div style={{ fontSize: '11px', marginTop: '4px' }}>
       {showPower && (
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginBottom: showTopStats ? '6px' : '0',
           padding: '2px 6px',
           background: 'linear-gradient(45deg, #ffd89b, #19547b)',
@@ -48,15 +50,15 @@ const CatAttributesBrief = ({ cat, showPower = true, showTopStats = true }) => {
           </Space>
         </div>
       )}
-      
+
       {showTopStats && (
         <Space size={2} wrap>
           {topStats.map((stat, index) => {
             const rank = getAttributeRank(stat.value, stat.type);
             const color = getAttributeColor(rank);
-            
+
             return (
-              <Tooltip 
+              <Tooltip
                 key={stat.name}
                 title={`${stat.name}: ${stat.value} (${rank}级)`}
                 placement="top"

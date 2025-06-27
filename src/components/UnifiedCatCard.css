@@ -1,0 +1,233 @@
+/* 统一猫咪卡片样式 */
+.unified-cat-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.unified-cat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.unified-card-selected {
+  border-color: #1890ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.unified-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.unified-cat-content {
+  position: relative;
+  height: 100%;
+}
+
+/* 等级徽章 */
+.unified-level-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+/* 性别徽章 */
+.unified-gender-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+.unified-gender-badge.male {
+  background: #1890ff;
+  color: white;
+}
+
+.unified-gender-badge.female {
+  background: #eb2f96;
+  color: white;
+}
+
+/* 猫咪图像容器 */
+.unified-cat-image {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0;
+}
+
+.unified-cat-image .cat-renderer {
+  transform: scale(0.7);
+  transform-origin: center;
+}
+
+/* 猫咪信息区域 */
+.unified-cat-info {
+  margin-top: 4px;
+}
+
+/* 属性显示 */
+.unified-attributes {
+  margin-bottom: 8px;
+}
+
+.unified-attributes-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2px;
+  padding: 0 2px;
+}
+
+.unified-attr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.unified-attr-value {
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+  line-height: 1;
+}
+
+/* ID和品质行 */
+.unified-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 4px;
+}
+
+.unified-cat-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 截图样式的ID和品质行 */
+.unified-info-row-styled {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 6px 8px;
+  border: 1px solid #e8e8e8;
+}
+
+.unified-cat-id-container {
+  flex: 1;
+}
+
+.unified-cat-id-styled {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+}
+
+.unified-quality-container {
+  flex-shrink: 0;
+}
+
+.unified-quality-tag {
+  margin: 0;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 8px;
+  line-height: 1.2;
+}
+
+/* 价格信息 */
+.unified-price-info {
+  text-align: center;
+  margin: 4px 0;
+  padding: 2px 4px;
+  background: #f0f9ff;
+  border-radius: 4px;
+  border-left: 3px solid #1890ff;
+}
+
+.unified-price-value {
+  font-size: 12px;
+  color: #1890ff;
+  font-weight: bold;
+}
+
+/* 卖家信息 */
+.unified-seller-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0;
+  font-size: 11px;
+}
+
+.unified-seller-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.unified-seller-value {
+  color: #333;
+  font-weight: bold;
+}
+
+/* 购买按钮 */
+.unified-buy-button {
+  width: 100%;
+  margin-top: 0;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+/* 市场卡片特殊样式 */
+.unified-market-card {
+  margin-bottom: 4px;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .unified-cat-image {
+    height: 80px;
+  }
+  
+  .unified-attr-item {
+    gap: 1px;
+  }
+  
+  .unified-attr-value {
+    font-size: 9px;
+  }
+  
+  .unified-cat-id {
+    font-size: 11px;
+  }
+}

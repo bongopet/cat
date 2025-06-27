@@ -47,7 +47,7 @@ const CatAttributes = ({ cat, showTitle = true }) => {
   }
 
   // 解密猫咪属性
-  const stats = decryptCatStats(cat.encrypted_stats, cat.id);
+  const stats = decryptCatStats(cat.encrypted_stats, cat.encryptedStatsHigh, cat.id);
   const totalPower = calculateTotalBattlePower(stats, cat.level);
 
   return renderAttributesDisplay(stats, totalPower, showTitle, false);

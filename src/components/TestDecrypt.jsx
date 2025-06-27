@@ -15,7 +15,7 @@ const TestDecrypt = () => {
     console.log('开始解密测试...');
     
     try {
-      const decryptedStats = decryptCatStats(testCat.encrypted_stats, testCat.id);
+      const decryptedStats = decryptCatStats(testCat.encrypted_stats, 0, testCat.id);
       // console.log('解密结果:', decryptedStats);
       
       const totalPower = decryptedStats.attack + decryptedStats.defense + decryptedStats.health + 

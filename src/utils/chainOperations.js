@@ -546,17 +546,17 @@ function calculateNextLevelCatCoinCost(cat) {
 }
 
 // 解密猫咪属性 (基于合约的128位加密逻辑)
-function decryptCatStats(encryptedStats, catId, encryptedStatsHigh) {
-  console.log(`解密猫咪#${catId}属性: low=${encryptedStats}, high=${encryptedStatsHigh}`);
-
+function decryptCatStats(encryptedStats, encryptedStatsHigh, catId) {
   try {
+    console.log(`解密猫咪#${catId}属性:`, {
+      encryptedStats,
+      encryptedStatsHigh
+    });
+
     // 将字符串转换为BigInt进行128位运算
     const encryptedLow = BigInt(encryptedStats);
     const encryptedHigh = BigInt(encryptedStatsHigh || '0'); // 如果没有高位数据，默认为0
     const id = BigInt(catId);
-
-    console.log(`加密值: low=${encryptedLow.toString()}, high=${encryptedHigh.toString()}, 猫咪ID: ${id.toString()}`);
-
     // 生成128位密钥
     const keyLow = id ^ BigInt('0x123456789ABCDEF0');
     const keyHigh = (id << BigInt(32)) ^ BigInt('0xFEDCBA0987654321');
@@ -564,10 +564,6 @@ function decryptCatStats(encryptedStats, catId, encryptedStatsHigh) {
     // 解密
     const statsLow = encryptedLow ^ keyLow;
     const statsHigh = encryptedHigh ^ keyHigh;
-
-    console.log(`密钥: low=${keyLow.toString(16)}, high=${keyHigh.toString(16)}`);
-    console.log(`解密后: low=${statsLow.toString(16)}, high=${statsHigh.toString(16)}`);
-
     // 从低64位提取: attack(20) + defense(20) + health(24)
     const attack = Number((statsLow >> BigInt(44)) & BigInt(0xFFFFF));     // 20位攻击 (位44-63)
     const defense = Number((statsLow >> BigInt(24)) & BigInt(0xFFFFF));    // 20位防御 (位24-43)
@@ -837,10 +833,7 @@ async function getUserCats(wallet, accountName) {
         console.log(`从链上获取到 ${rows.length} 只猫咪`);
         const processedCats = rows.map(cat => {
           // 解密属性 (128位)
-          console.log(`解密猫咪#${cat.id}属性:`, cat.encrypted_stats, cat.encrypted_stats_high);
-          const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.id, cat.encrypted_stats_high);
-          console.log(`猫咪#${cat.id}解密结果:`, decryptedStats);
-
+          const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.encrypted_stats_high, cat.id);
           const processedCat = {
             id: cat.id,
             owner: cat.owner,
@@ -851,6 +844,7 @@ async function getUserCats(wallet, accountName) {
             level: cat.level,
             experience: cat.experience,
             encrypted_stats: cat.encrypted_stats, // 加密属性
+            encrypted_stats_high: cat.encrypted_stats_high, // 高64位加密属性
             decryptedStats, // 解密后的属性
             genes: cat.genes,
             stamina: cat.stamina,
@@ -1494,6 +1488,7 @@ async function getMarketCats(wallet, limit = 20) {
               level: cat.level,
               experience: cat.experience,
               encrypted_stats: cat.encrypted_stats,
+              encrypted_stats_high: cat.encrypted_stats_high,
               genes: cat.genes,
               stamina: cat.stamina,
               maxStamina: 100,
@@ -1661,11 +1656,21 @@ async function getArenas(wallet) {
 
             const cat = catRows && catRows.length > 0 ? catRows[0] : null;
 
+            // 尝试从合约获取真实战斗等级，失败则使用估算
+            let powerRank = 'Unknown';
+            if (cat) {
+              try {
+                powerRank = await calculatePowerRankFromContract(wallet, cat.id);
+              } catch (error) {
+
+              }
+            }
+
             return {
               ...arena,
               cat: cat,
-              // 计算战斗力等级（基于合约逻辑）
-              powerRank: cat ? calculatePowerRank(cat) : 'Unknown'
+              // 使用合约获取的真实战斗力等级
+              powerRank: powerRank
             };
           } catch (error) {
             console.error(`获取擂台 ${arena.id} 的猫咪信息失败:`, error);
@@ -1689,33 +1694,57 @@ async function getArenas(wallet) {
   }
 }
 
-// 计算战斗力等级（前端估算）
-function calculatePowerRank(cat) {
-  // 基于等级和品质的简单估算
-  const levelBonus = cat.level * 15;
-  const qualityBonus = cat.quality * 50;
-  const estimatedPower = levelBonus + qualityBonus + 200; // 基础值
+// 通过合约获取真实的战斗等级
+async function calculatePowerRankFromContract(wallet, catId) {
+  try {
+    // 直接解密猫咪属性计算战斗力
+    const catRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      CATTABLE,
+      catId,
+      catId,
+      1,
+      'i64',
+      1
+    );
 
-  if (estimatedPower < 200) return 'Weak';
-  if (estimatedPower < 400) return 'Normal';
-  if (estimatedPower < 600) return 'Strong';
-  if (estimatedPower < 800) return 'Elite';
-  if (estimatedPower < 1000) return 'Master';
-  if (estimatedPower < 1200) return 'Legendary';
+    if (!catRows || catRows.length === 0) {
+      return 'Unknown';
+    }
+
+    const cat = catRows[0];
+
+    // 解密属性
+    const stats = decryptCatStats(cat.encrypted_stats, cat.encrypted_stats_high || 0, cat.id);
+
+    // 计算总属性值
+    const totalStats = stats.attack + stats.defense + stats.health +
+                      stats.critical + stats.dodge + stats.luck;
+    console.log(`id ${cat.id} 总属性值: ${totalStats}`);                 
+
+    // 根据总属性值返回战斗等级
+    return getPowerRankByStats(totalStats);
+
+  } catch (error) {
+    console.warn(`获取猫咪 ${catId} 的战斗等级失败:`, error.message);
+    return 'Unknown';
+  }
+}
+
+// 根据属性总和获取战斗等级
+function getPowerRankByStats(totalStats) {
+  if (totalStats < 300) return 'Weak';
+  if (totalStats < 500) return 'Normal';
+  if (totalStats < 700) return 'Strong';
+  if (totalStats < 900) return 'Elite';
+  if (totalStats < 1100) return 'Master';
+  if (totalStats < 1300) return 'Legendary';
   return 'Mythical';
 }
 
-// 注意：decryptCatStats 函数已在上面定义，这里删除重复声明
 
-// 计算总战斗力（基于解密的属性）
-function calculateTotalBattlePower(stats, level) {
-  // 使用与合约相同的战斗力计算公式
-  const basePower = (stats.attack * 3) + (stats.defense * 3) + (stats.health / 2) +
-                   (stats.critical * 2) + (stats.dodge * 2) + stats.luck;
-  const levelBonus = level * 15; // 每级增加15点战斗力
-
-  return Math.floor(basePower + levelBonus);
-}
 
 // 获取属性等级描述
 function getAttributeRank(value, type) {
@@ -2101,7 +2130,20 @@ async function getMyLegendaryInfo(wallet, accountName) {
     if (claimRecord) {
       totalClaimed = claimRecord.total_claimed || '0.00000000';
       claimCount = claimRecord.claim_count || 0;
-      lastClaimDay = claimRecord.last_claim_day || 'Never';
+
+      // 转换合约天数为可读日期
+      if (claimRecord.last_claim_day && claimRecord.last_claim_day !== 'Never') {
+        // 合约使用从1970-01-01开始的天数，转换为日期字符串
+        const lastClaimTimestamp = claimRecord.last_claim_day * 86400 * 1000; // 转换为毫秒
+        const lastClaimDate = new Date(lastClaimTimestamp);
+        lastClaimDay = lastClaimDate.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      } else {
+        lastClaimDay = 'Never';
+      }
 
       // 如果上次领取是今天，则不能再领取
       canClaim = claimRecord.last_claim_day < currentDay;
@@ -2220,7 +2262,8 @@ export {
   challengeArena,
   removeArena,
   getCatStamina,
-  calculatePowerRank,
+  calculatePowerRankFromContract,
+  getPowerRankByStats,
 
   // 传世猫池系统函数
   getPoolInfo,
@@ -2229,7 +2272,6 @@ export {
 
   // 猫咪属性解密函数
   decryptCatStats,
-  calculateTotalBattlePower,
   getAttributeRank,
   getAttributeColor,
 

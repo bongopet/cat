@@ -103,8 +103,8 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
     let stats = cat.decryptedStats;
     if (!stats && cat.encrypted_stats && cat.id) {
       console.log('手动解密属性...');
-      stats = decryptCatStats(cat.encrypted_stats, cat.id);
-      console.log('手动解密结果:', stats);
+      stats = decryptCatStats(cat.encrypted_stats, cat.encryptedStatsHigh, cat.id);
+      console.log(`手动解密结果: id${cat.id} ${stats}`);
     }
 
     if (!stats) {
@@ -151,7 +151,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
 
     if (cat.encrypted_stats && cat.id) {
       console.log(`为猫咪#${cat.id}手动解密属性...`);
-      const stats = decryptCatStats(cat.encrypted_stats, cat.id, cat.encrypted_stats_high);
+      const stats = decryptCatStats(cat.encrypted_stats, cat.encryptedStatsHigh, cat.id);
       console.log(`猫咪#${cat.id}解密结果:`, stats);
       return stats;
     }
@@ -1044,7 +1044,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                   console.log('decryptedStats:', selectedCat.decryptedStats);
 
                   if (selectedCat.encrypted_stats) {
-                    const manualDecrypt = decryptCatStats(selectedCat.encrypted_stats, selectedCat.id, selectedCat.encrypted_stats_high);
+                    const manualDecrypt = decryptCatStats(selectedCat.encrypted_stats, selectedCat.encryptedStatsHigh, selectedCat.id);
                     console.log('手动解密结果:', manualDecrypt);
                     message.info(`手动解密成功！攻击:${manualDecrypt.attack}, 防御:${manualDecrypt.defense}, 血量:${manualDecrypt.health}`);
                   }
