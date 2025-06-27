@@ -307,7 +307,7 @@ const ChallengeModal = ({
                     <div style={{ marginTop: 8 }}>
                       <Text type="secondary">等级: {selectedCat.level}</Text><br/>
                       <Text type="secondary">体力: {selectedCat.stamina}/100</Text><br/>
-                      <Text type="secondary">战力: {calculatePowerRank(selectedCat)}</Text>
+                      {/* <Text type="secondary">战力: {calculatePowerRankFromContract(selectedCat)}</Text> */}
                     </div>
                   </div>
                 </Space>

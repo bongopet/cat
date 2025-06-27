@@ -473,10 +473,13 @@ function App() {
         if (selectedCat) {
           const currentCatStillExists = cats.find(cat => cat.id === selectedCat.id);
           if (!currentCatStillExists) {
-            // 如果当前选中的猫咪不存在了（比如被繁殖销毁），选择第一只猫咪或清空选择
+            // 如果当前选中的猫咪不存在了（比如被繁殖销毁），选择最新的猫咪（ID最大）
             if (cats.length > 0) {
-              console.log('当前选中的猫咪已不存在，自动选择第一只猫咪');
-              setSelectedCat(cats[0]);
+              // 按ID排序，选择ID最大的猫咪（最新繁殖出来的）
+              const sortedCats = [...cats].sort((a, b) => b.id - a.id);
+              const newestCat = sortedCats[0];
+              console.log('当前选中的猫咪已不存在，自动选择最新的猫咪:', newestCat.id);
+              setSelectedCat(newestCat);
             } else {
               console.log('没有猫咪了，清空选择');
               setSelectedCat(null);
@@ -487,8 +490,9 @@ function App() {
             setSelectedCat(currentCatStillExists);
           }
         } else if (cats.length > 0) {
-          // 如果没有选中任何猫咪但有猫咪存在，选择第一只
-          setSelectedCat(cats[0]);
+          // 如果没有选中任何猫咪但有猫咪存在，选择最新的猫咪（ID最大）
+          const sortedCats = [...cats].sort((a, b) => b.id - a.id);
+          setSelectedCat(sortedCats[0]);
         }
       } catch (error) {
         console.error('获取猫咪列表失败:', error);
