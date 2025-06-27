@@ -18,7 +18,7 @@ import {
   FireOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
-import { QUALITY_NAMES, GENDER_NAMES,calculatePowerRankFromContract } from '../utils/chainOperations';
+import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRankFromContract, decryptCatStats } from '../utils/chainOperations';
 
 const { Option } = Select;
 
@@ -40,6 +40,7 @@ const PlaceArenaModal = ({
   const [selectedCat, setSelectedCat] = useState(null);
   const [betLevel, setBetLevel] = useState(0); // 0=2DFS, 1=5DFS, 2=10DFS
   const [totalAmount, setTotalAmount] = useState(10); // 初始奖池金额
+  const [catPower, setCatPower] = useState(0);
 
   // 重置表单
   useEffect(() => {
@@ -48,8 +49,31 @@ const PlaceArenaModal = ({
       setSelectedCat(null);
       setBetLevel(0);
       setTotalAmount(10);
+      setCatPower(0);
     }
   }, [visible, form]);
+
+  // 计算选中猫咪的战力
+  useEffect(() => {
+    const calculatePower = async () => {
+      if (selectedCat) {
+        try {
+          // 解密猫咪属性并计算战力
+          const stats = decryptCatStats(selectedCat.encrypted_stats, selectedCat.encrypted_stats_high, selectedCat.id);
+          const totalPower = stats.attack + stats.defense + stats.health + stats.critical + stats.dodge + stats.luck;
+    
+          setCatPower(totalPower);
+        } catch (error) {
+          console.error('计算猫咪战力失败:', error);
+          setCatPower(0);
+        }
+      } else {
+        setCatPower(0);
+      }
+    };
+
+    calculatePower();
+  }, [selectedCat]);
 
   // 获取可用的猫咪（不在擂台上且体力充足）
   const getAvailableCats = () => {
@@ -105,7 +129,7 @@ const PlaceArenaModal = ({
         }}
       >
         <Alert
-          message="新擂台规则"
+          message="擂台规则"
           description={
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               <li>选择一只猫咪和挑战等级（2 DFS / 5 DFS / 10 DFS）</li>
@@ -218,7 +242,7 @@ const PlaceArenaModal = ({
               <Row gutter={16}>
                 <Col span={8}>
                   <img
-                    src={`/images/cat_${selectedCat.genes}.png`}
+                    src={`/cat/images/cat_${selectedCat.genes}.png`}
                     alt={`Cat #${selectedCat.id}`}
                     style={{ width: '100%', borderRadius: 8 }}
                     onError={(e) => {
@@ -256,7 +280,7 @@ const PlaceArenaModal = ({
                       <Col span={8}>
                         <Statistic
                           title="战力"
-                          // value={calculatePowerRankFromContract(selectedCat)}
+                          value={catPower}
                           valueStyle={{ fontSize: 12 }}
                         />
                       </Col>
