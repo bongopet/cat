@@ -180,9 +180,9 @@ const CatList = ({
                       <Menu.Divider />
                       {Object.entries(QUALITY_NAMES).map(([quality, name]) => (
                         <Menu.Item key={quality}>
-                          <Tag color={QUALITY_COLORS[quality]} style={{ margin: 0 }}>
+                          <span style={{ color: QUALITY_COLORS[quality], fontWeight: 'bold' }}>
                             {name}
-                          </Tag>
+                          </span>
                         </Menu.Item>
                       ))}
                     </Menu>

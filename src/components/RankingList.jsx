@@ -8,6 +8,18 @@ import './RankingList.css';
 
 const { Title } = Typography;
 
+// 品质映射配置
+const qualityConfig = {
+  0: { name: '普通', color: '#8c8c8c' },
+  1: { name: '精良', color: '#52c41a' },
+  2: { name: '卓越', color: '#1890ff' },
+  3: { name: '非凡', color: '#722ed1' },
+  4: { name: '至尊', color: '#f5222d' },
+  5: { name: '神圣', color: '#fa8c16' },
+  6: { name: '永恒', color: '#eb2f96' },
+  7: { name: '传世', color: '#fadb14' }
+};
+
 const RankingList = ({ DFSWallet }) => {
   const [catsList, setCatsList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -138,12 +150,29 @@ const RankingList = ({ DFSWallet }) => {
       render: (level) => <Tag color="green" style={{ padding: '0 2px' }}>Lv.{level}</Tag>,
     },
     {
-      title: '经验',
-      dataIndex: 'experience',
-      key: 'experience',
-      width: 40,
-      sorter: (a, b) => a.experience - b.experience,
-      render: (experience) => experience || 0,
+      title: '品质',
+      dataIndex: 'quality',
+      key: 'quality',
+      width: 80,
+      sorter: (a, b) => a.quality - b.quality,
+      sortDirections: ['descend', 'ascend'],
+      render: (quality) => {
+        const qualityValue = quality || 0;
+        const config = qualityConfig[qualityValue] || qualityConfig[0];
+        return (
+          <Tag
+            color={config.color}
+            style={{
+              color: '#fff',
+              fontWeight: 'bold',
+              border: 'none',
+              padding: '2px 8px'
+            }}
+          >
+            {config.name}
+          </Tag>
+        );
+      },
     },
     {
       title: '体力',
@@ -151,7 +180,7 @@ const RankingList = ({ DFSWallet }) => {
       key: 'stamina',
       width: 50,
       render: (stamina, record) => {
-        const staminaValue = stamina ? (stamina / 100).toFixed(1) : '0.00';
+        const staminaValue = stamina ? (stamina).toFixed(1) : '0.00';
         // const maxStamina = record.maxStamina ? (record.maxStamina / 100).toFixed(2) : '100.00';
         return `${staminaValue}/${100}`;
       },

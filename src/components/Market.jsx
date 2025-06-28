@@ -41,6 +41,18 @@ import './Market.css'
 const { TabPane } = Tabs
 const { Option } = Select
 
+// 品质映射配置
+const qualityConfig = {
+  0: { name: '普通', color: '#8c8c8c' },
+  1: { name: '精良', color: '#52c41a' },
+  2: { name: '卓越', color: '#1890ff' },
+  3: { name: '非凡', color: '#722ed1' },
+  4: { name: '至尊', color: '#f5222d' },
+  5: { name: '神圣', color: '#fa8c16' },
+  6: { name: '永恒', color: '#eb2f96' },
+  7: { name: '传世', color: '#fadb14' }
+};
+
 function Market({ DFSWallet, userInfo }) {
   // 状态管理
   const [marketCats, setMarketCats] = useState([])
@@ -254,9 +266,16 @@ function Market({ DFSWallet, userInfo }) {
           placeholder="品质"
         >
           <Option value="all">全部</Option>
-          {Object.entries(QUALITY_NAMES).map(([key, name]) => (
-            <Option key={key} value={key}>{name}</Option>
-          ))}
+          {Object.entries(QUALITY_NAMES).map(([key, name]) => {
+            const config = qualityConfig[key];
+            return (
+              <Option key={key} value={key}>
+                <span style={{ color: config?.color || '#000' }}>
+                  {name}
+                </span>
+              </Option>
+            );
+          })}
         </Select>
         <Select
           value={priceSort}
