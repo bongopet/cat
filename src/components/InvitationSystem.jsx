@@ -384,7 +384,7 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
           <Card
             title="我的邀请统计"
             loading={loading}
-            style={{ height: '100%', minHeight: '300px' }}
+            style={{ height: '100%', minHeight: '220px' }}
           >
             <Row gutter={16}>
               <Col span={12}>
@@ -404,36 +404,39 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
               </Col>
             </Row>
 
-            <Divider />
-           
-
             {inviteInfo?.inviteCode ? (
-              <Alert
-                message={`您使用的邀请码: ${inviteInfo.inviteCode}`}
-                type="success"
-                showIcon
-              />
+              <>
+                <Alert
+                  message={`您使用的邀请码: ${inviteInfo.inviteCode}`}
+                  type="success"
+                  showIcon
+                />
+                {/* <Divider /> */}
+              </>
             ) : (
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <Text>绑定邀请码，享受更多福利</Text>
-                <Space.Compact style={{ width: '100%' }}>
-                  <Input
-                    style={{ width: 'calc(100% - 80px)' }}
-                    placeholder="输入邀请码"
-                    value={inviteCodeInput}
-                    onChange={(e) => setInviteCodeInput(e.target.value)}
-                    onPressEnter={handleBindInviteCode}
-                  />
-                  <Button
-                    type="primary"
-                    icon={<UserAddOutlined />}
-                    loading={bindingCode}
-                    onClick={handleBindInviteCode}
-                  >
-                    绑定
-                  </Button>
-                </Space.Compact>
-              </Space>
+              <>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text>绑定邀请码，享受更多福利</Text>
+                  <Space.Compact style={{ width: '100%' }}>
+                    <Input
+                      style={{ width: 'calc(100% - 80px)' }}
+                      placeholder="输入邀请码"
+                      value={inviteCodeInput}
+                      onChange={(e) => setInviteCodeInput(e.target.value)}
+                      onPressEnter={handleBindInviteCode}
+                    />
+                    <Button
+                      type="primary"
+                      icon={<UserAddOutlined />}
+                      loading={bindingCode}
+                      onClick={handleBindInviteCode}
+                    >
+                      绑定
+                    </Button>
+                  </Space.Compact>
+                </Space>
+                {/* <Divider /> */}
+              </>
             )}
           </Card>
         </Col>
@@ -441,7 +444,7 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
         {/* 邀请码管理 */}
         <Col xs={24} lg={12}>
           <Card
-            style={{ height: '100%', minHeight: '300px' }}
+            style={{ height: '100%', minHeight: '220px' }}
             title={
               <Space>
                 我的邀请码
@@ -451,19 +454,7 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
                 />
               </Space>
             }
-            extra={
-              userInviteCodes.length === 0 && (
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  loading={creatingCode}
-                  onClick={handleCreateInviteCode}
-                  size="small"
-                >
-                  创建邀请码 (5 DFS)
-                </Button>
-              )
-            }
+      
           >
             {userInviteCodes.length > 0 ? (
               <Space direction="vertical" style={{ width: '100%' }}>
@@ -518,13 +509,13 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <Space direction="vertical" size={16}>
-                  <div style={{ fontSize: '48px', color: '#d9d9d9' }}>
+                  {/* <div style={{ fontSize: '48px', color: '#d9d9d9' }}>
                     🎫
-                  </div>
+                  </div> */}
                   <Text type="secondary">您还没有创建邀请码</Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                  {/* <Text type="secondary" style={{ fontSize: '12px' }}>
                     创建邀请码需要支付5个DFS，每个用户只能创建一个邀请码
-                  </Text>
+                  </Text> */}
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
@@ -538,7 +529,7 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
               </div>
             )}
 
-            <Divider />
+            {/* <Divider /> */}
 
           </Card>
         </Col>
