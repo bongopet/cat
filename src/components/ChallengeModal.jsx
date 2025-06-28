@@ -11,16 +11,17 @@ import {
   Statistic,
   Row,
   Col,
-  Progress,
+
   Typography
 } from 'antd';
 import {
   ThunderboltOutlined,
   SafetyOutlined,
   TrophyOutlined,
-  FireOutlined
+  FireOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
-import { QUALITY_NAMES, GENDER_NAMES, calculatePowerRankFromContract, decryptCatStats, getUserCats } from '../utils/chainOperations';
+import { QUALITY_NAMES, GENDER_NAMES, decryptCatStats, getUserCats } from '../utils/chainOperations';
 import BattleAnimation from './BattleAnimation';
 
 const { Option } = Select;
@@ -47,6 +48,7 @@ const ChallengeModal = ({
   const [betLevel, setBetLevel] = useState(0);
   const [showBattleAnimation, setShowBattleAnimation] = useState(false);
   const [battleData, setBattleData] = useState(null);
+  const [catPower, setCatPower] = useState(0);
 
   // 重置表单
   useEffect(() => {
@@ -58,6 +60,27 @@ const ChallengeModal = ({
       setBetLevel(initialBetLevel);
     }
   }, [visible, form, preselectedBetLevel]);
+
+  // 计算选中猫咪的战力值
+  useEffect(() => {
+    const calculatePower = () => {
+      if (selectedCat) {
+        try {
+          // 解密猫咪属性并计算战力
+          const stats = decryptCatStats(selectedCat.encrypted_stats, selectedCat.encrypted_stats_high, selectedCat.id);
+          const totalPower = stats.attack + stats.defense + stats.health + stats.critical + stats.dodge + stats.luck;
+          setCatPower(totalPower);
+        } catch (error) {
+          console.error('计算猫咪战力失败:', error);
+          setCatPower(0);
+        }
+      } else {
+        setCatPower(0);
+      }
+    };
+
+    calculatePower();
+  }, [selectedCat]);
 
   // 获取可用的挑战猫咪
   const getAvailableCats = () => {
@@ -84,32 +107,10 @@ const ChallengeModal = ({
     });
   };
 
-  // 计算胜率估算（基于挑战等级的平均胜率）
-  const calculateWinChance = () => {
-    if (!selectedCat) return 50;
-
-    // 基于猫咪品质和等级的基础胜率
-    const basePower = selectedCat.level * 10 + selectedCat.quality * 20;
-
-    // 根据挑战等级调整胜率（高等级擂台通常有更强的猫咪）
-    const levelModifier = betLevel * 5; // 每个等级降低5%胜率
-    const winChance = Math.round(50 + (basePower / 20) - levelModifier);
-
-    return Math.max(10, Math.min(90, winChance)); // 限制在10%-90%之间
-  };
-
   // 获取品质颜色
   const getQualityColor = (quality) => {
     const colors = ['#d9d9d9', '#52c41a', '#1890ff', '#722ed1', '#eb2f96', '#fa8c16', '#f5222d', '#fa541c'];
     return colors[quality] || '#d9d9d9';
-  };
-
-  // 获取胜率颜色
-  const getWinChanceColor = (chance) => {
-    if (chance >= 70) return '#52c41a';
-    if (chance >= 50) return '#faad14';
-    if (chance >= 30) return '#fa8c16';
-    return '#f5222d';
   };
 
   const availableCats = getAvailableCats();
@@ -117,7 +118,6 @@ const ChallengeModal = ({
   // 获取当前显示的等级（预选等级优先）
   const currentBetLevel = preselectedBetLevel !== null ? preselectedBetLevel : betLevel;
   const betAmount = BET_LEVELS[currentBetLevel]?.amount || 2;
-  const winChance = calculateWinChance();
 
   // 获取当前bet_level的擂台数量
   const currentLevelArenaCount = arenaStats ? arenaStats[`level${currentBetLevel}Count`] || 0 : 0;
@@ -278,7 +278,7 @@ const ChallengeModal = ({
                   <img
                     src={`/images/cat_${selectedCat.genes}.png`}
                     alt={`Challenger Cat #${selectedCat.id}`}
-                    style={{ width: '100%', borderRadius: 8 }}
+                    style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 8, margin: '0 auto', display: 'block' }}
                     onError={(e) => {
                       e.target.src = '/images/logo.png';
                     }}
@@ -294,34 +294,49 @@ const ChallengeModal = ({
                     <div style={{ marginTop: 8 }}>
                       <Text type="secondary">等级: {selectedCat.level}</Text><br/>
                       <Text type="secondary">体力: {selectedCat.stamina}/100</Text><br/>
-                      {/* <Text type="secondary">战力: {calculatePowerRankFromContract(selectedCat)}</Text> */}
+                      <Text type="secondary">战力: {catPower}</Text>
                     </div>
                   </div>
                 </Space>
               </Card>
             </Col>
-            
+
             <Col span={4} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ textAlign: 'center' }}>
-                <ThunderboltOutlined style={{ fontSize: 24, color: '#faad14' }} />
-                <div style={{ marginTop: 8 }}>
-                  <Text strong style={{ color: getWinChanceColor(winChance) }}>
-                    {winChance}%
-                  </Text>
-                  <div style={{ fontSize: 12, color: '#666' }}>胜率</div>
+                <ThunderboltOutlined style={{ fontSize: 36, color: '#faad14' }} />
+                <div style={{ marginTop: 4, fontSize: 14, fontWeight: 'bold', color: '#333' }}>
+                  VS
                 </div>
               </div>
             </Col>
-            
+
+            <Col span={10}>
+              <Card size="small" title="对手信息" style={{ height: '100%' }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '200px',
+                  textAlign: 'center'
+                }}>
+                  <QuestionCircleOutlined style={{ fontSize: 48, color: '#faad14', marginBottom: 16 }} />
+                  <Text strong style={{ fontSize: 24, color: '#faad14', marginBottom: 8 }}>
+                    
+                  </Text>
+                  <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>随机对手</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>
+                    系统将从相同等级的<br/>
+                    擂台中随机选择对手
+                  </div>
+                </div>
+              </Card>
+            </Col>
+
           </Row>
 
           {selectedCat && (
             <div style={{ marginTop: 16, textAlign: 'center' }}>
-              <Progress
-                percent={winChance}
-                strokeColor={getWinChanceColor(winChance)}
-                format={(percent) => `胜率 ${percent}%`}
-              />
               <Alert
                 message={
                   <Space>

@@ -63,7 +63,7 @@ const Arena = ({ DFSWallet, accountName }) => {
   // 解析战斗结果
   const parseBattleResult = (consoleOutput) => {
     try {
-      // 解析console输出: "Cat #123 defeated cat #456 in bet level 1 arena. Total prize: 4.50000000 DFS..."
+      // 解析挑战成功的输出: "Cat #123 defeated cat #456 in bet level 1 arena. Total prize: 4.50000000 DFS..."
       const defeatedMatch = consoleOutput.match(/Cat #(\d+) defeated cat #(\d+) in bet level (\d+) arena/);
       if (defeatedMatch) {
         return {
@@ -75,8 +75,18 @@ const Arena = ({ DFSWallet, accountName }) => {
         };
       }
 
-      // 如果没有找到defeated，可能是挑战失败的情况
-      // 这里需要根据实际的失败输出格式来解析
+      // 解析挑战失败的输出: "Cat #456 defended successfully against cat #123 in bet level 1 arena..."
+      const defendedMatch = consoleOutput.match(/Cat #(\d+) defended successfully against cat #(\d+) in bet level (\d+) arena/);
+      if (defendedMatch) {
+        return {
+          challengerCatId: parseInt(defendedMatch[2]),
+          arenaCatId: parseInt(defendedMatch[1]),
+          betLevel: parseInt(defendedMatch[3]),
+          winner: 'arena',
+          result: 'defeat'
+        };
+      }
+
       return null;
     } catch (error) {
       console.error('解析战斗结果失败:', error);
@@ -211,14 +221,14 @@ const Arena = ({ DFSWallet, accountName }) => {
 
       // 遍历所有action traces寻找包含战斗结果的console输出
       for (const trace of actionTraces) {
-        if (trace.console && trace.console.includes('defeated')) {
+        if (trace.console && (trace.console.includes('defeated') || trace.console.includes('defended successfully'))) {
           consoleOutput = trace.console;
           break;
         }
         // 也检查inline traces
         if (trace.inline_traces) {
           for (const inlineTrace of trace.inline_traces) {
-            if (inlineTrace.console && inlineTrace.console.includes('defeated')) {
+            if (inlineTrace.console && (inlineTrace.console.includes('defeated') || inlineTrace.console.includes('defended successfully'))) {
               consoleOutput = inlineTrace.console;
               break;
             }

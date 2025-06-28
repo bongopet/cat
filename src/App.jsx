@@ -14,7 +14,8 @@ import {
   StarOutlined,
   DollarOutlined,
   GoldOutlined,
-  LockOutlined
+  LockOutlined,
+  TeamOutlined
 } from '@ant-design/icons'
 import Wallet from 'dfssdk'
 import { WalletType } from 'dfssdk/dist/types'
@@ -25,6 +26,7 @@ import CatStats from './components/CatStats'
 import Market from './components/Market'
 import Arena from './components/Arena'
 import LegendaryPool from './components/LegendaryPool'
+import InvitationSystem from './components/InvitationSystem'
 import WalletSigner from './components/WalletSigner'
 import SignatureEncryption from './components/SignatureEncryption'
 import {
@@ -529,6 +531,11 @@ function App() {
       icon: <GoldOutlined />,
       label: '传世猫池',
     },
+    {
+      key: 'invitation',
+      icon: <TeamOutlined />,
+      label: '邀请',
+    },
     // {
     //   key: 'wallet-signer',
     //   icon: <WalletOutlined />,
@@ -602,6 +609,13 @@ function App() {
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
             <LegendaryPool DFSWallet={dfsWallet} userInfo={account} />
+          </div>
+        );
+
+      case 'invitation':
+        return (
+          <div className="tab-content" style={{ margin: 0, padding: 0 }}>
+            <InvitationSystem DFSWallet={dfsWallet} userInfo={account} />
           </div>
         );
 

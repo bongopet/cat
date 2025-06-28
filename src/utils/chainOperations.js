@@ -45,6 +45,180 @@ const GENDER_NAMES = {
 
 
 
+// ==================== 邀请系统函数 ====================
+
+// 创建邀请码 (通过DFS转账)
+async function createInviteCode(wallet, account) {
+  try {
+    console.log('开始创建邀请码...', account.name);
+
+    // 检查DFS余额
+    const balanceStr = await getAccountBalance(wallet, 'eosio.token', account.name, 'DFS');
+    const balanceParts = balanceStr.split(' ');
+    const balanceValue = Number.parseFloat(balanceParts[0]);
+
+    if (isNaN(balanceValue) || balanceValue < 5.0) {
+      const errorMsg = `DFS余额不足，创建邀请码需要5.00000000 DFS (当前余额: ${balanceStr || '0 DFS'})`;
+      throw new Error(errorMsg);
+    }
+
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    // 执行DFS转账创建邀请码
+    const transferAction = buildTransferAction(
+      account.name,
+      CONTRACT,
+      '5.00000000 DFS',
+      'createinvcode', // 创建邀请码备注
+      permission
+    );
+
+    const result = await sendTransaction(wallet, [transferAction]);
+
+    message.success('邀请码创建成功！');
+    console.log('邀请码创建成功', result);
+
+    return {
+      success: true,
+      txHash: result?.transaction_id || `create-${Date.now()}`
+    };
+  } catch (error) {
+    console.error('创建邀请码失败:', error);
+    throw error;
+  }
+}
+
+// 绑定邀请码
+async function bindInviteCode(wallet, account, inviteCode) {
+  try {
+    console.log('开始绑定邀请码...', { user: account.name, inviteCode });
+
+    const permission = getUserPermission('contract');
+    console.log(`使用权限: ${permission}`);
+
+    const bindAction = {
+      account: CONTRACT,
+      name: 'bindinvcode',
+      authorization: [{
+        actor: account.name,
+        permission: permission,
+      }],
+      data: {
+        user: account.name,
+        invite_code: inviteCode,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [bindAction]);
+
+    message.success('邀请码绑定成功！');
+    console.log('邀请码绑定成功', result);
+
+    return {
+      success: true,
+      txHash: result?.transaction_id || `bind-${Date.now()}`
+    };
+  } catch (error) {
+    console.error('绑定邀请码失败:', error);
+    throw error;
+  }
+}
+
+// 获取邀请信息
+async function getInviteInfo(wallet, user) {
+  try {
+    console.log('获取邀请信息...', user);
+
+    const permission = getUserPermission('contract');
+    const infoAction = {
+      account: CONTRACT,
+      name: 'getinvinfo',
+      authorization: [{
+        actor: user,
+        permission: permission,
+      }],
+      data: {
+        user: user,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [infoAction]);
+    console.log('获取邀请信息成功', result);
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('获取邀请信息失败:', error);
+    throw error;
+  }
+}
+
+// 获取邀请列表
+async function getInviteList(wallet, inviter, limit = 10) {
+  try {
+    console.log('获取邀请列表...', { inviter, limit });
+
+    const permission = getUserPermission('contract');
+    const listAction = {
+      account: CONTRACT,
+      name: 'getinvlist',
+      authorization: [{
+        actor: inviter,
+        permission: permission,
+      }],
+      data: {
+        inviter: inviter,
+        limit: limit,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [listAction]);
+    console.log('获取邀请列表成功', result);
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('获取邀请列表失败:', error);
+    throw error;
+  }
+}
+
+// 获取邀请码信息
+async function getInviteCodeInfo(wallet, user, inviteCode) {
+  try {
+    console.log('获取邀请码信息...', { user, inviteCode });
+
+    const permission = getUserPermission('contract');
+    const codeAction = {
+      account: CONTRACT,
+      name: 'getcodeinfo',
+      authorization: [{
+        actor: user,
+        permission: permission,
+      }],
+      data: {
+        invite_code: inviteCode,
+      },
+    };
+
+    const result = await sendTransaction(wallet, [codeAction]);
+    console.log('获取邀请码信息成功', result);
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('获取邀请码信息失败:', error);
+    throw error;
+  }
+}
+
 // ==================== 新的BongoCat合约操作函数 ====================
 
 // 领取免费猫咪
@@ -2292,6 +2466,13 @@ export {
   recordCatTransaction,
   getStoredTransactions,
   getCatStats,
+
+  // 邀请系统函数
+  createInviteCode,
+  bindInviteCode,
+  getInviteInfo,
+  getInviteList,
+  getInviteCodeInfo,
 
   // 常量导出
   QUALITY_NAMES,
