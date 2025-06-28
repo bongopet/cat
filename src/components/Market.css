@@ -1,7 +1,22 @@
 .market-container {
   padding: 24px;
-  background: #f0f2f5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  color: white;
+}
+
+/* 确保标题和描述文字在深色背景上清晰可见 */
+.market-container h1,
+.market-container h2,
+.market-container h3,
+.market-container h4,
+.market-container h5,
+.market-container h6 {
+  color: white !important;
+}
+
+.market-container p {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* 市场猫咪包装器 */

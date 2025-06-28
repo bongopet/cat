@@ -1,0 +1,34 @@
+/* 传世猫池容器 */
+.legendary-pool-container {
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+/* 确保标题和描述文字在深色背景上清晰可见 */
+.legendary-pool-container h1,
+.legendary-pool-container h2,
+.legendary-pool-container h3,
+.legendary-pool-container h4,
+.legendary-pool-container h5,
+.legendary-pool-container h6 {
+  color: white !important;
+}
+
+.legendary-pool-container p {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .legendary-pool-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .legendary-pool-container {
+    padding: 12px;
+  }
+}

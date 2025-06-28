@@ -1,26 +1,73 @@
-.cat-stats {
+/* 统计容器 - 与排行榜界面保持一致 */
+.cat-stats,
+.ranking-list-container {
+  width: 100%;
   padding: 24px;
+  margin: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-}
-
-.stats-header {
-  text-align: center;
-  margin-bottom: 32px;
   color: white;
 }
 
-.stats-header h2 {
-  color: white;
-  font-size: 28px;
-  margin: 0 0 8px 0;
-  font-weight: bold;
+/* 确保标题和描述文字在深色背景上清晰可见 - 与排行榜界面保持一致 */
+.cat-stats h1,
+.cat-stats h2,
+.cat-stats h3,
+.cat-stats h4,
+.cat-stats h5,
+.cat-stats h6,
+.ranking-list-container h1,
+.ranking-list-container h2,
+.ranking-list-container h3,
+.ranking-list-container h4,
+.ranking-list-container h5,
+.ranking-list-container h6 {
+  color: white !important;
 }
 
-.stats-header p {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 16px;
+.cat-stats p,
+.ranking-list-container p {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 表格样式 - 与排行榜保持一致 */
+.ranking-table {
+  width: 100%;
+  overflow-x: hidden;
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.ranking-table .ant-table-container {
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.ranking-table .ant-table-content {
+  overflow-x: hidden !important;
+}
+
+.ranking-table .ant-table-body {
+  overflow-x: hidden !important;
+}
+
+.ranking-table .ant-table-thead > tr > th {
+  background-color: #f0f5ff;
+  font-weight: bold;
+  padding: 6px 2px;
+}
+
+.ranking-table .ant-table-tbody > tr > td {
+  padding: 6px 2px;
+}
+
+.ranking-table .ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff;
 }
 
 /* 通用总量显示样式 */
@@ -65,65 +112,14 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-.stats-table-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
 
-.stats-table-card .ant-card-head {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
 
-.stats-table-card .ant-card-head-title {
-  font-weight: bold;
-  color: #1890ff;
-  width: 100%;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.table-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.table-controls .total-cats-display {
-  background: rgba(24, 144, 255, 0.1);
-  border: 1px solid rgba(24, 144, 255, 0.2);
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 14px;
-}
-
-.table-controls .total-label {
-  color: #666;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.table-controls .total-value {
-  color: #1890ff;
-  font-size: 16px;
-  font-weight: 700;
-  text-shadow: none;
-  animation: none;
-}
-
-.table-controls .total-unit {
-  color: #666;
-  font-size: 12px;
-  font-weight: 500;
-}
-
+/* 表格样式 */
 .stats-table {
+  background: transparent;
+}
+
+.stats-table .ant-table {
   background: transparent;
 }
 
@@ -142,48 +138,85 @@
   background: rgba(24, 144, 255, 0.05);
 }
 
+/* 刷新按钮样式 - 与擂台界面保持一致 */
+.cat-stats .refresh-button {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+.cat-stats .refresh-button:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cat-stats .refresh-button:focus {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: white !important;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .cat-stats {
     padding: 16px;
   }
 
-  .stats-header h2 {
-    font-size: 24px;
+  .cat-stats h2 {
+    font-size: 20px;
   }
 
-  .stats-header p {
+  .cat-stats p {
     font-size: 14px;
   }
 
-  .table-header {
+  /* 移动端标题和按钮布局 */
+  .cat-stats > div:first-child > div {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
   }
 
-  .table-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .table-controls .total-cats-display {
-    padding: 8px 12px;
-    border-radius: 14px;
-  }
-
-  .table-controls .total-value {
-    font-size: 14px;
-  }
-
-  .table-controls .total-label,
-  .table-controls .total-unit {
-    font-size: 11px;
+  .cat-stats .refresh-button {
+    align-self: flex-end;
   }
 }
 
-/* 统计卡片样式 */
-.ant-card {
+/* 统计卡片样式 - 与擂台界面保持一致 */
+.cat-stats .arena-stats .ant-statistic {
+  text-align: center;
+}
+
+.cat-stats .arena-stats .ant-statistic-title {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.cat-stats .arena-stats .ant-statistic-content {
+  font-size: 24px;
+}
+
+.cat-stats .arena-stats .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.cat-stats .arena-stats .ant-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.cat-stats .ant-card {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.95);
@@ -236,7 +269,7 @@
   }
 }
 
-.ant-card {
+.cat-stats .ant-card {
   animation: slideUp 0.6s ease-out;
 }
 

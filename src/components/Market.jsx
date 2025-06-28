@@ -257,7 +257,7 @@ function Market({ DFSWallet, userInfo }) {
 
   // 渲染筛选控件
   const renderFilters = () => (
-    <Card style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 16 }}>
       <Space wrap>
         <Select
           value={qualityFilter}
@@ -289,16 +289,8 @@ function Market({ DFSWallet, userInfo }) {
             <SortDescendingOutlined /> 价格降序
           </Option>
         </Select>
-        
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={fetchMarketData}
-          loading={loading}
-        >
-          刷新
-        </Button>
       </Space>
-    </Card>
+    </div>
   )
 
   // 渲染市场猫咪卡片
@@ -384,40 +376,67 @@ function Market({ DFSWallet, userInfo }) {
 
   return (
     <div className="market-container">
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab={<span><ShopOutlined />市场</span>} key="market">
-          {renderMarketStats()}
-          {renderFilters()}
-          
-          <Spin spinning={loading}>
-            {getFilteredAndSortedCats().length > 0 ? (
+      {/* 标题和操作区域 */}
+      <div style={{ marginBottom: 24 }}>
+        <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
+              <ShopOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+              猫咪市场
+            </h2>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
+              在这里买卖你的猫咪，发现稀有品种
+            </p>
+          </div>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchMarketData}
+              loading={loading}
+            >
+              刷新
+            </Button>
+          </Space>
+        </Space>
+      </div>
+
+      {/* 统计信息区域 */}
+      {renderMarketStats()}
+
+      {/* 主要内容区域 */}
+      <Card>
+        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+          <TabPane tab={<span><ShopOutlined />市场</span>} key="market">
+            {renderFilters()}
+
+            <Spin spinning={loading}>
+              {getFilteredAndSortedCats().length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {getFilteredAndSortedCats().map(renderMarketCat)}
+                </Row>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="暂无猫咪在售"
+                />
+              )}
+            </Spin>
+          </TabPane>
+
+          <TabPane tab={<span><DollarOutlined />我的出售</span>} key="mysales">
+            {userCats.length > 0 ? (
               <Row gutter={[16, 16]}>
-                {getFilteredAndSortedCats().map(renderMarketCat)}
+                {userCats.map(renderUserCat)}
               </Row>
             ) : (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无猫咪在售"
+                description="您暂无可交易的猫咪"
               />
             )}
-          </Spin>
-        </TabPane>
-        
-        <TabPane tab={<span><DollarOutlined />我的出售</span>} key="mysales">
-
-          
-          {userCats.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {userCats.map(renderUserCat)}
-            </Row>
-          ) : (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="您暂无可交易的猫咪"
-            />
-          )}
-        </TabPane>
-      </Tabs>
+          </TabPane>
+        </Tabs>
+      </Card>
 
       {/* 购买确认模态框 */}
       <Modal

@@ -1,7 +1,22 @@
 .invitation-system {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+/* 确保标题和描述文字在深色背景上清晰可见 */
+.invitation-system h1,
+.invitation-system h2,
+.invitation-system h3,
+.invitation-system h4,
+.invitation-system h5,
+.invitation-system h6 {
+  color: white !important;
+}
+
+.invitation-system p {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .invitation-system .ant-card {

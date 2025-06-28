@@ -1,9 +1,26 @@
 .ranking-list-container {
   width: 100%;
-  padding: 0;
+  padding: 24px;
   margin: 0;
   overflow-x: hidden;
   box-sizing: border-box;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+/* 确保标题和描述文字在深色背景上清晰可见 */
+.ranking-list-container h1,
+.ranking-list-container h2,
+.ranking-list-container h3,
+.ranking-list-container h4,
+.ranking-list-container h5,
+.ranking-list-container h6 {
+  color: white !important;
+}
+
+.ranking-list-container p {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .ranking-card {

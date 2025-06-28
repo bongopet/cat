@@ -585,10 +585,7 @@ function App() {
       case 'ranking':
         return (
           <div className="tab-content" style={{ margin: 0, padding: 0 }}>
-              <div className="ranking-header">
-                <div></div> {/* 占位，保持与其他页面布局一致 */}
-              </div>
-                <RankingList DFSWallet={dfsWallet} />
+            <RankingList DFSWallet={dfsWallet} />
           </div>
         );
       case 'market':

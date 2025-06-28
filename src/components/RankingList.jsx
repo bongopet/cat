@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Spin, Tag, Typography, message, Tooltip, Modal } from 'antd';
+import { Table, Button, Spin, Tag, Typography, message, Tooltip, Modal, Card, Space } from 'antd';
 import { TrophyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getAllCats } from '../utils/chainOperations';
 import { getCatColorClass } from '../utils/catGeneParser';
@@ -189,35 +189,50 @@ const RankingList = ({ DFSWallet }) => {
 
   return (
     <div className="ranking-list-container">
-      <div className="ranking-header">   
-        
-        <Button
-          type="primary"
-          icon={<ReloadOutlined />}
-          onClick={handleRefresh}
-          loading={loading}
-        >
-          刷新
-        </Button>
+      {/* 标题和操作区域 */}
+      <div style={{ marginBottom: 24 }}>
+        <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
+              <TrophyOutlined style={{ marginRight: 8, color: '#fadb14' }} />
+              猫咪排行榜
+            </h2>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
+              查看所有猫咪的等级排名和属性信息
+            </p>
+          </div>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleRefresh}
+              loading={loading}
+            >
+              刷新
+            </Button>
+          </Space>
+        </Space>
       </div>
-      
-      <Spin spinning={loading}>
-        <Table
-          dataSource={catsList}
-          columns={columns}
-          rowKey="id"
-          pagination={{
-            ...pagination,
-            size: "small",
-            pageSize: 15,
-            position: ['bottomCenter']
-          }}
-          onChange={handleTableChange}
-          className="ranking-table"
-          size="small"
-          bordered={false}
-        />
-      </Spin>
+
+      {/* 主要内容区域 */}
+      <Card>
+        <Spin spinning={loading}>
+          <Table
+            dataSource={catsList}
+            columns={columns}
+            rowKey="id"
+            pagination={{
+              ...pagination,
+              size: "small",
+              pageSize: 15,
+              position: ['bottomCenter']
+            }}
+            onChange={handleTableChange}
+            className="ranking-table"
+            size="small"
+            bordered={false}
+          />
+        </Spin>
+      </Card>
       
       {/* 猫咪详情Modal */}
       <Modal

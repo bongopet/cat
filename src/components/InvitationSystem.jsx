@@ -32,7 +32,7 @@ import { createInviteCode, bindInviteCode } from '../utils/chainOperations';
 import { formatTime } from '../utils/timeUtils';
 import './InvitationSystem.css';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 const CONTRACT = 'ifwzjalq2lg1'; // 合约地址
 
 const InvitationSystem = ({ DFSWallet, userInfo }) => {
@@ -374,18 +374,40 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
 
   return (
     <div className="invitation-system">
-      <Title level={2}>
-        <TeamOutlined /> 邀请
-      </Title>
+      {/* 标题和操作区域 */}
+      <div style={{ marginBottom: 24 }}>
+        <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
+              <TeamOutlined style={{ marginRight: 8, color: '#52c41a' }} />
+              邀请系统
+            </h2>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
+              邀请好友加入，获得交易佣金奖励
+            </p>
+          </div>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchInviteInfo}
+              loading={loading}
+            >
+              刷新
+            </Button>
+          </Space>
+        </Space>
+      </div>
 
-      <Row gutter={[16, 16]} align="stretch">
-        {/* 邀请统计 */}
-        <Col xs={24} lg={12}>
-          <Card
-            title="我的邀请统计"
-            loading={loading}
-            style={{ height: '100%', minHeight: '220px' }}
-          >
+      {/* 主要内容区域 */}
+      <Card>
+        <Row gutter={[16, 16]} align="stretch">
+          {/* 邀请统计 */}
+          <Col xs={24} lg={12}>
+            <Card
+              title="我的邀请统计"
+              loading={loading}
+              style={{ height: '100%', minHeight: '220px' }}
+            >
             <Row gutter={16}>
               <Col span={12}>
                 <Statistic
@@ -563,6 +585,7 @@ const InvitationSystem = ({ DFSWallet, userInfo }) => {
           />
         </Card>
       )}
+      </Card>
 
       {/* 邀请说明Modal */}
       <Modal

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Statistic, Row, Col, Typography, Space, Alert, Spin, message, Tooltip } from 'antd';
-import { TrophyOutlined, GiftOutlined, InfoCircleOutlined, ReloadOutlined, GoldOutlined, DollarOutlined } from '@ant-design/icons';
+import { Card, Button, Statistic, Row, Col, Typography, Space, Alert, Spin, message } from 'antd';
+import { GiftOutlined, InfoCircleOutlined, ReloadOutlined, GoldOutlined, DollarOutlined } from '@ant-design/icons';
 import { claimDailyReward, getPoolInfo, getMyLegendaryInfo } from '../utils/chainOperations';
+import './LegendaryPool.css';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const LegendaryPool = ({ DFSWallet, userInfo }) => {
   const wallet = DFSWallet;
@@ -151,39 +152,46 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
   }, [wallet, accountName]);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <Title level={2}>
-          <GoldOutlined style={{ color: '#faad14', marginRight: '8px' }} />
-          传世猫池
-        </Title>
-        <Text type="secondary">
-          所有传世猫拥有者每日均分池子1%的DFS奖励
-        </Text>
+    <div className="legendary-pool-container">
+      {/* 标题和操作区域 */}
+      <div style={{ marginBottom: 24 }}>
+        <Space size="large" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ position: 'relative' }}>
+            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', color: 'white' }}>
+              <GoldOutlined style={{ marginRight: 8, color: '#faad14' }} />
+              传世猫池
+            </h2>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
+              所有传世猫拥有者每日均分池子1%的DFS奖励
+            </p>
+          </div>
+          <Space>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={refreshData}
+              loading={loading}
+            >
+              刷新
+            </Button>
+          </Space>
+        </Space>
       </div>
 
-      <Row gutter={[24, 24]}>
-        {/* 池子信息卡片 */}
-        <Col xs={24} lg={12}>
-          <Card
-            title={
-              <Space>
-                <DollarOutlined style={{ color: '#faad14' }} />
-                池子信息
-                <Tooltip title="点击刷新数据">
-                  <Button 
-                    type="text" 
-                    icon={<ReloadOutlined />} 
-                    onClick={refreshData}
-                    loading={loading}
-                    size="small"
-                  />
-                </Tooltip>
-              </Space>
-            }
-            loading={loading}
-            style={{ height: '100%' }}
-          >
+      {/* 主要内容区域 */}
+      <Card>
+        <Row gutter={[24, 24]}>
+          {/* 池子信息卡片 */}
+          <Col xs={24} lg={12}>
+            <Card
+              title={
+                <Space>
+                  <DollarOutlined style={{ color: '#faad14' }} />
+                  池子信息
+                </Space>
+              }
+              loading={loading}
+              style={{ height: '100%' }}
+            >
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
               <Statistic
                 title="池子总DFS"
@@ -337,41 +345,60 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
       </Row>
 
       {/* 说明信息 */}
-      <Card
-        title="传世猫池说明"
-        style={{ marginTop: '24px' }}
-        styles={{ body: { padding: '16px' } }}
-      >
+      {/* <div style={{ marginTop: '24px' }}>
+        <h3 style={{ color: 'white', marginBottom: '16px' }}>传世猫池说明</h3>
         <Row gutter={[24, 16]}>
           <Col xs={24} md={8}>
-            <div style={{ textAlign: 'center' }}>
-              <GoldOutlined style={{ fontSize: '32px', color: '#faad14', marginBottom: '8px' }} />
-              <Title level={4}>获得传世猫</Title>
-              <Text type="secondary">
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid #e8e8e8'
+            }}>
+              <GoldOutlined style={{ fontSize: '32px', color: '#faad14', marginBottom: '12px' }} />
+              <h4 style={{ color: '#000000', margin: '8px 0', fontWeight: 'bold' }}>获得传世猫</h4>
+              <p style={{ color: '#333333', margin: 0, fontSize: '14px' }}>
                 通过繁殖系统培育出传世品质的猫咪
-              </Text>
+              </p>
             </div>
           </Col>
           <Col xs={24} md={8}>
-            <div style={{ textAlign: 'center' }}>
-              <DollarOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '8px' }} />
-              <Title level={4}>均分奖励</Title>
-              <Text type="secondary">
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid #e8e8e8'
+            }}>
+              <DollarOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '12px' }} />
+              <h4 style={{ color: '#000000', margin: '8px 0', fontWeight: 'bold' }}>均分奖励</h4>
+              <p style={{ color: '#333333', margin: 0, fontSize: '14px' }}>
                 所有传世猫拥有者均分池子1%的DFS
-              </Text>
+              </p>
             </div>
           </Col>
           <Col xs={24} md={8}>
-            <div style={{ textAlign: 'center' }}>
-              <InfoCircleOutlined style={{ fontSize: '32px', color: '#1890ff', marginBottom: '8px' }} />
-              <Title level={4}>持续收益</Title>
-              <Text type="secondary">
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              background: '#ffffff',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              border: '1px solid #e8e8e8'
+            }}>
+              <InfoCircleOutlined style={{ fontSize: '32px', color: '#1890ff', marginBottom: '12px' }} />
+              <h4 style={{ color: '#000000', margin: '8px 0', fontWeight: 'bold' }}>持续收益</h4>
+              <p style={{ color: '#333333', margin: 0, fontSize: '14px' }}>
                 只要拥有传世猫，就能持续获得被动收益
-              </Text>
+              </p>
             </div>
           </Col>
         </Row>
-      </Card>
+      </div> */}
+    </Card>
     </div>
   );
 };
