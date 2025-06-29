@@ -22,11 +22,13 @@ import {
   ReloadOutlined,
   FireOutlined,
   SafetyOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  PlayCircleOutlined
 } from '@ant-design/icons';
 import ArenaCard from './ArenaCard';
 import PlaceArenaModal from './PlaceArenaModal';
 import ChallengeModal from './ChallengeModal';
+import { formatTime } from '../utils/timeUtils';
 import BattleAnimation from './BattleAnimation';
 import ArenaRules from './ArenaRules';
 import {
@@ -35,7 +37,9 @@ import {
   placeInArena,
   challengeArena,
   removeArena,
-  decryptCatStats
+  decryptCatStats,
+  getUserChallengeRecords,
+  QUALITY_NAMES
 } from '../utils/chainOperations';
 import './Arena.css';
 
@@ -46,6 +50,7 @@ const Arena = ({ DFSWallet, accountName }) => {
   const [loading, setLoading] = useState(false);
   const [arenas, setArenas] = useState([]);
   const [userCats, setUserCats] = useState([]);
+  const [challengeRecords, setChallengeRecords] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   
   // 模态框状态
@@ -56,6 +61,18 @@ const Arena = ({ DFSWallet, accountName }) => {
   // 战斗动画状态
   const [battleAnimationVisible, setBattleAnimationVisible] = useState(false);
   const [battleData, setBattleData] = useState(null);
+
+  // 品质颜色映射
+  const QUALITY_COLORS = {
+    0: '#8c8c8c',  // 普通 - 灰色
+    1: '#52c41a',  // 精良 - 绿色
+    2: '#1890ff',  // 卓越 - 蓝色
+    3: '#722ed1',  // 非凡 - 紫色
+    4: '#f5222d',  // 至尊 - 红色
+    5: '#fa8c16',  // 神圣 - 橙色
+    6: '#eb2f96',  // 永恒 - 粉色
+    7: '#fadb14'   // 传世 - 金色
+  };
 
   // 规则说明状态
   const [rulesVisible, setRulesVisible] = useState(false);
@@ -166,13 +183,15 @@ const Arena = ({ DFSWallet, accountName }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [arenasData, catsData] = await Promise.all([
+      const [arenasData, catsData, challengeData] = await Promise.all([
         getArenas(DFSWallet),
-        getUserCats(DFSWallet, accountName)
+        getUserCats(DFSWallet, accountName),
+        getUserChallengeRecords(DFSWallet, accountName)
       ]);
-      
+
       setArenas(arenasData || []);
       setUserCats(catsData || []);
+      setChallengeRecords(challengeData || []);
     } catch (error) {
       console.error('加载擂台数据失败:', error);
       message.error('加载擂台数据失败');
@@ -271,6 +290,55 @@ const Arena = ({ DFSWallet, accountName }) => {
       message.error('移除擂台失败: ' + (error.message || '未知错误'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 处理战斗回放
+  const handleBattleReplay = async (record) => {
+    try {
+      if (!record.challengerCat || !record.defenderCat) {
+        message.warning('缺少猫咪数据，无法回放战斗');
+        return;
+      }
+
+      // 获取两只猫咪的属性数据
+      const [challengerStats, defenderStats] = await Promise.all([
+        decryptCatStats(DFSWallet, record.challenger_cat_id),
+        decryptCatStats(DFSWallet, record.defender_cat_id)
+      ]);
+
+      // 模拟战斗结果数据
+      const battleInfo = {
+        challengerWins: record.victory,
+        challengerPower: challengerStats ?
+          challengerStats.attack + challengerStats.defense + challengerStats.health +
+          challengerStats.critical + challengerStats.dodge + challengerStats.luck : 300,
+        defenderPower: defenderStats ?
+          defenderStats.attack + defenderStats.defense + defenderStats.health +
+          defenderStats.critical + defenderStats.dodge + defenderStats.luck : 300,
+        arenaCatId: record.defender_cat_id,
+        betLevel: record.challenge_level
+      };
+
+      // 设置战斗数据并显示动画
+      setBattleData({
+        challengerCat: record.challengerCat,
+        arenaCat: record.defenderCat,
+        challengerStats: challengerStats || {
+          attack: 50, defense: 50, health: 50,
+          critical: 50, dodge: 50, luck: 50
+        },
+        arenaStats: defenderStats || {
+          attack: 50, defense: 50, health: 50,
+          critical: 50, dodge: 50, luck: 50
+        },
+        battleResult: battleInfo
+      });
+
+      setBattleAnimationVisible(true);
+    } catch (error) {
+      console.error('准备战斗回放失败:', error);
+      message.error('战斗回放失败');
     }
   };
 
@@ -412,6 +480,113 @@ const Arena = ({ DFSWallet, accountName }) => {
     );
   };
 
+  // 渲染挑战记录列表
+  const renderChallengeRecords = () => {
+    if (challengeRecords.length === 0) {
+      return (
+        <Empty
+          description="您还没有挑战记录"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
+      );
+    }
+
+    const betLevelNames = ['初级擂台', '中级擂台', '高级擂台'];
+    const betLevelColors = ['#52c41a', '#1890ff', '#f5222d'];
+
+    return (
+      <Row gutter={[16, 16]}>
+        {challengeRecords.map(record => (
+          <Col xs={24} sm={12} lg={8} key={record.challenge_id}>
+            <Card
+              size="small"
+              style={{
+                borderColor: record.victory ? '#52c41a' : '#ff4d4f',
+                borderWidth: 2
+              }}
+              styles={{ body: { padding: '12px' } }}
+            >
+              <div style={{ marginBottom: '8px' }}>
+                <Space>
+                  <Tag color={record.victory ? 'success' : 'error'}>
+                    {record.victory ? '胜利' : '失败'}
+                  </Tag>
+                  <Tag color={betLevelColors[record.challenge_level]}>
+                    {betLevelNames[record.challenge_level]}
+                  </Tag>
+                </Space>
+              </div>
+
+              <div style={{ marginBottom: '8px' }}>
+                <Text strong>挑战者: </Text>
+                <Text>#{record.challenger_cat_id}</Text>
+                {record.challengerCat && (
+                  <Tag
+                    size="small"
+                    style={{
+                      backgroundColor: QUALITY_COLORS[record.challengerCat.quality] || QUALITY_COLORS[0],
+                      color: 'white',
+                      border: 'none',
+                      marginLeft: '8px'
+                    }}
+                  >
+                    {QUALITY_NAMES[record.challengerCat.quality] || '普通'}
+                  </Tag>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '8px' }}>
+                <Text strong>守护者: </Text>
+                <Text>#{record.defender_cat_id}</Text>
+                {record.defenderCat && (
+                  <Tag
+                    size="small"
+                    style={{
+                      backgroundColor: QUALITY_COLORS[record.defenderCat.quality] || QUALITY_COLORS[0],
+                      color: 'white',
+                      border: 'none',
+                      marginLeft: '8px'
+                    }}
+                  >
+                    {QUALITY_NAMES[record.defenderCat.quality] || '普通'}
+                  </Tag>
+                )}
+                <br />
+                <Text type="secondary">主人: {record.defender_account}</Text>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <Text strong>擂台ID: </Text>
+                <Text>{record.arena_id}</Text>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  {formatTime(record.created_at)}
+                </Text>
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlayCircleOutlined />}
+                  onClick={() => handleBattleReplay(record)}
+                  style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none'
+                  }}
+                >
+                  战斗回放
+                </Button>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    );
+  };
+
   // 渲染擂台列表
   const renderArenaList = () => {
     const filteredArenas = getFilteredArenas();
@@ -527,6 +702,11 @@ const Arena = ({ DFSWallet, accountName }) => {
           <TabPane tab="我的擂台" key="my">
             <Spin spinning={loading}>
               {renderArenaList()}
+            </Spin>
+          </TabPane>
+          <TabPane tab="我的挑战" key="challenges">
+            <Spin spinning={loading}>
+              {renderChallengeRecords()}
             </Spin>
           </TabPane>
      

@@ -1795,6 +1795,98 @@ async function getMarketStats(wallet) {
 
 // ========== 擂台系统函数 ==========
 
+// 获取用户的挑战记录
+async function getUserChallengeRecords(wallet, accountName) {
+  try {
+    console.log(`正在获取用户 ${accountName} 的挑战记录...`);
+
+    // 先尝试获取所有记录，然后在前端过滤
+    const challengeRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      'arenachals',
+      '', // lower_bound
+      '', // upper_bound
+      1, // index_position - 主键索引
+      'i64', // key_type
+      1000 // limit
+    );
+
+    if (challengeRows && challengeRows.length > 0) {
+      console.log(`获取到 ${challengeRows.length} 条总挑战记录`);
+
+      // 过滤出当前用户的挑战记录
+      const userChallengeRows = challengeRows.filter(record =>
+        record.challenger_account === accountName
+      );
+
+      console.log(`找到 ${userChallengeRows.length} 条用户挑战记录`);
+
+      if (userChallengeRows.length === 0) {
+        return [];
+      }
+
+      // 获取相关猫咪和擂台信息
+      const recordsWithDetails = await Promise.all(
+        userChallengeRows.map(async (record) => {
+          try {
+            // 获取挑战者猫咪信息
+            const challengerCatRows = await getTableRows(
+              wallet,
+              CONTRACT,
+              CONTRACT,
+              CATTABLE,
+              record.challenger_cat_id.toString(),
+              record.challenger_cat_id.toString(),
+              1,
+              'i64',
+              1
+            );
+
+            // 获取守护者猫咪信息
+            const defenderCatRows = await getTableRows(
+              wallet,
+              CONTRACT,
+              CONTRACT,
+              CATTABLE,
+              record.defender_cat_id.toString(),
+              record.defender_cat_id.toString(),
+              1,
+              'i64',
+              1
+            );
+
+            return {
+              ...record,
+              challengerCat: challengerCatRows && challengerCatRows.length > 0 ? challengerCatRows[0] : null,
+              defenderCat: defenderCatRows && defenderCatRows.length > 0 ? defenderCatRows[0] : null
+            };
+          } catch (error) {
+            console.error(`获取挑战记录 ${record.challenge_id} 的详细信息失败:`, error);
+            return {
+              ...record,
+              challengerCat: null,
+              defenderCat: null
+            };
+          }
+        })
+      );
+
+      // 按时间降序排序
+      recordsWithDetails.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      return recordsWithDetails;
+    } else {
+      console.log('未找到挑战记录');
+      return [];
+    }
+  } catch (error) {
+    console.error('获取挑战记录失败:', error);
+    return [];
+  }
+}
+
 // 获取所有擂台信息
 async function getArenas(wallet) {
   try {
@@ -2473,6 +2565,9 @@ export {
   getInviteInfo,
   getInviteList,
   getInviteCodeInfo,
+
+  // 擂台挑战记录函数
+  getUserChallengeRecords,
 
   // 常量导出
   QUALITY_NAMES,

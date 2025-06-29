@@ -77,7 +77,7 @@ function CatCard({
               border: 'none'
             }}
           >
-            {cat.qualityName || QUALITY_NAMES[cat.quality] || '普通'}
+            {QUALITY_NAMES[cat.quality] || '普通'}
           </Tag>
         </div>
 
@@ -171,7 +171,7 @@ function CatCard({
                   border: 'none'
                 }}
               >
-                {cat.qualityName || QUALITY_NAMES[cat.quality] || '普通'}
+                {QUALITY_NAMES[cat.quality] || '普通'}
               </Tag>
             </div>
           </div>
