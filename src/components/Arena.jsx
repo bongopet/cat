@@ -302,26 +302,49 @@ const Arena = ({ DFSWallet, accountName }) => {
         return;
       }
 
-      // 获取两只猫咪的属性数据
-      const [challengerStats, defenderStats] = await Promise.all([
-        decryptCatStats(DFSWallet, record.challenger_cat_id),
-        decryptCatStats(DFSWallet, record.defender_cat_id)
-      ]);
+      // 使用与实际挑战相同的属性解密方法
+      const challengerStats = decryptCatStats(
+        record.challengerCat.encrypted_stats,
+        record.challengerCat.encrypted_stats_high,
+        record.challengerCat.id
+      );
 
-      // 模拟战斗结果数据
+      const defenderStats = decryptCatStats(
+        record.defenderCat.encrypted_stats,
+        record.defenderCat.encrypted_stats_high,
+        record.defenderCat.id
+      );
+
+      console.log('战斗回放数据:', {
+        challengerCat: record.challengerCat.id,
+        defenderCat: record.defenderCat.id,
+        challengerStats,
+        defenderStats,
+        victory: record.victory,
+        timestamp: record.created_at
+      });
+
+      // 构建与实际挑战相同格式的战斗结果数据
       const battleInfo = {
-        challengerWins: record.victory,
+        challengerCatId: record.challenger_cat_id,
+        arenaCatId: record.defender_cat_id,
+        betLevel: record.challenge_level,
+        winner: record.victory ? 'challenger' : 'arena',
+        result: record.victory ? 'victory' : 'defeat',
+        // 添加战力信息用于动画计算
         challengerPower: challengerStats ?
           challengerStats.attack + challengerStats.defense + challengerStats.health +
           challengerStats.critical + challengerStats.dodge + challengerStats.luck : 300,
         defenderPower: defenderStats ?
           defenderStats.attack + defenderStats.defense + defenderStats.health +
           defenderStats.critical + defenderStats.dodge + defenderStats.luck : 300,
-        arenaCatId: record.defender_cat_id,
-        betLevel: record.challenge_level
+        // 添加回放标识，让动画组件知道这是回放
+        isReplay: true,
+        // 使用挑战记录的时间戳作为随机种子，确保回放一致性
+        randomSeed: new Date(record.created_at).getTime()
       };
 
-      // 设置战斗数据并显示动画
+      // 使用与实际挑战相同的数据结构设置战斗数据
       setBattleData({
         challengerCat: record.challengerCat,
         arenaCat: record.defenderCat,

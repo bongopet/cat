@@ -49,6 +49,23 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   const [feedingStates, setFeedingStates] = useState({}); // 跟踪每只猫的DFS喂养状态
   const [attributeModalVisible, setAttributeModalVisible] = useState(false); // 属性弹窗状态
 
+  // 品质颜色映射 - 与其他组件保持一致
+  const QUALITY_COLORS = {
+    0: '#8c8c8c',  // 普通 - 灰色
+    1: '#52c41a',  // 精良 - 绿色
+    2: '#1890ff',  // 卓越 - 蓝色
+    3: '#722ed1',  // 非凡 - 紫色
+    4: '#f5222d',  // 至尊 - 红色
+    5: '#fa8c16',  // 神圣 - 橙色
+    6: '#eb2f96',  // 永恒 - 粉色
+    7: '#fadb14'   // 传世 - 金色
+  };
+
+  // 获取品质颜色
+  const getQualityColor = (quality) => {
+    return QUALITY_COLORS[quality] || QUALITY_COLORS[0];
+  };
+
   // Calculate exp progress percentage
   const getExpProgressPercent = (exp, level) => {
     // Next level total exp required
@@ -568,7 +585,11 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <Tag color={selectedCat.gender === 0 ? 'geekblue' : 'magenta'}>
                       {GENDER_NAMES[selectedCat.gender] || '未知'}
                     </Tag>
-                    <Tag color="gold">
+                    <Tag style={{
+                      backgroundColor: getQualityColor(selectedCat.quality),
+                      color: 'white',
+                      border: 'none'
+                    }}>
                       {QUALITY_NAMES[selectedCat.quality] || '普通'}
                     </Tag>
                     <Tag color="orange">

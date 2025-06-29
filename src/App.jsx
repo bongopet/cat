@@ -784,53 +784,56 @@ function App() {
             </div>
           ) : (
             <div className="connect-prompt">
-              <div className="connect-hero">
-                <div className="connect-cat-image">
-                  <img
-                    // src={`${basePath}images/logo.png`}
-                    src={`/cat/images/logo.png`}
-                    alt="猫星球"
-                    className="hero-cat-image"
-                  />
-                </div>
-                <div className="connect-text">
-                  <h1>欢迎来到猫星球</h1>
-                  <p>连接您的DFS钱包，开始您的养猫之旅！</p>
-                  <Button
-                    type="primary"
-                    size="large"
-                    onClick={showWalletSelector}
-                    loading={connecting}
-                    icon={<WalletOutlined />}
-                  >
-                    连接DFS钱包
-                  </Button>
-                </div>
-              </div>
+          
               <div className="connect-features">
                 <div className="feature-item">
                   <div className="feature-icon">
                     <img src="/cat/images/Cat.svg" alt="猫咪" className="feature-icon-image" />
                   </div>
                   <h3>收集猫咪</h3>
-                  <p>铸造独特的猫咪，每只猫咪都有自己的特性和属性</p>
+                  <p>繁殖独特的猫咪，8种品质等级，每只都有独特基因和属性</p>
+                </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <span className="feature-icon-symbol">⚔️</span>
+                  </div>
+                  <h3>擂台对战</h3>
+                  <p>将猫咪放置在擂台上，接受其他玩家的挑战，赢取DFS奖励</p>
+                </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <span className="feature-icon-symbol">🎯</span>
+                  </div>
+                  <h3>邀请系统</h3>
+                  <p>创建邀请码邀请新用户，获得邀请奖励和持续收益分成</p>
                 </div>
                 <div className="feature-item">
                   <div className="feature-icon">
                     <span className="feature-icon-symbol">🏆</span>
                   </div>
                   <h3>提升等级</h3>
-                  <p>通过喂养和互动提升您的猫咪等级，增强属性</p>
+                  <p>使用猫币和DFS喂养猫咪，提升等级和属性，增强战斗力</p>
                 </div>
                 <div className="feature-item">
                   <div className="feature-icon">
                     <span className="feature-icon-symbol">💰</span>
                   </div>
                   <h3>市场交易</h3>
-                  <p>未来您可以在市场上买卖猫咪，赚取收益</p>
+                  <p>在市场上买卖猫咪，发现稀有品质，建立您的猫咪收藏</p>
+                </div>
+                <div className="feature-item">
+                  <div className="feature-icon">
+                    <span className="feature-icon-symbol">👑</span>
+                  </div>
+                  <h3>传世猫池</h3>
+                  <p>拥有传世品质猫咪可每日领取特殊奖励，享受顶级收益</p>
                 </div>
               </div>
-            </div>
+
+                 
+                
+              </div>
+            
           )}
         </Content>
       </Layout>

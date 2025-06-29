@@ -13,14 +13,31 @@ import CatRenderer from './CatRenderer';
 import { QUALITY_NAMES, GENDER_NAMES } from '../utils/chainOperations';
 import './BattleAnimation.css';
 
-const BattleAnimation = ({ 
-  visible, 
-  challengerCat, 
-  arenaCat, 
-  challengerStats, 
-  arenaStats, 
-  battleResult, 
-  onClose 
+// 品质颜色映射 - 与其他组件保持一致
+const QUALITY_COLORS = {
+  0: '#8c8c8c',  // 普通 - 灰色
+  1: '#52c41a',  // 精良 - 绿色
+  2: '#1890ff',  // 卓越 - 蓝色
+  3: '#722ed1',  // 非凡 - 紫色
+  4: '#f5222d',  // 至尊 - 红色
+  5: '#fa8c16',  // 神圣 - 橙色
+  6: '#eb2f96',  // 永恒 - 粉色
+  7: '#fadb14'   // 传世 - 金色
+};
+
+// 获取品质颜色
+const getQualityColor = (quality) => {
+  return QUALITY_COLORS[quality] || QUALITY_COLORS[0];
+};
+
+const BattleAnimation = ({
+  visible,
+  challengerCat,
+  arenaCat,
+  challengerStats,
+  arenaStats,
+  battleResult,
+  onClose
 }) => {
   const [currentPhase, setCurrentPhase] = useState('intro'); // intro -> battle -> result
   const [challengerHP, setChallengerHP] = useState(100);
@@ -28,6 +45,15 @@ const BattleAnimation = ({
   const [currentRound, setCurrentRound] = useState(0);
   const [battleLog, setBattleLog] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // 简单的伪随机数生成器，用于确保回放一致性
+  const createSeededRandom = (seed) => {
+    let currentSeed = seed;
+    return () => {
+      currentSeed = (currentSeed * 9301 + 49297) % 233280;
+      return currentSeed / 233280;
+    };
+  };
 
   // 重置动画状态并自动开始战斗
   useEffect(() => {
@@ -49,29 +75,29 @@ const BattleAnimation = ({
   }, [visible, challengerStats, arenaStats]);
 
   // 计算伤害
-  const calculateDamage = (attacker, defender) => {
+  const calculateDamage = (attacker, defender, randomFunc = Math.random) => {
     const baseAttack = attacker.attack || 0;
     const defense = defender.defense || 0;
     const critical = attacker.critical || 0;
     const dodge = defender.dodge || 0;
-    
+
     // 基础伤害计算
     let damage = Math.max(1, baseAttack - defense * 0.5);
-    
+
     // 暴击判定 (暴击值/255 的概率)
     const criticalChance = critical / 255;
-    const isCritical = Math.random() < criticalChance;
+    const isCritical = randomFunc() < criticalChance;
     if (isCritical) {
       damage *= 1.5;
     }
-    
+
     // 闪避判定 (闪避值/255 的概率)
     const dodgeChance = dodge / 255;
-    const isDodged = Math.random() < dodgeChance;
+    const isDodged = randomFunc() < dodgeChance;
     if (isDodged) {
       damage = 0;
     }
-    
+
     return {
       damage: Math.round(damage),
       isCritical,
@@ -97,19 +123,25 @@ const BattleAnimation = ({
       // 根据battleResult决定谁应该获胜
       const challengerWins = battleResult.winner === 'challenger';
 
+      // 如果是回放且有随机种子，使用种子随机数确保一致性
+      let randomFunc = Math.random;
+      if (battleResult.isReplay && battleResult.randomSeed) {
+        randomFunc = createSeededRandom(battleResult.randomSeed);
+      }
+
       // 预先计算每回合的伤害，确保双方都会受伤但结果正确
-      const totalRounds = Math.min(maxRounds, minRounds + Math.floor(Math.random() * 3)); // 5-8回合
+      const totalRounds = Math.min(maxRounds, minRounds + Math.floor(randomFunc() * 3)); // 5-8回合
 
       // 计算总伤害分配
       let challengerTotalDamage, arenaTotalDamage;
       if (challengerWins) {
         // 挑战者获胜：擂台猫死亡，挑战者剩余10-40血
         challengerTotalDamage = 100; // 对擂台猫造成100伤害
-        arenaTotalDamage = 60 + Math.floor(Math.random() * 30); // 对挑战者造成60-90伤害
+        arenaTotalDamage = 60 + Math.floor(randomFunc() * 30); // 对挑战者造成60-90伤害
       } else {
         // 擂台猫获胜：挑战者死亡，擂台猫剩余10-40血
         arenaTotalDamage = 100; // 对挑战者造成100伤害
-        challengerTotalDamage = 60 + Math.floor(Math.random() * 30); // 对擂台猫造成60-90伤害
+        challengerTotalDamage = 60 + Math.floor(randomFunc() * 30); // 对擂台猫造成60-90伤害
       }
 
       // 将总伤害分配到各个回合
@@ -121,8 +153,8 @@ const BattleAnimation = ({
         const baseChallengerDamage = Math.floor(challengerTotalDamage / totalRounds);
         const baseArenaDamage = Math.floor(arenaTotalDamage / totalRounds);
 
-        challengerDamagePerRound.push(baseChallengerDamage + Math.floor(Math.random() * 6) - 3); // ±3随机
-        arenaDamagePerRound.push(baseArenaDamage + Math.floor(Math.random() * 6) - 3); // ±3随机
+        challengerDamagePerRound.push(baseChallengerDamage + Math.floor(randomFunc() * 6) - 3); // ±3随机
+        arenaDamagePerRound.push(baseArenaDamage + Math.floor(randomFunc() * 6) - 3); // ±3随机
       }
 
       // 调整最后一回合的伤害，确保总伤害正确
@@ -137,7 +169,7 @@ const BattleAnimation = ({
         const roundIndex = round - 1;
 
         // 挑战者攻击
-        const challengerAttack = calculateDamage(challengerStats, arenaStats);
+        const challengerAttack = calculateDamage(challengerStats, arenaStats, randomFunc);
         const actualChallengerDamage = Math.max(1, challengerDamagePerRound[roundIndex]);
 
         arenaCurrentHP = Math.max(0, arenaCurrentHP - actualChallengerDamage);
@@ -158,7 +190,7 @@ const BattleAnimation = ({
         }
 
         // 擂台猫咪反击
-        const arenaAttack = calculateDamage(arenaStats, challengerStats);
+        const arenaAttack = calculateDamage(arenaStats, challengerStats, randomFunc);
         const actualArenaDamage = Math.max(1, arenaDamagePerRound[roundIndex]);
 
         challengerCurrentHP = Math.max(0, challengerCurrentHP - actualArenaDamage);
@@ -263,7 +295,14 @@ const BattleAnimation = ({
             <Tag color={challengerCat.gender === 0 ? 'geekblue' : 'magenta'} style={{ fontSize: '12px', padding: '2px 6px', margin: '2px' }}>
               {GENDER_NAMES[challengerCat.gender]}
             </Tag>
-            <Tag color="gold" style={{ fontSize: '12px', padding: '2px 6px', margin: '2px' }}>
+            <Tag style={{
+              backgroundColor: getQualityColor(challengerCat.quality),
+              color: 'white',
+              border: 'none',
+              fontSize: '12px',
+              padding: '2px 6px',
+              margin: '2px'
+            }}>
               {QUALITY_NAMES[challengerCat.quality]}
             </Tag>
           </div>
@@ -312,7 +351,14 @@ const BattleAnimation = ({
             <Tag color={arenaCat.gender === 0 ? 'geekblue' : 'magenta'} style={{ fontSize: '12px', padding: '2px 6px', margin: '2px' }}>
               {GENDER_NAMES[arenaCat.gender]}
             </Tag>
-            <Tag color="gold" style={{ fontSize: '12px', padding: '2px 6px', margin: '2px' }}>
+            <Tag style={{
+              backgroundColor: getQualityColor(arenaCat.quality),
+              color: 'white',
+              border: 'none',
+              fontSize: '12px',
+              padding: '2px 6px',
+              margin: '2px'
+            }}>
               {QUALITY_NAMES[arenaCat.quality]}
             </Tag>
           </div>
@@ -373,7 +419,14 @@ const BattleAnimation = ({
             <Tag color={challengerCat.gender === 0 ? 'geekblue' : 'magenta'} style={{ fontSize: '11px', padding: '1px 4px', margin: '1px' }}>
               {GENDER_NAMES[challengerCat.gender]}
             </Tag>
-            <Tag color="gold" style={{ fontSize: '11px', padding: '1px 4px', margin: '1px' }}>
+            <Tag style={{
+              backgroundColor: getQualityColor(challengerCat.quality),
+              color: 'white',
+              border: 'none',
+              fontSize: '11px',
+              padding: '1px 4px',
+              margin: '1px'
+            }}>
               {QUALITY_NAMES[challengerCat.quality]}
             </Tag>
           </div>
@@ -441,7 +494,14 @@ const BattleAnimation = ({
             <Tag color={arenaCat.gender === 0 ? 'geekblue' : 'magenta'} style={{ fontSize: '11px', padding: '1px 4px', margin: '1px' }}>
               {GENDER_NAMES[arenaCat.gender]}
             </Tag>
-            <Tag color="gold" style={{ fontSize: '11px', padding: '1px 4px', margin: '1px' }}>
+            <Tag style={{
+              backgroundColor: getQualityColor(arenaCat.quality),
+              color: 'white',
+              border: 'none',
+              fontSize: '11px',
+              padding: '1px 4px',
+              margin: '1px'
+            }}>
               {QUALITY_NAMES[arenaCat.quality]}
             </Tag>
           </div>

@@ -107,10 +107,21 @@ const ChallengeModal = ({
     });
   };
 
+  // 品质颜色映射 - 与统计页面保持一致
+  const QUALITY_COLORS = {
+    0: '#8c8c8c',  // 普通 - 灰色
+    1: '#52c41a',  // 精良 - 绿色
+    2: '#1890ff',  // 卓越 - 蓝色
+    3: '#722ed1',  // 非凡 - 紫色
+    4: '#f5222d',  // 至尊 - 红色
+    5: '#fa8c16',  // 神圣 - 橙色
+    6: '#eb2f96',  // 永恒 - 粉色
+    7: '#fadb14'   // 传世 - 金色
+  };
+
   // 获取品质颜色
   const getQualityColor = (quality) => {
-    const colors = ['#d9d9d9', '#52c41a', '#1890ff', '#722ed1', '#eb2f96', '#fa8c16', '#f5222d', '#fa541c'];
-    return colors[quality] || '#d9d9d9';
+    return QUALITY_COLORS[quality] || QUALITY_COLORS[0];
   };
 
   const availableCats = getAvailableCats();
