@@ -2244,12 +2244,12 @@ async function getPoolInfo(wallet) {
       }
     }
 
-    // 查询所有猫咪，统计传世猫拥有者数量
-    const catsRows = await getTableRows(
+    // 查询传世猫记录表（优化版本）
+    const legendaryCatsRows = await getTableRows(
       wallet,
       CONTRACT,
       CONTRACT,
-      CATTABLE,
+      'legcats21s', // 新的传世猫记录表
       null, // lower_bound
       null, // upper_bound
       1, // index_position - 主键索引
@@ -2257,30 +2257,32 @@ async function getPoolInfo(wallet) {
       1000 // limit
     );
 
-    console.log('猫咪表查询结果:', catsRows);
+    console.log('传世猫记录表查询结果:', legendaryCatsRows);
 
-    // 统计传世猫拥有者
+    // 统计传世猫拥有者和总数
     const legendaryOwners = new Set();
-    if (catsRows) {
-      catsRows.forEach(cat => {
-        if (cat.quality === 7) { // LEGENDARY = 7
-          legendaryOwners.add(cat.owner);
-        }
+    let totalLegendaryCats = 0;
+
+    if (legendaryCatsRows) {
+      legendaryCatsRows.forEach(legCat => {
+        legendaryOwners.add(legCat.owner);
+        totalLegendaryCats++;
       });
     }
 
     const legendaryOwnerCount = legendaryOwners.size;
     const totalDFSAmount = parseFloat(totalDFS) || 0;
     const totalDailyReward = (totalDFSAmount * 0.01).toFixed(8); // 1%
-    const individualDailyReward = legendaryOwnerCount > 0
-      ? (totalDFSAmount * 0.01 / legendaryOwnerCount).toFixed(8)
+    const perCatReward = totalLegendaryCats > 0
+      ? (totalDFSAmount * 0.01 / totalLegendaryCats).toFixed(8)
       : '0.00000000';
 
     const poolData = {
       totalDFS: totalDFSAmount.toFixed(8),
       totalDailyReward,
-      individualDailyReward,
+      perCatReward, // 每只传世猫的奖励
       legendaryOwnerCount,
+      totalLegendaryCats, // 传世猫总数
       poolId
     };
 
@@ -2292,8 +2294,9 @@ async function getPoolInfo(wallet) {
     return {
       totalDFS: '0.00000000',
       totalDailyReward: '0.00000000',
-      individualDailyReward: '0.00000000',
+      perCatReward: '0.00000000',
       legendaryOwnerCount: 0,
+      totalLegendaryCats: 0,
       poolId: 1
     };
   }
@@ -2301,89 +2304,73 @@ async function getPoolInfo(wallet) {
 
 // 删除不再需要的解析函数
 
-// 获取用户传世猫信息
+// 获取用户传世猫信息（优化版本）
 async function getMyLegendaryInfo(wallet, accountName) {
   try {
-    console.log('获取用户传世猫信息...', accountName);
+    console.log('获取用户传世猫信息（优化版本）...', accountName);
 
-    // 查询所有猫咪，然后过滤用户的传世猫
-    const catsRows = await getTableRows(
+    // 查询传世猫记录表，按拥有者过滤
+    const legendaryCatsRows = await getTableRows(
       wallet,
       CONTRACT,
       CONTRACT,
-      CATTABLE,
-      '', // lower_bound
-      '', // upper_bound
-      1, // index_position - 主键索引
-      'i64', // key_type
-      1000 // limit - 增加限制以获取更多数据
+      'legcats21s', // 传世猫记录表
+      accountName, // lower_bound - 用户名
+      accountName, // upper_bound - 用户名
+      2, // index_position - byowner索引
+      'name', // key_type
+      100 // limit
     );
 
-    console.log('用户猫咪查询结果:', catsRows);
+    console.log('用户传世猫记录查询结果:', legendaryCatsRows);
 
-    // 详细调试：显示所有猫咪的品质信息
-    if (catsRows && catsRows.length > 0) {
-      console.log('用户所有猫咪的品质信息:');
-      catsRows.forEach(cat => {
-        console.log(`猫咪#${cat.id}: owner=${cat.owner}, quality=${cat.quality}, qualityName=${QUALITY_NAMES[cat.quality] || '未知'}`);
-      });
-    }
+    // 过滤属于该用户的传世猫
+    const userLegendaryCats = legendaryCatsRows ?
+      legendaryCatsRows.filter(legCat => legCat.owner === accountName) : [];
 
-    // 查找传世猫
-    let legendaryCat = null;
-    if (catsRows) {
-      // 先查找该用户的所有猫咪
-      const userCats = catsRows.filter(cat => cat.owner === accountName);
-      console.log(`用户${accountName}的所有猫咪(${userCats.length}只):`, userCats);
+    console.log(`用户${accountName}的传世猫咪(${userLegendaryCats.length}只):`, userLegendaryCats);
 
-      // 在用户的猫咪中查找传世猫
-      legendaryCat = userCats.find(cat => cat.quality === 7); // LEGENDARY = 7
-
-      // 额外调试：查找所有传世品质的猫咪（不限制owner）
-      const allLegendaryCats = catsRows.filter(cat => cat.quality === 7);
-      console.log(`所有传世猫咪(${allLegendaryCats.length}只):`, allLegendaryCats);
-
-      // 查找该用户拥有的传世猫
-      const userLegendaryCats = userCats.filter(cat => cat.quality === 7);
-      console.log(`用户${accountName}的传世猫咪(${userLegendaryCats.length}只):`, userLegendaryCats);
-    }
-
-    if (!legendaryCat) {
+    if (userLegendaryCats.length === 0) {
       console.log(`用户${accountName}没有传世猫`);
       return {
         hasLegendary: false,
-        catId: 0,
+        legendaryCount: 0,
+        catIds: [],
         canClaim: false,
         totalClaimed: '0.00000000',
         claimCount: 0,
-        lastClaimDay: 'Never'
+        lastClaimDay: 'Never',
+        userDailyReward: '0.00000000'
       };
     }
 
-    console.log('找到传世猫:', legendaryCat);
+    console.log('找到用户传世猫:', userLegendaryCats);
 
-    // 查询每日领取记录
-    const claimsRows = await getTableRows(
+    // 获取池子信息以计算用户奖励
+    const poolInfo = await getPoolInfo(wallet);
+    const userDailyReward = userLegendaryCats.length > 0 && poolInfo.perCatReward
+      ? (parseFloat(poolInfo.perCatReward) * userLegendaryCats.length).toFixed(8)
+      : '0.00000000';
+
+    // 查询用户每日领取记录（新的用户记录表）
+    const userClaimsRows = await getTableRows(
       wallet,
       CONTRACT,
       CONTRACT,
-      'dailyclaim1s',
-      null, // lower_bound
-      null, // upper_bound
+      'userclaim1s', // 新的用户领取记录表
+      accountName, // lower_bound - 用户名
+      accountName, // upper_bound - 用户名
       1, // index_position - 主键索引
-      'i64', // key_type
-      1000 // limit
+      'name', // key_type
+      1 // limit
     );
 
-    console.log('每日领取记录查询结果:', claimsRows);
+    console.log('用户领取记录查询结果:', userClaimsRows);
 
-    // 查找该传世猫的领取记录（新表结构：以cat_id为主键）
-    let claimRecord = null;
-    if (claimsRows) {
-      claimRecord = claimsRows.find(claim =>
-        claim.legendary_cat_id === legendaryCat.id
-      );
-    }
+    // 获取用户的领取记录
+    const userClaimRecord = userClaimsRows && userClaimsRows.length > 0 ? userClaimsRows[0] : null;
+
+    console.log('用户领取记录:', userClaimRecord);
 
     // 计算是否可以领取（基于时间比较）
     const currentTime = new Date();
@@ -2391,41 +2378,39 @@ async function getMyLegendaryInfo(wallet, accountName) {
 
     let canClaim = true;
     let totalClaimed = '0.00000000';
-    let claimCount = 0;
+    let totalClaimCount = 0;
     let lastClaimDay = 'Never';
 
-    if (claimRecord) {
-      totalClaimed = claimRecord.total_claimed || '0.00000000';
-      claimCount = claimRecord.claim_count || 0;
+    // 处理用户领取记录
+    if (userClaimRecord) {
+      // 获取总领取金额
+      const claimedAmount = userClaimRecord.total_claimed || '0.00000000';
+      const cleanAmount = typeof claimedAmount === 'string' && claimedAmount.includes(' DFS')
+        ? claimedAmount.replace(' DFS', '')
+        : claimedAmount;
+      totalClaimed = parseFloat(cleanAmount).toFixed(8);
 
-      // 处理ISO格式的时间字符串 "2025-06-27T07:56:09"
-      if (claimRecord.last_claim_time) {
-        // 使用时间工具函数格式化显示
-        lastClaimDay = formatTime(claimRecord.last_claim_time);
+      // 获取领取次数
+      totalClaimCount = userClaimRecord.claim_count || 0;
 
-        // 计算上次领取的日期（UTC日期转换为天数）
-        const lastClaimDate = new Date(claimRecord.last_claim_time + 'Z');
-        const lastClaimDateDay = Math.floor(lastClaimDate.getTime() / (86400 * 1000));
-
-        // 如果上次领取是今天，则不能再领取
+      // 检查是否可以领取（基于最新的领取时间）
+      if (userClaimRecord.last_claim_time) {
+        const claimTime = new Date(userClaimRecord.last_claim_time + 'Z');
+        lastClaimDay = formatTime(userClaimRecord.last_claim_time);
+        const lastClaimDateDay = Math.floor(claimTime.getTime() / (86400 * 1000));
         canClaim = lastClaimDateDay < currentDay;
-      } else {
-        lastClaimDay = 'Never';
-      }
-
-      // 移除DFS后缀
-      if (typeof totalClaimed === 'string' && totalClaimed.includes(' DFS')) {
-        totalClaimed = totalClaimed.replace(' DFS', '');
       }
     }
 
     const legendaryData = {
       hasLegendary: true,
-      catId: legendaryCat.id,
+      legendaryCount: userLegendaryCats.length,
+      catIds: userLegendaryCats.map(cat => cat.cat_id),
       canClaim,
       totalClaimed,
-      claimCount,
-      lastClaimDay: lastClaimDay === 'Never' ? 'Never' : lastClaimDay.toString()
+      claimCount: totalClaimCount,
+      lastClaimDay: lastClaimDay === 'Never' ? 'Never' : lastClaimDay.toString(),
+      userDailyReward
     };
 
     console.log('解析后的传世猫信息:', legendaryData);
@@ -2434,11 +2419,13 @@ async function getMyLegendaryInfo(wallet, accountName) {
     console.error('获取传世猫信息失败:', error);
     return {
       hasLegendary: false,
-      catId: 0,
+      legendaryCount: 0,
+      catIds: [],
       canClaim: false,
       totalClaimed: '0.00000000',
       claimCount: 0,
-      lastClaimDay: 'Never'
+      lastClaimDay: 'Never',
+      userDailyReward: '0.00000000'
     };
   }
 }

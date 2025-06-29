@@ -14,17 +14,20 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
   const [poolInfo, setPoolInfo] = useState({
     totalDFS: '0.00000000',
     totalDailyReward: '0.00000000',
-    individualDailyReward: '0.00000000',
+    perCatReward: '0.00000000',
     legendaryOwnerCount: 0,
+    totalLegendaryCats: 0,
     poolId: 1
   });
   const [legendaryInfo, setLegendaryInfo] = useState({
     hasLegendary: false,
-    catId: 0,
+    legendaryCount: 0,
+    catIds: [],
     canClaim: false,
     totalClaimed: '0.00000000',
     claimCount: 0,
-    lastClaimDay: 'Never'
+    lastClaimDay: 'Never',
+    userDailyReward: '0.00000000'
   });
 
   // 加载池子信息
@@ -43,8 +46,9 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
       setPoolInfo({
         totalDFS: '0.00000000',
         totalDailyReward: '0.00000000',
-        individualDailyReward: '0.00000000',
+        perCatReward: '0.00000000',
         legendaryOwnerCount: 0,
+        totalLegendaryCats: 0,
         poolId: 1
       });
     } finally {
@@ -65,11 +69,13 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
       // 如果没有传世猫或其他错误，设置默认状态
       setLegendaryInfo({
         hasLegendary: false,
-        catId: 0,
+        legendaryCount: 0,
+        catIds: [],
         canClaim: false,
         totalClaimed: '0.00000000',
         claimCount: 0,
-        lastClaimDay: 'Never'
+        lastClaimDay: 'Never',
+        userDailyReward: '0.00000000'
       });
 
       // 只有在非预期错误时才显示错误消息
@@ -101,7 +107,8 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
       const result = await claimDailyReward(wallet, accountName);
 
       if (result.success) {
-        message.success(`每日奖励领取成功！获得 ${result.amount} DFS`);
+        const rewardAmount = legendaryInfo.userDailyReward || result.amount;
+        message.success(`每日奖励领取成功！获得 ${rewardAmount} DFS (${legendaryInfo.legendaryCount}只传世猫)`);
         console.log('领取成功，交易ID:', result.txHash);
 
         // 刷新数据
@@ -162,7 +169,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
               传世猫池
             </h2>
             <p style={{ margin: '4px 0 0 0', color: 'rgba(255, 255, 255, 0.9)' }}>
-              所有传世猫拥有者每日均分池子1%的DFS奖励
+              池子1%的DFS按传世猫数量分配，拥有多只传世猫获得更多奖励
             </p>
           </div>
           <Space>
@@ -202,28 +209,48 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
               />
 
               <Row gutter={16}>
-                <Col span={12}>
+                <Col span={8}>
                   <Statistic
                     title="每日总释放 (1%)"
                     value={poolInfo.totalDailyReward}
                     suffix="DFS"
                     precision={8}
-                    valueStyle={{ color: '#52c41a', fontSize: '16px' }}
+                    valueStyle={{ color: '#52c41a', fontSize: '14px' }}
                   />
                 </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="传世猫总数"
+                    value={poolInfo.totalLegendaryCats}
+                    suffix="只"
+                    valueStyle={{ color: '#faad14', fontSize: '14px' }}
+                  />
+                </Col>
+                <Col span={8}>
+                  <Statistic
+                    title="每猫奖励"
+                    value={poolInfo.perCatReward}
+                    suffix="DFS"
+                    precision={8}
+                    valueStyle={{ color: '#722ed1', fontSize: '14px' }}
+                  />
+                </Col>
+              </Row>
+
+              <Row gutter={16} style={{ marginTop: '16px' }}>
                 <Col span={12}>
                   <Statistic
                     title="传世猫拥有者"
                     value={poolInfo.legendaryOwnerCount}
                     suffix="人"
-                    valueStyle={{ color: '#faad14', fontSize: '16px' }}
+                    valueStyle={{ color: '#1890ff', fontSize: '16px' }}
                   />
                 </Col>
               </Row>
 
               <Statistic
-                title="每人可领取"
-                value={poolInfo.individualDailyReward}
+                title="我的可领取"
+                value={legendaryInfo.hasLegendary ? legendaryInfo.userDailyReward : '0.00000000'}
                 suffix="DFS"
                 precision={8}
                 valueStyle={{ color: '#eb2f96', fontSize: '20px' }}
@@ -243,13 +270,13 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
                   </Text>
                   <Text style={{ fontSize: '12px', color: '#666' }}>
                     • 每日释放池子总量的1%<br/>
-                    • 所有传世猫拥有者均分<br/>
+                    • 按传世猫数量分配奖励<br/>
                     • 每人每天只能领取一次<br/>
-                    • 拥有者越少，每人分得越多
+                    • 拥有多只传世猫获得更多奖励
                   </Text>
-                  {poolInfo.legendaryOwnerCount > 0 && (
+                  {poolInfo.totalLegendaryCats > 0 && (
                     <Text style={{ fontSize: '11px', color: '#52c41a', fontWeight: 'bold' }}>
-                      当前 {poolInfo.legendaryOwnerCount} 人均分，每人可得 {poolInfo.individualDailyReward} DFS
+                      当前 {poolInfo.totalLegendaryCats} 只传世猫，每只可得 {poolInfo.perCatReward} DFS
                     </Text>
                   )}
                 </Space>
@@ -286,8 +313,17 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
             ) : (
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 <div>
+                  <Text strong>拥有传世猫: </Text>
+                  <Text style={{ color: '#faad14', fontSize: '16px' }}>{legendaryInfo.legendaryCount}只</Text>
+                </div>
+
+                <div>
                   <Text strong>传世猫 ID: </Text>
-                  <Text style={{ color: '#faad14', fontSize: '16px' }}>#{legendaryInfo.catId}</Text>
+                  <Text style={{ color: '#faad14', fontSize: '14px' }}>
+                    {legendaryInfo.catIds && legendaryInfo.catIds.length > 0
+                      ? legendaryInfo.catIds.map(id => `#${id}`).join(', ')
+                      : '无'}
+                  </Text>
                 </div>
 
                 <Row gutter={16}>
@@ -332,7 +368,7 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
 
                 {legendaryInfo.canClaim && (
                   <Alert
-                    message={`今日可领取: ${poolInfo.individualDailyReward} DFS`}
+                    message={`今日可领取: ${legendaryInfo.userDailyReward} DFS (${legendaryInfo.legendaryCount}只传世猫)`}
                     type="success"
                     showIcon
                     style={{ marginTop: '8px' }}
@@ -374,9 +410,9 @@ const LegendaryPool = ({ DFSWallet, userInfo }) => {
               border: '1px solid #e8e8e8'
             }}>
               <DollarOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '12px' }} />
-              <h4 style={{ color: '#000000', margin: '8px 0', fontWeight: 'bold' }}>均分奖励</h4>
+              <h4 style={{ color: '#000000', margin: '8px 0', fontWeight: 'bold' }}>按猫分配</h4>
               <p style={{ color: '#333333', margin: 0, fontSize: '14px' }}>
-                所有传世猫拥有者均分池子1%的DFS
+                池子1%的DFS按传世猫数量分配，多猫多得
               </p>
             </div>
           </Col>
