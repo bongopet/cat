@@ -283,7 +283,7 @@ const Arena = ({ DFSWallet, accountName }) => {
     }, 0);
 
     return (
-      <Row gutter={[8, 16]} style={{ marginBottom: 24 }} className="arena-stats">
+      <Row gutter={[4, 16]} style={{ marginBottom: 24 }} className="arena-stats">
         <Col xs={8} sm={8} md={8}>
           <Card>
             <Statistic

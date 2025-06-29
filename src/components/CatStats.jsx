@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Spin, message, Table, Tag, Button, Space } from 'antd';
+import { Card, Spin, message, Table, Tag, Button, Space, Row, Col, Statistic } from 'antd';
 import { BarChartOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getCatStats, QUALITY_NAMES, getCats } from '../utils/chainOperations';
 import './CatStats.css';
@@ -224,36 +224,33 @@ const CatStats = ({ DFSWallet }) => {
         </Space>
       </div>
 
+      {/* 统计信息区域 */}
+      <Row gutter={[4, 16]} style={{ marginBottom: 24 }} className="stats">
+        <Col xs={12} sm={12} md={12} lg={12}>
+          <Card>
+            <Statistic
+              title="统计总量"
+              value={totalCats}
+              prefix={<BarChartOutlined />}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={12} md={12} lg={12}>
+          <Card>
+            <Statistic
+              title="实际总量"
+              value={actualTotalCats}
+              prefix={<BarChartOutlined />}
+              valueStyle={{ color: actualTotalCats !== totalCats ? '#f5222d' : '#52c41a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       {/* 主要内容区域 */}
       <Card>
         <Spin spinning={loading}>
-          {/* 统计概览 */}
-          <div style={{ marginBottom: 16, padding: '16px 0', borderBottom: '1px solid #f0f0f0' }}>
-            <Space size="large">
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1890ff' }}>
-                  {totalCats}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>统计总量</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ 
-                  fontSize: '24px', 
-                  fontWeight: 'bold', 
-                  color: actualTotalCats !== totalCats ? '#f5222d' : '#52c41a' 
-                }}>
-                  {actualTotalCats}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>实际总量</div>
-                {actualTotalCats !== totalCats && (
-                  <div style={{ fontSize: '12px', color: '#f5222d' }}>
-                    差异: {actualTotalCats - totalCats}
-                  </div>
-                )}
-              </div>
-    
-            </Space>
-          </div>
 
           {/* 品质分布表格 */}
           <Table

@@ -228,29 +228,24 @@ const BattleAnimation = ({
   };
 
   const renderIntroPhase = () => (
-    <div style={{ textAlign: 'center', padding: '30px 20px' }}>
-      <h2 style={{ marginBottom: '30px', color: '#1890ff' }}>⚔️ 擂台挑战即将开始！</h2>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'flex-start',
-        margin: '30px 0',
-        minHeight: '280px',
-        gap: '20px'
+    <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+      <h2 style={{ marginBottom: '20px', color: '#1890ff', fontSize: '18px' }}>⚔️ 擂台挑战即将开始！</h2>
+      <div className="battle-intro-container" style={{
+        margin: '20px 0',
+        minHeight: '200px',
+        gap: '8px'
       }}>
-        <div style={{
-          flex: 1,
-          textAlign: 'center',
-          maxWidth: '200px'
+        <div className="battle-cat-card" style={{
+          textAlign: 'center'
         }}>
-          <h3 style={{ marginBottom: '15px', color: '#52c41a' }}>挑战者</h3>
+          <h3 style={{ marginBottom: '10px', color: '#52c41a', fontSize: '14px' }}>挑战者</h3>
           <div style={{
-            width: '140px',
-            height: '140px',
-            margin: '0 auto 20px',
+            width: '100px',
+            height: '100px',
+            margin: '0 auto 15px',
             border: '3px solid #52c41a',
             borderRadius: '50%',
-            padding: '15px',
+            padding: '10px',
             background: 'linear-gradient(135deg, #f6ffed, #d9f7be)',
             display: 'flex',
             alignItems: 'center',
@@ -274,17 +269,12 @@ const BattleAnimation = ({
           </div>
         </div>
 
-        <div style={{
-          flex: 0,
-          display: 'flex',
+        <div className="battle-vs-section" style={{
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: '80px',
-          height: '200px'
+          height: '120px'
         }}>
           <div style={{
-            fontSize: '36px',
+            fontSize: '24px',
             fontWeight: 'bold',
             color: '#ff4d4f',
             textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
@@ -294,19 +284,17 @@ const BattleAnimation = ({
           </div>
         </div>
 
-        <div style={{
-          flex: 1,
-          textAlign: 'center',
-          maxWidth: '200px'
+        <div className="battle-cat-card" style={{
+          textAlign: 'center'
         }}>
-          <h3 style={{ marginBottom: '15px', color: '#f5222d' }}>擂台守护者</h3>
+          <h3 style={{ marginBottom: '10px', color: '#f5222d', fontSize: '14px' }}>擂台守护者</h3>
           <div style={{
-            width: '140px',
-            height: '140px',
-            margin: '0 auto 20px',
+            width: '100px',
+            height: '100px',
+            margin: '0 auto 15px',
             border: '3px solid #f5222d',
             borderRadius: '50%',
-            padding: '15px',
+            padding: '10px',
             background: 'linear-gradient(135deg, #fff2f0, #ffccc7)',
             display: 'flex',
             alignItems: 'center',
@@ -338,7 +326,7 @@ const BattleAnimation = ({
         borderRadius: '8px',
         border: '1px solid #91d5ff'
       }}>
-        <p style={{ margin: 0, fontSize: '16px', color: '#1890ff' }}>
+        <p style={{ margin: 0, fontSize: '14px', color: '#1890ff' }}>
           🎯 战斗即将自动开始，请准备观战！
         </p>
       </div>
@@ -346,29 +334,24 @@ const BattleAnimation = ({
   );
 
   const renderBattlePhase = () => (
-    <div style={{ padding: '30px 20px' }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-around',
-        alignItems: 'flex-start',
-        marginBottom: '30px',
-        minHeight: '220px',
-        gap: '15px'
+    <div style={{ padding: '20px 10px' }}>
+      <div className="battle-intro-container" style={{
+        marginBottom: '20px',
+        minHeight: '180px',
+        gap: '8px'
       }}>
-        <div style={{
-          flex: 1,
+        <div className="battle-cat-card" style={{
           textAlign: 'center',
-          padding: '15px',
+          padding: '10px',
           background: challengerHP > 50 ? 'linear-gradient(135deg, #f6ffed, #d9f7be)' : 'linear-gradient(135deg, #fff2f0, #ffccc7)',
-          borderRadius: '12px',
-          border: `3px solid ${challengerHP > 50 ? '#52c41a' : '#ff7875'}`,
-          transition: 'all 0.3s ease',
-          maxWidth: '200px'
+          borderRadius: '8px',
+          border: `2px solid ${challengerHP > 50 ? '#52c41a' : '#ff7875'}`,
+          transition: 'all 0.3s ease'
         }}>
           <div style={{
-            width: '90px',
-            height: '90px',
-            margin: '0 auto 15px',
+            width: '70px',
+            height: '70px',
+            margin: '0 auto 10px',
             transform: isAnimating && currentRound % 2 === 1 ? 'scale(1.1)' : 'scale(1)',
             transition: 'transform 0.3s ease',
             display: 'flex',
@@ -402,26 +385,21 @@ const BattleAnimation = ({
           />
         </div>
 
-        <div style={{
-          flex: 0,
-          display: 'flex',
+        <div className="battle-vs-section" style={{
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minWidth: '100px',
           height: '180px'
         }}>
           <div style={{
-            fontSize: '20px',
+            fontSize: '16px',
             fontWeight: 'bold',
             color: '#1890ff',
-            marginBottom: '10px'
+            marginBottom: '8px'
           }}>
             第 {currentRound} 回合
           </div>
           {isAnimating && (
             <div className="battle-vs-text" style={{
-              fontSize: '16px',
+              fontSize: '12px',
               color: '#ff4d4f',
               textAlign: 'center'
             }}>
@@ -430,20 +408,18 @@ const BattleAnimation = ({
           )}
         </div>
 
-        <div style={{
-          flex: 1,
+        <div className="battle-cat-card" style={{
           textAlign: 'center',
-          padding: '15px',
+          padding: '10px',
           background: arenaHP > 50 ? 'linear-gradient(135deg, #fff2f0, #ffccc7)' : 'linear-gradient(135deg, #f6ffed, #d9f7be)',
-          borderRadius: '12px',
-          border: `3px solid ${arenaHP > 50 ? '#f5222d' : '#52c41a'}`,
-          transition: 'all 0.3s ease',
-          maxWidth: '200px'
+          borderRadius: '8px',
+          border: `2px solid ${arenaHP > 50 ? '#f5222d' : '#52c41a'}`,
+          transition: 'all 0.3s ease'
         }}>
           <div style={{
-            width: '90px',
-            height: '90px',
-            margin: '0 auto 15px',
+            width: '70px',
+            height: '70px',
+            margin: '0 auto 10px',
             transform: isAnimating && currentRound % 2 === 0 ? 'scale(1.1)' : 'scale(1)',
             transition: 'transform 0.3s ease',
             display: 'flex',
@@ -554,11 +530,13 @@ const BattleAnimation = ({
       open={visible}
       onCancel={onClose}
       footer={null}
-      width={800}
+      width="90%"
+      style={{ maxWidth: '800px' }}
       centered
       styles={{
         body: { padding: '10px' }
       }}
+      className="battle-modal"
     >
       {currentPhase === 'intro' && renderIntroPhase()}
       {currentPhase === 'battle' && renderBattlePhase()}

@@ -230,7 +230,7 @@ function Market({ DFSWallet, userInfo }) {
     }
 
     return (
-      <Row gutter={[8, 16]} style={{ marginBottom: 24 }} className="market-stats">
+      <Row gutter={[4, 16]} style={{ marginBottom: 24 }} className="market-stats">
         <Col xs={12} sm={12} md={12} lg={12}>
           <Card>
             <Statistic
@@ -404,8 +404,8 @@ function Market({ DFSWallet, userInfo }) {
       {renderMarketStats()}
 
       {/* 主要内容区域 */}
-      <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+      <Card styles={{ body: { padding: 0 } }}>
+        <Tabs activeKey={activeTab} onChange={setActiveTab} style={{ padding: '24px' }}>
           <TabPane tab={<span><ShopOutlined />市场</span>} key="market">
             {renderFilters()}
 
