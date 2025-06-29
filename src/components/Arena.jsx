@@ -31,6 +31,7 @@ import ChallengeModal from './ChallengeModal';
 import { formatTime } from '../utils/timeUtils';
 import BattleAnimation from './BattleAnimation';
 import ArenaRules from './ArenaRules';
+import CatRenderer from './CatRenderer';
 import {
   getArenas,
   getUserCats,
@@ -517,51 +518,157 @@ const Arena = ({ DFSWallet, accountName }) => {
                 </Space>
               </div>
 
-              <div style={{ marginBottom: '8px' }}>
-                <Text strong>挑战者: </Text>
-                <Text>#{record.challenger_cat_id}</Text>
-                {record.challengerCat && (
-                  <Tag
-                    size="small"
-                    style={{
-                      backgroundColor: QUALITY_COLORS[record.challengerCat.quality] || QUALITY_COLORS[0],
-                      color: 'white',
-                      border: 'none',
-                      marginLeft: '8px'
-                    }}
-                  >
-                    {QUALITY_NAMES[record.challengerCat.quality] || '普通'}
-                  </Tag>
-                )}
-              </div>
-
-              <div style={{ marginBottom: '8px' }}>
-                <Text strong>守护者: </Text>
-                <Text>#{record.defender_cat_id}</Text>
-                {record.defenderCat && (
-                  <Tag
-                    size="small"
-                    style={{
-                      backgroundColor: QUALITY_COLORS[record.defenderCat.quality] || QUALITY_COLORS[0],
-                      color: 'white',
-                      border: 'none',
-                      marginLeft: '8px'
-                    }}
-                  >
-                    {QUALITY_NAMES[record.defenderCat.quality] || '普通'}
-                  </Tag>
-                )}
-                <br />
-                <Text type="secondary">主人: {record.defender_account}</Text>
-              </div>
-
+              {/* 猫咪对战展示区域 */}
               <div style={{ marginBottom: '12px' }}>
-                <Text strong>擂台ID: </Text>
-                <Text>{record.arena_id}</Text>
+                <Row gutter={4} align="top" justify="space-between">
+                  {/* 挑战者 */}
+                  <Col span={11}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ marginBottom: '4px' }}>
+                        <Text strong style={{ color: '#1890ff', fontSize: '12px' }}>挑战者</Text>
+                      </div>
+                      {record.challengerCat && (
+                        <div style={{
+                          width: '60px',
+                          height: '60px',
+                          margin: '0 auto 4px',
+                          border: `2px solid ${QUALITY_COLORS[record.challengerCat.quality] || QUALITY_COLORS[0]}`,
+                          borderRadius: '6px',
+                          padding: '2px',
+                          background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ transform: 'scale(0.45)', transformOrigin: 'center' }}>
+                            <CatRenderer
+                              parent={`challenge-challenger-${record.challenger_cat_id}`}
+                              gene={record.challengerCat.genes}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <Text style={{ fontSize: '12px' }}>#{record.challenger_cat_id}</Text>
+                        {record.challengerCat && (
+                          <div style={{ marginTop: '2px' }}>
+                            <Tag
+                              size="small"
+                              style={{
+                                backgroundColor: QUALITY_COLORS[record.challengerCat.quality] || QUALITY_COLORS[0],
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '10px',
+                                padding: '0 4px',
+                                lineHeight: '16px'
+                              }}
+                            >
+                              {QUALITY_NAMES[record.challengerCat.quality] || '普通'}
+                            </Tag>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ marginTop: '2px' }}>
+                        <Text type="secondary" style={{ fontSize: '10px' }}>
+                          {record.challenger_account === accountName ? '我的' : `主人: ${record.challenger_account}`}
+                        </Text>
+                      </div>
+                    </div>
+                  </Col>
+
+                  {/* VS 标识 */}
+                  <Col span={2}>
+                    <div style={{
+                      textAlign: 'center',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingTop: '30px'
+                    }}>
+                      <div style={{
+                        width: '30px',
+                        height: '30px',
+                        background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '12px'
+                      }}>
+                        VS
+                      </div>
+                    </div>
+                  </Col>
+
+                  {/* 守护者 */}
+                  <Col span={11}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ marginBottom: '4px' }}>
+                        <Text strong style={{ color: '#f5222d', fontSize: '12px' }}>守护者</Text>
+                      </div>
+                      {record.defenderCat && (
+                        <div style={{
+                          width: '60px',
+                          height: '60px',
+                          margin: '0 auto 4px',
+                          border: `2px solid ${QUALITY_COLORS[record.defenderCat.quality] || QUALITY_COLORS[0]}`,
+                          borderRadius: '6px',
+                          padding: '2px',
+                          background: 'linear-gradient(135deg, #fff2f0, #ffccc7)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ transform: 'scale(0.45)', transformOrigin: 'center' }}>
+                            <CatRenderer
+                              parent={`challenge-defender-${record.defender_cat_id}`}
+                              gene={record.defenderCat.genes}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      <div>
+                        <Text style={{ fontSize: '12px' }}>#{record.defender_cat_id}</Text>
+                        {record.defenderCat && (
+                          <div style={{ marginTop: '2px' }}>
+                            <Tag
+                              size="small"
+                              style={{
+                                backgroundColor: QUALITY_COLORS[record.defenderCat.quality] || QUALITY_COLORS[0],
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '10px',
+                                padding: '0 4px',
+                                lineHeight: '16px'
+                              }}
+                            >
+                              {QUALITY_NAMES[record.defenderCat.quality] || '普通'}
+                            </Tag>
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ marginTop: '2px' }}>
+                        <Text type="secondary" style={{ fontSize: '10px' }}>
+                          {record.defender_account === accountName ? '我的' : `主人: ${record.defender_account}`}
+                        </Text>
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
               </div>
 
-              <div style={{ marginBottom: '12px' }}>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
+              <div style={{ marginBottom: '8px', textAlign: 'center' }}>
+                <Text strong style={{ fontSize: '12px' }}>擂台ID: </Text>
+                <Text style={{ fontSize: '12px' }}>{record.arena_id}</Text>
+              </div>
+
+              <div style={{ marginBottom: '8px', textAlign: 'center' }}>
+                <Text type="secondary" style={{ fontSize: '11px' }}>
                   {formatTime(record.created_at)}
                 </Text>
               </div>
@@ -574,7 +681,9 @@ const Arena = ({ DFSWallet, accountName }) => {
                   onClick={() => handleBattleReplay(record)}
                   style={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    border: 'none'
+                    border: 'none',
+                    fontSize: '12px',
+                    height: '28px'
                   }}
                 >
                   战斗回放
