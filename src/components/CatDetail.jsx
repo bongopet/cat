@@ -22,6 +22,7 @@ import {
   checkCatAction,
   upgradeCatWithCoin,
   restoreStaminaWithCoin,
+  getCatStaminaCostInfo,
   upgradeCat,
   checkCatHasAvailableExp,
   feedCatWithDFS,
@@ -48,6 +49,7 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [feedingStates, setFeedingStates] = useState({}); // 跟踪每只猫的DFS喂养状态
   const [attributeModalVisible, setAttributeModalVisible] = useState(false); // 属性弹窗状态
+  const [staminaCostInfo, setStaminaCostInfo] = useState(null); // 体力恢复成本信息
 
   // 品质颜色映射 - 与其他组件保持一致
   const QUALITY_COLORS = {
@@ -238,6 +240,23 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
       setGeneDetails(getCatGeneDetails(selectedCat.genes));
     }
   }, [selectedCat]);
+
+  // 获取体力恢复成本信息
+  useEffect(() => {
+    const fetchStaminaCostInfo = async () => {
+      if (selectedCat && DFSWallet) {
+        try {
+          const costInfo = await getCatStaminaCostInfo(DFSWallet, selectedCat.id);
+          setStaminaCostInfo(costInfo);
+        } catch (error) {
+          console.error('获取体力恢复成本信息失败:', error);
+          setStaminaCostInfo({ rank: 999, multiplier: 1.0, isHighRank: false });
+        }
+      }
+    };
+
+    fetchStaminaCostInfo();
+  }, [selectedCat, DFSWallet]);
 
   // 启动和清理定时器
   useEffect(() => {
@@ -598,6 +617,14 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                     <Tag color="purple" icon={<ThunderboltOutlined />}>
                       战力: {calculateTotalPower(selectedCat)}
                     </Tag>
+                    {staminaCostInfo && (
+                      <Tag
+                        color={staminaCostInfo.rank <= 30 ? "gold" : "default"}
+                        icon={<TrophyOutlined />}
+                      >
+                        排名: 第{staminaCostInfo.rank}名/{staminaCostInfo.totalCats || '?'}
+                      </Tag>
+                    )}
                   </Space>
                 </div>
                 <div className="cat-birth">
@@ -730,6 +757,11 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
           <div className="attribute-item">
             <div className="attribute-label">
               体力恢复 (猫币)
+              {staminaCostInfo && staminaCostInfo.isHighRank && (
+                <Tag color="gold" style={{ marginLeft: 8, fontSize: '12px' }}>
+                  排名第{staminaCostInfo.rank}名 {staminaCostInfo.multiplier}x成本
+                </Tag>
+              )}
             </div>
             <div className="attribute-progress">
               <div className="progress-container">
@@ -746,7 +778,11 @@ const CatDetail = ({ DFSWallet, userInfo, selectedCat, refreshCats, allCats = []
                   icon={<HeartOutlined />}
                   disabled={isStaminaFull(selectedCat.stamina)}
                   onClick={handleRestoreStamina}
-                  title="猫币恢复体力 (1 BGCAT = 10-20体力)"
+                  title={
+                    staminaCostInfo && staminaCostInfo.isHighRank
+                      ? `猫币恢复体力 (战力排名第${staminaCostInfo.rank}名，需要${staminaCostInfo.multiplier} BGCAT = 10-20体力)`
+                      : "猫币恢复体力 (1 BGCAT = 10-20体力)"
+                  }
                 />
               </div>
             </div>

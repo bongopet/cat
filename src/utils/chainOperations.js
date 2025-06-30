@@ -841,18 +841,29 @@ async function upgradeCatWithCoin(wallet, account, catId, cat) {
 }
 
 // 使用猫币恢复体力（通过转账实现）
-async function restoreStaminaWithCoin(wallet, account, catId, amount = '1.00000000') {
+async function restoreStaminaWithCoin(wallet, account, catId, baseAmount = '1.00000000') {
   try {
     console.log(`开始用猫币恢复猫咪#${catId}体力...`);
+
+    // 获取猫咪的战力排名和成本倍数
+    const costInfo = await getCatStaminaCostInfo(wallet, catId);
+    const { rank, multiplier, isHighRank, battlePower } = costInfo;
+
+    // 计算实际需要的猫币数量
+    const baseAmountNum = Number.parseFloat(baseAmount);
+    const actualAmount = (baseAmountNum * multiplier).toFixed(8);
+
+    console.log(`猫咪#${catId} 战力排名: ${rank}, 成本倍数: ${multiplier}x, 需要猫币: ${actualAmount} BGCAT`);
 
     // 检查BGCAT余额
     const balanceStr = await getAccountBalance(wallet, 'dfsppptokens', account.name, 'BGCAT');
     const balanceParts = balanceStr.split(' ');
     const balanceValue = Number.parseFloat(balanceParts[0]);
-    const restoreAmount = Number.parseFloat(amount);
+    const requiredAmount = Number.parseFloat(actualAmount);
 
-    if (isNaN(balanceValue) || balanceValue < restoreAmount) {
-      const errorMsg = `BGCAT余额不足，恢复体力需要至少${amount} BGCAT (当前余额: ${balanceStr || '0 BGCAT'})`;
+    if (isNaN(balanceValue) || balanceValue < requiredAmount) {
+      const rankInfo = isHighRank ? ` (战力排名第${rank}名，需要${multiplier}x猫币)` : '';
+      const errorMsg = `BGCAT余额不足，恢复体力需要${actualAmount} BGCAT${rankInfo} (当前余额: ${balanceStr || '0 BGCAT'})`;
       throw new Error(errorMsg);
     }
 
@@ -864,7 +875,7 @@ async function restoreStaminaWithCoin(wallet, account, catId, amount = '1.000000
     const transferAction = buildTransferAction(
       account.name,
       CONTRACT,
-      `${amount} BGCAT`,
+      `${actualAmount} BGCAT`,
       `stamina:${catId}`, // 体力恢复备注格式
       permission,
       'dfsppptokens' // 猫币合约
@@ -872,12 +883,18 @@ async function restoreStaminaWithCoin(wallet, account, catId, amount = '1.000000
 
     const result = await sendTransaction(wallet, [transferAction]);
 
-    message.success('猫币恢复体力成功！每个猫币恢复10-20体力！');
+    // 根据排名显示不同的成功消息
+    let successMsg = '猫币恢复体力成功！每个基础猫币恢复10-20体力！';
+    if (isHighRank) {
+      successMsg = `猫币恢复体力成功！战力排名第${rank}名，消耗${multiplier}x猫币 (${actualAmount} BGCAT)`;
+    }
+
+    message.success(successMsg);
     console.log('猫币恢复体力成功', result);
 
     // 记录交易
     const txId = result?.transaction_id || `stamina-${Date.now()}`;
-    recordCatTransaction('stamina', catId, txId, amount, 'BGCAT');
+    recordCatTransaction('stamina', catId, txId, actualAmount, 'BGCAT');
 
     return {
       success: true,
@@ -886,6 +903,115 @@ async function restoreStaminaWithCoin(wallet, account, catId, amount = '1.000000
   } catch (error) {
     console.error('猫币恢复体力失败:', error);
     throw error;
+  }
+}
+
+// 获取猫咪战力排名和恢复成本倍数
+async function getCatStaminaCostInfo(wallet, catId) {
+  try {
+    console.log(`获取猫咪#${catId}的体力恢复成本信息...`);
+
+    // 获取所有猫咪数据来计算排名
+    const catsRows = await getTableRows(
+      wallet,
+      CONTRACT,
+      CONTRACT,
+      CATTABLE,
+      null,
+      null,
+      1,
+      'i64',
+      1000
+    );
+
+    if (!catsRows || catsRows.length === 0) {
+      return { rank: 999, multiplier: 1.0, isHighRank: false };
+    }
+
+    // 找到目标猫咪 (确保类型匹配)
+    const targetCatId = parseInt(catId);
+    const targetCat = catsRows.find(cat => parseInt(cat.id) === targetCatId);
+    if (!targetCat) {
+      console.log(`未找到猫咪#${catId}，返回默认排名`);
+      return { rank: 999, multiplier: 1.0, isHighRank: false };
+    }
+
+    // 计算战力 - 需要解密属性来计算
+    const calculateCatPower = (cat) => {
+      try {
+        // 尝试解密属性
+        const decryptedStats = decryptCatStats(cat.encrypted_stats, cat.encrypted_stats_high, cat.id);
+        if (decryptedStats) {
+          return decryptedStats.attack + decryptedStats.defense + decryptedStats.health +
+                 decryptedStats.critical + decryptedStats.dodge + decryptedStats.luck;
+        }
+        return 0;
+      } catch (error) {
+        console.error(`计算猫咪#${cat.id}战力失败:`, error);
+        return 0;
+      }
+    };
+
+    const targetPower = calculateCatPower(targetCat);
+    console.log(`目标猫咪#${catId} 战力: ${targetPower}`);
+
+    // 如果目标猫咪战力为0，直接返回最低排名
+    if (targetPower === 0) {
+      console.log(`猫咪#${catId} 战力为0，返回最低排名`);
+      return { rank: 999, multiplier: 1.0, isHighRank: false, battlePower: 0 };
+    }
+
+    // 计算所有猫咪的战力并排序 (只计算前100只以提高性能)
+    const validCats = catsRows
+      .slice(0, 100) // 限制计算数量以提高性能
+      .map(cat => ({
+        id: cat.id,
+        battle_power: calculateCatPower(cat)
+      }))
+      .filter(cat => cat.battle_power > 0)
+      .sort((a, b) => b.battle_power - a.battle_power); // 按战力降序排列
+
+    console.log(`有效猫咪数量: ${validCats.length}`);
+    console.log(`前5名战力:`, validCats.slice(0, 5).map(cat => `#${cat.id}:${cat.battle_power}`));
+    console.log(`目标猫咪#${catId}战力: ${targetPower}`);
+
+    // 找到目标猫咪的排名
+    let rank = validCats.findIndex(cat => parseInt(cat.id) === targetCatId) + 1;
+
+    // 如果没找到，说明战力为0或无效，给最低排名
+    if (rank === 0) {
+      rank = validCats.length + 1;
+      console.log(`猫咪#${catId} 未在有效猫咪列表中找到，给予最低排名: ${rank}`);
+    } else {
+      console.log(`猫咪#${catId} 在排序列表中的位置: ${rank}/${validCats.length}`);
+    }
+
+    // 计算成本倍数
+    let multiplier = 1.0;
+    if (rank <= 3) {
+      multiplier = 5.0;  // 前3名：5倍成本
+    } else if (rank <= 10) {
+      multiplier = 3.0;  // 4-10名：3倍成本
+    } else if (rank <= 20) {
+      multiplier = 2.0;  // 11-20名：2倍成本
+    } else if (rank <= 30) {
+      multiplier = 1.5;  // 21-30名：1.5倍成本
+    }
+
+    const isHighRank = rank <= 30;
+
+    console.log(`猫咪#${catId} 战力排名: ${rank}, 成本倍数: ${multiplier}x, 战力: ${targetPower}`);
+
+    return {
+      rank,
+      multiplier,
+      isHighRank,
+      battlePower: targetPower,
+      totalCats: validCats.length
+    };
+  } catch (error) {
+    console.error('获取猫咪成本信息失败:', error);
+    return { rank: 999, multiplier: 1.0, isHighRank: false };
   }
 }
 
@@ -2530,6 +2656,7 @@ export {
   // 猫币功能函数
   upgradeCatWithCoin,
   restoreStaminaWithCoin,
+  getCatStaminaCostInfo,
   calculateNextLevelCatCoinCost,
 
   // 原有函数（保持兼容性）
